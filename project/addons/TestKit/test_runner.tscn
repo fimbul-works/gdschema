@@ -1,0 +1,143 @@
+[gd_scene load_steps=7 format=3 uid="uid://bkdh3qj8xqsnh"]
+
+[ext_resource type="Script" path="res://addons/TestKit/test_runner_ui.gd" id="1_mmc8f"]
+
+[sub_resource type="FontVariation" id="FontVariation_2vkfn"]
+variation_embolden = 1.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_8wqys"]
+bg_color = Color(0, 0, 0, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_v05f1"]
+bg_color = Color(0.351854, 0.252252, 0.530663, 1)
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_ubouy"]
+content_margin_left = 2.0
+content_margin_top = 2.0
+content_margin_right = 2.0
+content_margin_bottom = 2.0
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_kg43c"]
+content_margin_left = 8.0
+content_margin_top = 4.0
+content_margin_right = 8.0
+content_margin_bottom = 4.0
+
+[node name="TestRunnerUI" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_mmc8f")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.1, 0.1, 0.1, 1)
+
+[node name="VBox" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Header" type="VBoxContainer" parent="VBox"]
+layout_mode = 2
+size_flags_vertical = 0
+
+[node name="MarginContainer" type="MarginContainer" parent="VBox/Header"]
+layout_mode = 2
+theme_override_constants/margin_left = 3
+theme_override_constants/margin_top = 3
+theme_override_constants/margin_right = 3
+theme_override_constants/margin_bottom = 3
+
+[node name="RunButton" type="Button" parent="VBox/Header/MarginContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_fonts/font = SubResource("FontVariation_2vkfn")
+theme_override_font_sizes/font_size = 20
+text = "Run Tests ▶"
+
+[node name="ProgressBar" type="ProgressBar" parent="VBox/Header"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 10)
+layout_mode = 2
+theme_override_styles/background = SubResource("StyleBoxFlat_8wqys")
+theme_override_styles/fill = SubResource("StyleBoxFlat_v05f1")
+
+[node name="MainContent" type="HSplitContainer" parent="VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+split_offset = -300
+dragger_visibility = 1
+
+[node name="LeftPanel" type="VBoxContainer" parent="VBox/MainContent"]
+custom_minimum_size = Vector2(250, 0)
+layout_mode = 2
+size_flags_horizontal = 2
+
+[node name="SuitesHeader" type="Label" parent="VBox/MainContent/LeftPanel"]
+visible = false
+layout_mode = 2
+text = "Test Suites"
+
+[node name="SuitesScrollContainer" type="ScrollContainer" parent="VBox/MainContent/LeftPanel"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_styles/panel = SubResource("StyleBoxEmpty_ubouy")
+horizontal_scroll_mode = 0
+
+[node name="TestSuitesList" type="VBoxContainer" parent="VBox/MainContent/LeftPanel/SuitesScrollContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="RightPanel" type="VBoxContainer" parent="VBox/MainContent"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="TestDetailsScroll" type="ScrollContainer" parent="VBox/MainContent/RightPanel"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_styles/panel = SubResource("StyleBoxEmpty_kg43c")
+horizontal_scroll_mode = 0
+
+[node name="TestDetailsContent" type="VBoxContainer" parent="VBox/MainContent/RightPanel/TestDetailsScroll"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="EmptyMessage" type="RichTextLabel" parent="VBox/MainContent/RightPanel/TestDetailsScroll/TestDetailsContent"]
+layout_mode = 2
+size_flags_vertical = 0
+theme_override_colors/default_color = Color(1, 1, 1, 0.498039)
+bbcode_enabled = true
+text = "[i]Select a test suite from the left panel to view details.[/i]"
+fit_content = true
+
+[node name="MarginContainer" type="MarginContainer" parent="VBox"]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 4
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 4
+
+[node name="SummaryLabel" type="RichTextLabel" parent="VBox/MarginContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+bbcode_enabled = true
+text = "[b]Ready to run tests[/b]"
+fit_content = true

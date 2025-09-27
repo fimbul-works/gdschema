@@ -1,0 +1,4 @@
+[submodule "ext/godot-cpp"]
+	path = ext/godot-cpp
+	url = https://github.com/godotengine/godot-cpp
+	branch = 4.3

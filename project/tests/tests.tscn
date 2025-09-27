@@ -1,0 +1,70 @@
+[gd_scene load_steps=16 format=3 uid="uid://b8sttu5ugrluj"]
+
+[ext_resource type="PackedScene" uid="uid://bkdh3qj8xqsnh" path="res://addons/TestKit/test_runner.tscn" id="1_ybys2"]
+[ext_resource type="Script" path="res://tests/test_basic_schema.gd" id="2_it4mf"]
+[ext_resource type="Script" path="res://tests/test_string_validation.gd" id="3_oivrj"]
+[ext_resource type="Script" path="res://tests/test_numeric_validation.gd" id="4_ft3h4"]
+[ext_resource type="Script" path="res://tests/test_array_validation.gd" id="5_v8xr6"]
+[ext_resource type="Script" path="res://tests/test_object_validation.gd" id="6_q555x"]
+[ext_resource type="Script" path="res://tests/test_type_validation.gd" id="7_yfo6w"]
+[ext_resource type="Script" path="res://tests/test_logical_composition.gd" id="8_jahab"]
+[ext_resource type="Script" path="res://tests/test_conditional_schema.gd" id="9_ieaqh"]
+[ext_resource type="Script" path="res://tests/test_reference.gd" id="10_1uo70"]
+[ext_resource type="Script" path="res://tests/test_definitions.gd" id="11_obrdq"]
+[ext_resource type="Script" path="res://tests/test_format_validation.gd" id="12_057o5"]
+[ext_resource type="Script" path="res://tests/test_error_handling.gd" id="13_88un0"]
+[ext_resource type="Script" path="res://tests/test_integration.gd" id="15_6syin"]
+[ext_resource type="Script" path="res://tests/test_edge_case.gd" id="15_hralm"]
+
+[node name="Tests" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="TestRunnerUI" parent="." instance=ExtResource("1_ybys2")]
+layout_mode = 1
+
+[node name="Basic Schema" type="Node2D" parent="TestRunnerUI"]
+script = ExtResource("2_it4mf")
+
+[node name="String Validation" type="Node2D" parent="TestRunnerUI"]
+script = ExtResource("3_oivrj")
+
+[node name="Numeric Validation" type="Node2D" parent="TestRunnerUI"]
+script = ExtResource("4_ft3h4")
+
+[node name="Array Validation" type="Node2D" parent="TestRunnerUI"]
+script = ExtResource("5_v8xr6")
+
+[node name="Object Validation" type="Node2D" parent="TestRunnerUI"]
+script = ExtResource("6_q555x")
+
+[node name="Type Validation" type="Node2D" parent="TestRunnerUI"]
+script = ExtResource("7_yfo6w")
+
+[node name="Logical Composition" type="Node2D" parent="TestRunnerUI"]
+script = ExtResource("8_jahab")
+
+[node name="Conditional Schemas" type="Node2D" parent="TestRunnerUI"]
+script = ExtResource("9_ieaqh")
+
+[node name="Reference" type="Node2D" parent="TestRunnerUI"]
+script = ExtResource("10_1uo70")
+
+[node name="Definitions" type="Node2D" parent="TestRunnerUI"]
+script = ExtResource("11_obrdq")
+
+[node name="Format Validation" type="Node2D" parent="TestRunnerUI"]
+script = ExtResource("12_057o5")
+
+[node name="Error Handling" type="Node2D" parent="TestRunnerUI"]
+script = ExtResource("13_88un0")
+
+[node name="Integration" type="Node2D" parent="TestRunnerUI"]
+script = ExtResource("15_6syin")
+
+[node name="Edge Cases" type="Node2D" parent="TestRunnerUI"]
+script = ExtResource("15_hralm")

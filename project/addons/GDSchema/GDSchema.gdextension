@@ -1,0 +1,23 @@
+[configuration]
+
+entry_symbol = "schema_library_init"
+compatibility_minimum = "4.3"
+reloadable = true
+
+[libraries]
+
+windows.debug.x86_32 = "res://addons/GDSchema/bin/libgdschema.windows.debug.x86_32.dll"
+windows.release.x86_32 = "res://addons/GDSchema/bin/libgdschema.windows.release.x86_32.dll"
+windows.debug.x86_64 = "res://addons/GDSchema/bin/libgdschema.windows.debug.x86_64.dll"
+windows.release.x86_64 = "res://addons/GDSchema/bin/libgdschema.windows.release.x86_64.dll"
+
+linux.debug.x86_64 = "res://addons/GDSchema/bin/libgdschema.linux.debug.x86_64.so"
+linux.release.x86_64 = "res://addons/GDSchema/bin/libgdschema.linux.release.x86_64.so"
+
+macos.debug.arm64 = "res://addons/GDSchema/bin/libgdschema.macos.debug"
+macos.release.arm64 = "res://addons/GDSchema/bin/libgdschema.macos.release"
+
+[icons]
+
+Schema = "res://addons/GDSchema/icon.svg"
+SchemaValidationResult = "res://addons/GDSchema/icon.svg"
