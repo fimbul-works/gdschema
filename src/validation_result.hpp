@@ -99,7 +99,9 @@ public:
 	 * @brief Checks if validation succeeded
 	 * @return True if no errors occurred
 	 */
-	bool is_valid() const { return validation_succeeded && errors.empty(); }
+	bool is_valid() const {
+		return validation_succeeded && errors.empty();
+	}
 
 	/**
 	 * @brief Checks if there are validation errors

@@ -434,6 +434,34 @@ func test_contains_with_ref() -> void:
 	expect(schema.validate([{"invalid": true}, {"id": 1, "name": "valid"}]).is_valid(), "Array with one item matching reference should validate")
 	expect(!schema.validate([{"invalid": true}, {"id": 0, "name": ""}]).is_valid(), "Array with no items matching reference should not validate")
 
+# ========== TUPLE VALIDATION ==========
+
+func test_tuple_validation_with_additional_items() -> void:
+	var schema = Schema.build_schema({
+		"type": "array",
+		"items": [
+			{"type": "string"},
+			{"type": "number"}
+		],
+		"additionalItems": false
+	})
+
+	expect(schema.validate(["hello", 42]).is_valid(), "Tuple matching schema should validate")
+	expect(!schema.validate(["hello", 42, "extra"]).is_valid(), "Extra items should not validate when additionalItems is false")
+
+func test_tuple_with_additional_items_schema() -> void:
+	var schema = Schema.build_schema({
+		"type": "array",
+		"items": [
+			{"type": "string"},
+			{"type": "number"}
+		],
+		"additionalItems": {"type": "boolean"}
+	})
+
+	expect(schema.validate(["hello", 42, true, false]).is_valid(), "Additional booleans should validate")
+	expect(!schema.validate(["hello", 42, "invalid"]).is_valid(), "Additional non-boolean should not validate")
+
 # ========== ERROR HANDLING ==========
 
 func test_contains_error_messages() -> void:
@@ -452,7 +480,7 @@ func test_contains_error_messages() -> void:
 
 	# Error should indicate that no items matched the contains schema
 	if result.error_count() > 0:
-		var error_msg = result.get_error_message(0).to_lower()
+		var error_msg = result.get_summary().to_lower()
 		expect(error_msg.contains("contains") or error_msg.contains("no items"), "Error should mention contains requirement")
 
 # ========== EDGE CASES ==========

@@ -66,6 +66,16 @@ func test_numeric_multiple_of() -> void:
 	expect(schema.validate(0).is_valid(), "Zero should validate")
 	expect(!schema.validate(1.3).is_valid(), "Non-multiple should not validate")
 
+func test_floating_point_precision() -> void:
+	var schema = Schema.build_schema({
+		"type": "number",
+		"multipleOf": 0.01
+	})
+
+	# Test floating point precision issues
+	expect(schema.validate(0.03).is_valid(), "0.03 should be multiple of 0.01")
+	expect(schema.validate(0.0300).is_valid(), "Equivalent values should validate the same")
+
 func test_numeric_combined_constraints() -> void:
 	var schema = Schema.build_schema({
 		"type": "number",

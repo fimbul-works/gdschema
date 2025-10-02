@@ -4,11 +4,14 @@
 #include "rule/any_of_rule.hpp"
 #include "rule/conditional_rule.hpp"
 #include "rule/const_rule.hpp"
+#include "rule/contains_rule.hpp"
 #include "rule/content_encoding_rule.hpp"
 #include "rule/content_media_type_rule.hpp"
+#include "rule/dependency_rule.hpp"
 #include "rule/enum_rule.hpp"
 #include "rule/exclusive_maximum_rule.hpp"
 #include "rule/exclusive_minimum_rule.hpp"
+#include "rule/false_rule.hpp"
 #include "rule/format_rule.hpp"
 #include "rule/max_items_rule.hpp"
 #include "rule/max_length_rule.hpp"
@@ -25,10 +28,13 @@
 #include "rule/ref_rule.hpp"
 #include "rule/required_properties_rule.hpp"
 #include "rule/selector_rule.hpp"
+#include "rule/true_rule.hpp"
 #include "rule/type_rule.hpp"
 #include "rule/unique_items_rule.hpp"
 #include "schema.hpp"
+#include "selector/additional_items_selector.hpp"
 #include "selector/additional_properties_selector.hpp"
+#include "selector/array_item_selector.hpp"
 #include "selector/array_items_selector.hpp"
 #include "selector/object_keys_selector.hpp"
 #include "selector/object_values_selector.hpp"
@@ -408,21 +414,18 @@ void RuleFactory::create_object_rules(const Dictionary &schema_def, const Ref<Sc
 
 	// propertyNames - validate all object keys
 	if (schema_def.has("propertyNames")) {
-		Variant prop_names_var = schema_def["propertyNames"];
-		if (prop_names_var.get_type() == Variant::DICTIONARY) {
-			Ref<Schema> child_schema = schema->get_child("propertyNames");
-			if (child_schema.is_valid()) {
-				auto prop_names_result = create_rules(child_schema);
-				result.errors.insert(result.errors.end(),
-						prop_names_result.errors.begin(),
-						prop_names_result.errors.end());
+		Ref<Schema> child_schema = schema->get_child("propertyNames");
+		if (child_schema.is_valid()) {
+			auto prop_names_result = create_rules(child_schema);
+			result.errors.insert(result.errors.end(),
+					prop_names_result.errors.begin(),
+					prop_names_result.errors.end());
 
-				if (prop_names_result.is_valid() && !prop_names_result.rules->is_empty()) {
-					auto selector = std::make_unique<ObjectKeysSelector>();
-					result.rules->add_rule(std::make_unique<SelectorRule>(
-							std::move(selector),
-							std::move(prop_names_result.rules)));
-				}
+			if (prop_names_result.is_valid() && !prop_names_result.rules->is_empty()) {
+				auto selector = std::make_unique<ObjectKeysSelector>();
+				result.rules->add_rule(std::make_unique<SelectorRule>(
+						std::move(selector),
+						std::move(prop_names_result.rules)));
 			}
 		}
 	}
@@ -526,6 +529,225 @@ void RuleFactory::create_object_rules(const Dictionary &schema_def, const Ref<Sc
 							std::move(additional_result.rules)));
 				}
 			}
+		}
+	}
+
+	// Dependencies - property and schema dependencies
+	if (schema_def.has("dependencies")) {
+		Dictionary dependencies = schema_def["dependencies"].operator Dictionary();
+		Array dep_keys = dependencies.keys();
+
+		for (int i = 0; i < dep_keys.size(); i++) {
+			StringName dep_name = dep_keys[i];
+			Variant dep_value = dependencies[dep_keys[i]];
+
+			if (dep_value.get_type() == Variant::ARRAY) {
+				// Property dependency
+				Array required_props = dep_value.operator Array();
+				std::vector<String> props;
+
+				for (int j = 0; j < required_props.size(); j++) {
+					if (required_props[j].get_type() == Variant::STRING) {
+						props.push_back(required_props[j].operator String());
+					}
+				}
+
+				if (!props.empty()) {
+					auto selector = std::make_unique<ValueSelector>();
+					auto rule = std::make_unique<DependencyRule>(dep_name, props);
+					result.rules->add_rule(std::make_unique<SelectorRule>(
+							std::move(selector), std::move(rule)));
+				}
+
+			} else if (dep_value.get_type() == Variant::DICTIONARY) {
+				// Schema dependency
+				StringName child_key = vformat("dependencies/%s", dep_name);
+				Ref<Schema> child_schema = schema->get_child(child_key);
+
+				if (child_schema.is_valid()) {
+					auto dep_result = create_rules(child_schema);
+					result.errors.insert(result.errors.end(),
+							dep_result.errors.begin(), dep_result.errors.end());
+
+					if (dep_result.is_valid() && !dep_result.rules->is_empty()) {
+						auto selector = std::make_unique<ValueSelector>();
+						auto rule = std::make_unique<DependencyRule>(dep_name, dep_result.rules);
+						result.rules->add_rule(std::make_unique<SelectorRule>(
+								std::move(selector), std::move(rule)));
+					}
+				}
+			}
+		}
+	}
+}
+
+void RuleFactory::create_array_rules(const Dictionary &schema_def, const Ref<Schema> &schema, RuleCompileResult &result) {
+	// minItems
+	if (schema_def.has("minItems")) {
+		Variant min_items_var = schema_def["minItems"];
+		int64_t min_items;
+		if (try_get_non_negative_int(min_items_var, min_items)) {
+			auto selector = std::make_unique<ValueSelector>();
+			auto rule = std::make_unique<MinItemsRule>(min_items);
+			result.rules->add_rule(std::make_unique<SelectorRule>(std::move(selector), std::move(rule)));
+		}
+	}
+
+	// maxItems
+	if (schema_def.has("maxItems")) {
+		Variant max_items_var = schema_def["maxItems"];
+		int64_t max_items;
+		if (try_get_non_negative_int(max_items_var, max_items)) {
+			auto selector = std::make_unique<ValueSelector>();
+			auto rule = std::make_unique<MaxItemsRule>(max_items);
+			result.rules->add_rule(std::make_unique<SelectorRule>(std::move(selector), std::move(rule)));
+		}
+	}
+
+	// uniqueItems
+	if (schema_def.has("uniqueItems")) {
+		Variant unique_items_var = schema_def["uniqueItems"];
+		if (unique_items_var.get_type() == Variant::BOOL && unique_items_var.operator bool()) {
+			auto selector = std::make_unique<ValueSelector>();
+			auto rule = std::make_unique<UniqueItemsRule>();
+			result.rules->add_rule(std::make_unique<SelectorRule>(std::move(selector), std::move(rule)));
+		}
+	}
+
+	// Track tuple length for additionalItems
+	int tuple_length = -1;
+
+	// items - validate array items (single schema or tuple validation)
+	if (schema_def.has("items")) {
+		Variant items_var = schema_def["items"];
+
+		if (items_var.get_type() == Variant::DICTIONARY) {
+			// Single schema applies to all items
+			Ref<Schema> child_schema = schema->get_child("items");
+
+			if (child_schema.is_valid()) {
+				auto items_result = create_rules(child_schema);
+				result.errors.insert(result.errors.end(),
+						items_result.errors.begin(),
+						items_result.errors.end());
+
+				if (items_result.is_valid() && !items_result.rules->is_empty()) {
+					auto selector = std::make_unique<ArrayItemsSelector>();
+					result.rules->add_rule(std::make_unique<SelectorRule>(
+							std::move(selector),
+							std::move(items_result.rules)));
+				}
+			}
+		} else if (items_var.get_type() == Variant::ARRAY) {
+			// Tuple validation - each position has its own schema
+			Array items_array = items_var.operator Array();
+			tuple_length = items_array.size(); // Store tuple length
+
+			for (int i = 0; i < items_array.size(); i++) {
+				StringName child_key = vformat("items/%d", i);
+				Ref<Schema> child_schema = schema->get_child(child_key);
+
+				if (child_schema.is_valid()) {
+					auto item_result = create_rules(child_schema);
+					result.errors.insert(result.errors.end(),
+							item_result.errors.begin(),
+							item_result.errors.end());
+
+					if (item_result.is_valid() && !item_result.rules->is_empty()) {
+						// Create selector for this specific array position
+						auto selector = std::make_unique<ArrayItemSelector>(i);
+						result.rules->add_rule(std::make_unique<SelectorRule>(
+								std::move(selector),
+								std::move(item_result.rules)));
+					}
+				}
+			}
+		}
+	}
+
+	// additionalItems - only applies when items is an array (tuple validation)
+	if (tuple_length >= 0 && schema_def.has("additionalItems")) {
+		Variant additional_items_var = schema_def["additionalItems"];
+
+		if (additional_items_var.get_type() == Variant::BOOL && !additional_items_var.operator bool()) {
+			// additionalItems: false - no additional items allowed beyond tuple
+			// Create a FalseRule that will fail for any additional items
+			auto selector = std::make_unique<AdditionalItemsSelector>(tuple_length);
+			auto rule = std::make_shared<FalseRule>();
+			result.rules->add_rule(std::make_unique<SelectorRule>(
+					std::move(selector),
+					std::move(rule)));
+		} else if (additional_items_var.get_type() == Variant::DICTIONARY) {
+			// additionalItems: {...} - additional items must match this schema
+			Ref<Schema> child_schema = schema->get_child("additionalItems");
+			if (child_schema.is_valid()) {
+				auto additional_result = create_rules(child_schema);
+				result.errors.insert(result.errors.end(),
+						additional_result.errors.begin(),
+						additional_result.errors.end());
+
+				if (additional_result.is_valid() && !additional_result.rules->is_empty()) {
+					auto selector = std::make_unique<AdditionalItemsSelector>(tuple_length);
+					result.rules->add_rule(std::make_unique<SelectorRule>(
+							std::move(selector),
+							std::move(additional_result.rules)));
+				}
+			}
+		}
+		// Note: additionalItems: true (default) means additional items are allowed with no constraints
+	}
+
+	// contains - at least one array item must validate against the schema
+	if (schema_def.has("contains")) {
+		UtilityFunctions::print("DEBUG: Processing contains constraint");
+
+		Ref<Schema> child_schema = schema->get_child("contains");
+
+		UtilityFunctions::print("CONTAINS ", schema_def, " child valid? ", child_schema.is_valid());
+
+		if (child_schema.is_valid()) {
+			Dictionary child_def = child_schema->get_schema_definition();
+			UtilityFunctions::print("DEBUG: Contains child schema def: ", child_def);
+
+			// Check if this is boolean schema detection
+			if (child_def.is_empty()) {
+				UtilityFunctions::print("DEBUG: Creating TrueRule for contains: true");
+				// contains: true (empty schema) - always matches any item
+				auto selector = std::make_unique<ValueSelector>();
+				auto rule = std::make_shared<TrueRule>();
+				auto contains_rule = std::make_unique<ContainsRule>(rule);
+				result.rules->add_rule(std::make_unique<SelectorRule>(
+						std::move(selector),
+						std::move(contains_rule)));
+			} else if (child_def.size() == 1 && child_def.has("not") &&
+					child_def["not"].get_type() == Variant::DICTIONARY &&
+					child_def["not"].operator Dictionary().is_empty()) {
+				UtilityFunctions::print("DEBUG: Creating FalseRule for contains: false");
+				// contains: false pattern {"not": {}} - never matches any item
+				auto selector = std::make_unique<ValueSelector>();
+				auto rule = std::make_shared<FalseRule>();
+				auto contains_rule = std::make_unique<ContainsRule>(rule);
+				result.rules->add_rule(std::make_unique<SelectorRule>(
+						std::move(selector),
+						std::move(contains_rule)));
+			} else {
+				UtilityFunctions::print("DEBUG: Creating normal contains rule");
+				// Normal schema - compile recursively
+				auto contains_result = create_rules(child_schema);
+				result.errors.insert(result.errors.end(),
+						contains_result.errors.begin(),
+						contains_result.errors.end());
+
+				if (contains_result.is_valid()) {
+					auto selector = std::make_unique<ValueSelector>();
+					auto rule = std::make_unique<ContainsRule>(contains_result.rules);
+					result.rules->add_rule(std::make_unique<SelectorRule>(
+							std::move(selector),
+							std::move(rule)));
+				}
+			}
+		} else {
+			UtilityFunctions::print("DEBUG: Contains child schema is invalid!");
 		}
 	}
 }
@@ -700,62 +922,6 @@ void RuleFactory::create_logical_rules(const Dictionary &schema_def, const Ref<S
 			result.rules->add_rule(std::make_unique<SelectorRule>(
 					std::move(selector),
 					std::move(conditional_rule)));
-		}
-	}
-}
-
-void RuleFactory::create_array_rules(const Dictionary &schema_def, const Ref<Schema> &schema, RuleCompileResult &result) {
-	// minItems
-	if (schema_def.has("minItems")) {
-		Variant min_items_var = schema_def["minItems"];
-		int64_t min_items;
-		if (try_get_non_negative_int(min_items_var, min_items)) {
-			auto selector = std::make_unique<ValueSelector>();
-			auto rule = std::make_unique<MinItemsRule>(min_items);
-			result.rules->add_rule(std::make_unique<SelectorRule>(std::move(selector), std::move(rule)));
-		}
-	}
-
-	// maxItems
-	if (schema_def.has("maxItems")) {
-		Variant max_items_var = schema_def["maxItems"];
-		int64_t max_items;
-		if (try_get_non_negative_int(max_items_var, max_items)) {
-			auto selector = std::make_unique<ValueSelector>();
-			auto rule = std::make_unique<MaxItemsRule>(max_items);
-			result.rules->add_rule(std::make_unique<SelectorRule>(std::move(selector), std::move(rule)));
-		}
-	}
-
-	// uniqueItems
-	if (schema_def.has("uniqueItems")) {
-		Variant unique_items_var = schema_def["uniqueItems"];
-		if (unique_items_var.get_type() == Variant::BOOL && unique_items_var.operator bool()) {
-			auto selector = std::make_unique<ValueSelector>();
-			auto rule = std::make_unique<UniqueItemsRule>();
-			result.rules->add_rule(std::make_unique<SelectorRule>(std::move(selector), std::move(rule)));
-		}
-	}
-
-	// items - validate all array items against the same schema
-	if (schema_def.has("items")) {
-		Variant items_var = schema_def["items"];
-		if (items_var.get_type() == Variant::DICTIONARY) {
-			Ref<Schema> child_schema = schema->get_child("items");
-
-			if (child_schema.is_valid()) {
-				auto items_result = create_rules(child_schema);
-				result.errors.insert(result.errors.end(),
-						items_result.errors.begin(),
-						items_result.errors.end());
-
-				if (items_result.is_valid() && !items_result.rules->is_empty()) {
-					auto selector = std::make_unique<ArrayItemsSelector>();
-					result.rules->add_rule(std::make_unique<SelectorRule>(
-							std::move(selector),
-							std::move(items_result.rules)));
-				}
-			}
 		}
 	}
 }

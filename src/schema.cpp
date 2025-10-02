@@ -41,7 +41,10 @@ void Schema::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_compile_errors"), &Schema::get_compile_errors);
 	ClassDB::bind_method(D_METHOD("get_compile_error_summary"), &Schema::get_compile_error_summary);
 
-	ClassDB::bind_static_method("Schema", D_METHOD("build_schema", "schema_dict"), &Schema::build_schema);
+	ClassDB::bind_static_method("Schema", D_METHOD("build_schema", "schema_dict", "validate_against_meta"), &Schema::build_schema, DEFVAL(false));
+	ClassDB::bind_static_method("Schema", D_METHOD("register_schema", "schema", "id"), &Schema::register_schema, DEFVAL(""));
+	ClassDB::bind_static_method("Schema", D_METHOD("is_schema_registered", "id"), &Schema::is_schema_registered);
+	ClassDB::bind_static_method("Schema", D_METHOD("unregister_schema", "id"), &Schema::unregister_schema);
 
 	BIND_VIRTUAL_METHOD(Schema, _to_string);
 }
@@ -53,16 +56,18 @@ Schema::Schema() {
 	compilation_mutex = Ref<Mutex>(memnew(Mutex));
 }
 
-Schema::Schema(const Dictionary &schema_dict, const Ref<Schema> &p_root_schema, const StringName &p_schema_path) {
+Schema::Schema(const Dictionary &schema_dict, const Ref<Schema> &p_root_schema, const StringName &p_schema_path, const bool validate_against_meta) {
 	schema_type = SchemaType::SCHEMA_OBJECT;
 	schema_path = "";
 	is_compiled = false;
 	compilation_mutex = Ref<Mutex>(memnew(Mutex));
 
-	Ref<SchemaValidationResult> validation_result = MetaSchemaDefinitions::validate_schema_definition(schema_dict);
+	if (validate_against_meta) {
+		Ref<SchemaValidationResult> validation_result = MetaSchemaDefinitions::validate_schema_definition(schema_dict);
 
-	if (validation_result->has_errors()) {
-		UtilityFunctions::print(vformat("Schema(%s) failed validation:\n%s\n", p_schema_path, validation_result->get_errors()), schema_dict);
+		if (validation_result->has_errors()) {
+			UtilityFunctions::push_warning(vformat("Schema(%s) failed validation:\n%s\n", p_schema_path, validation_result->get_errors()), schema_dict);
+		}
 	}
 
 	schema_definition = schema_dict;
@@ -89,13 +94,54 @@ Schema::~Schema() {
 	root_schema.unref();
 }
 
-Ref<Schema> Schema::build_schema(const Dictionary &schema_dict) {
+Ref<Schema> Schema::build_schema(const Dictionary &schema_dict, bool validate_against_meta) {
 	Ref<Schema> schema = memnew(Schema(schema_dict));
 	schema->compile();
 	if (schema->compile_errors.size() > 0) {
-		UtilityFunctions::push_error("Schema.build_schema(", schema_dict, " failed:\n", schema->get_compile_error_summary());
+		UtilityFunctions::push_error("Building schema failed failed:\n", schema->get_compile_error_summary());
 	}
+
+	// Auto-register if $id is present
+	if (schema.is_valid() && !schema->schema_id.is_empty()) {
+		register_schema(schema);
+	}
+
 	return schema;
+}
+
+bool Schema::register_schema(const Ref<Schema> &schema, const StringName &id) {
+	if (!schema.is_valid()) {
+		UtilityFunctions::push_error("Cannot register null schema");
+		return false;
+	}
+
+	// Determine the registration ID
+	StringName registration_id = id;
+
+	if (registration_id.is_empty()) {
+		// Try to extract from schema's $id
+		registration_id = schema->schema_id;
+
+		if (registration_id.is_empty()) {
+			UtilityFunctions::push_error("Schema has no $id and no explicit ID provided for registration");
+			return false;
+		}
+	} else if (!schema->schema_id.is_empty() && schema->schema_id != registration_id) {
+		// Warn if explicit ID conflicts with $id
+		UtilityFunctions::push_warning(vformat(
+				"Registering schema with ID '%s' but schema has $id '%s' - this may cause reference resolution issues",
+				registration_id, schema->schema_id));
+	}
+
+	return SchemaRegistry::get_singleton().register_schema(registration_id, schema);
+}
+
+bool Schema::is_schema_registered(const StringName &id) {
+	return SchemaRegistry::get_singleton().has_schema(id);
+}
+
+bool Schema::unregister_schema(const StringName &id) {
+	return SchemaRegistry::get_singleton().unregister_schema(id);
 }
 
 void Schema::compile() {
@@ -333,8 +379,9 @@ Ref<Schema> Schema::create_schema_child(const Dictionary &child_schema, const St
 void Schema::create_schema_child_if_exists(const Dictionary &dict, const StringName &key) {
 	if (dict.has(key)) {
 		Variant value = dict[key];
-		if (value.get_type() == Variant::DICTIONARY) {
-			Dictionary child_schema = value.operator Dictionary();
+		Variant schema_dict_var = variant_to_schema_dict(value);
+		if (schema_dict_var.get_type() == Variant::DICTIONARY) {
+			Dictionary child_schema = schema_dict_var.operator Dictionary();
 			create_schema_child(child_schema, key);
 		}
 	}

@@ -2,10 +2,10 @@
 
 using namespace godot;
 
-void SchemaRegistry::register_schema(const StringName &id, Ref<Schema> schema) {
+bool SchemaRegistry::register_schema(const StringName &id, Ref<Schema> schema) {
 	if (has_schema(id)) {
 		UtilityFunctions::push_warning(vformat("Schema %s already registered", id));
-		return;
+		return false;
 	}
 
 	registry_mutex->lock();
@@ -15,6 +15,7 @@ void SchemaRegistry::register_schema(const StringName &id, Ref<Schema> schema) {
 #ifdef GODOT_YAML_DEBUG
 	UtilityFunctions::print(vformat("Registered Schema %s", id));
 #endif
+	return true;
 }
 
 bool SchemaRegistry::has_schema(const StringName &id) {
@@ -48,10 +49,10 @@ PackedStringArray SchemaRegistry::get_schema_ids() {
 	return id_list;
 }
 
-void SchemaRegistry::unregister_schema(const StringName &id) {
+bool SchemaRegistry::unregister_schema(const StringName &id) {
 	if (!has_schema(id)) {
 		WARN_PRINT(vformat("Schema %s is not registered", id));
-		return;
+		return false;
 	}
 
 	registry_mutex->lock();
@@ -61,4 +62,6 @@ void SchemaRegistry::unregister_schema(const StringName &id) {
 #ifdef GODOT_SCHEMA_DEBUG
 	UtilityFunctions::print(vformat("Unregistered Schema %s", id));
 #endif
+
+	return true;
 }

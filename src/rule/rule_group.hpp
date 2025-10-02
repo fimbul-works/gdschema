@@ -22,7 +22,7 @@ private:
 
 public:
 	void add_rule(std::shared_ptr<ValidationRule> rule);
-	bool is_empty() const { return rules.empty(); }
+	bool is_empty() const override { return rules.empty(); } // Add override keyword
 	size_t rule_count() const { return rules.size(); }
 
 	bool validate(const Variant &target, ValidationContext &context) const override;

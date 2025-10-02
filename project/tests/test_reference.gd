@@ -492,6 +492,291 @@ func test_json_pointer_escaping() -> void:
 
 	expect(schema.validate(valid_data).is_valid(), "JSON pointer escaping should work correctly")
 
+func test_schema_id_and_ref_resolution() -> void:
+	var schema = Schema.build_schema({
+		"$id": "https://example.com/person.json",
+		"type": "object",
+		"properties": {
+			"name": {"type": "string"},
+			"friend": {"$ref": "#"}  # Should resolve to root
+		}
+	})
+
+	expect(schema.validate({"name": "Alice", "friend": {"name": "Bob"}}).is_valid(), "Recursive reference with $id should work")
+
+func test_register_schema_with_id_field() -> void:
+	var schema = Schema.build_schema({
+		"$id": "http://example.com/test.json",
+		"type": "string"
+	})
+
+	expect(Schema.is_schema_registered("http://example.com/test.json"), "Should be findable by $id")
+
+func test_register_schema_explicit_id() -> void:
+	var schema = Schema.build_schema({"type": "number"})
+
+	expect(Schema.register_schema(schema, "my-number-schema"), "Should register with explicit ID")
+	expect(Schema.is_schema_registered("my-number-schema"), "Should be findable by explicit ID")
+
+func test_register_schema_no_id_fails() -> void:
+	var schema = Schema.build_schema({"type": "boolean"})
+
+	expect(!Schema.register_schema(schema), "Should fail when no $id and no explicit ID")
+
+func test_external_schema_reference() -> void:
+	# Register an address schema
+	var address_schema = Schema.build_schema({
+		"$id": "http://example.com/address.json",
+		"type": "object",
+		"properties": {
+			"street": {"type": "string"},
+			"city": {"type": "string"},
+			"zipcode": {"type": "string", "pattern": "^[0-9]{5}$"}
+		},
+		"required": ["street", "city"]
+	})
+
+	expect(Schema.is_schema_registered("http://example.com/address.json"),
+		"Address schema should auto-register via $id")
+
+	# Create a person schema that references the address schema
+	var person_schema = Schema.build_schema({
+		"type": "object",
+		"properties": {
+			"name": {"type": "string"},
+			"age": {"type": "number"},
+			"address": {"$ref": "http://example.com/address.json"}
+		},
+		"required": ["name"]
+	})
+
+	# Test valid data
+	var valid_person = {
+		"name": "John Doe",
+		"age": 30,
+		"address": {
+			"street": "123 Main St",
+			"city": "Springfield",
+			"zipcode": "12345"
+		}
+	}
+
+	var result = person_schema.validate(valid_person)
+	expect(result.is_valid(), "Valid person with valid address should validate")
+
+	# Test invalid address (missing required city)
+	var invalid_person_missing_city = {
+		"name": "Jane Doe",
+		"address": {
+			"street": "456 Oak Ave"
+		}
+	}
+
+	result = person_schema.validate(invalid_person_missing_city)
+	expect(!result.is_valid(), "Person with invalid address (missing city) should not validate")
+	expect(result.has_errors(), "Should have validation errors")
+
+	# Test invalid address (bad zipcode pattern)
+	var invalid_person_bad_zip = {
+		"name": "Bob Smith",
+		"address": {
+			"street": "789 Pine Rd",
+			"city": "Portland",
+			"zipcode": "ABCDE"  # Should be 5 digits
+		}
+	}
+
+	result = person_schema.validate(invalid_person_bad_zip)
+	expect(!result.is_valid(), "Person with invalid zipcode should not validate")
+
+func test_external_schema_with_fragment() -> void:
+	# Register a schema with definitions
+	var definitions_schema = Schema.build_schema({
+		"$id": "http://example.com/definitions.json",
+		"definitions": {
+			"positiveInteger": {
+				"type": "integer",
+				"minimum": 1
+			},
+			"email": {
+				"type": "string",
+				"pattern": "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"
+			}
+		}
+	})
+
+	# Reference specific definitions from external schema
+	var user_schema = Schema.build_schema({
+		"type": "object",
+		"properties": {
+			"id": {"$ref": "http://example.com/definitions.json#/definitions/positiveInteger"},
+			"email": {"$ref": "http://example.com/definitions.json#/definitions/email"}
+		},
+		"required": ["id", "email"]
+	})
+
+	# Valid data
+	var valid_user = {
+		"id": 42,
+		"email": "user@example.com"
+	}
+
+	var result = user_schema.validate(valid_user)
+	expect(result.is_valid(), "Valid user should validate")
+
+	# Invalid: negative ID
+	var invalid_user_negative_id = {
+		"id": -5,
+		"email": "user@example.com"
+	}
+
+	result = user_schema.validate(invalid_user_negative_id)
+	expect(!result.is_valid(), "Negative ID should not validate")
+
+	# Invalid: bad email format
+	var invalid_user_bad_email = {
+		"id": 42,
+		"email": "not-an-email"
+	}
+
+	result = user_schema.validate(invalid_user_bad_email)
+	expect(!result.is_valid(), "Invalid email should not validate")
+
+func test_multiple_external_references() -> void:
+	# Register multiple schemas
+	var name_schema = Schema.build_schema({
+		"$id": "http://example.com/name.json",
+		"type": "object",
+		"properties": {
+			"first": {"type": "string", "minLength": 1},
+			"last": {"type": "string", "minLength": 1}
+		},
+		"required": ["first", "last"]
+	})
+
+	var contact_schema = Schema.build_schema({
+		"$id": "http://example.com/contact.json",
+		"type": "object",
+		"properties": {
+			"email": {"type": "string"},
+			"phone": {"type": "string"}
+		},
+		"required": ["email"]
+	})
+
+	# Schema that references multiple external schemas
+	var employee_schema = Schema.build_schema({
+		"type": "object",
+		"properties": {
+			"name": {"$ref": "http://example.com/name.json"},
+			"contact": {"$ref": "http://example.com/contact.json"},
+			"department": {"type": "string"}
+		},
+		"required": ["name", "contact"]
+	})
+
+	# Valid employee
+	var valid_employee = {
+		"name": {
+			"first": "Alice",
+			"last": "Johnson"
+		},
+		"contact": {
+			"email": "alice@company.com",
+			"phone": "555-1234"
+		},
+		"department": "Engineering"
+	}
+
+	var result = employee_schema.validate(valid_employee)
+	expect(result.is_valid(), "Valid employee should validate")
+
+	# Invalid: missing last name
+	var invalid_employee = {
+		"name": {
+			"first": "Bob"
+		},
+		"contact": {
+			"email": "bob@company.com"
+		}
+	}
+
+	result = employee_schema.validate(invalid_employee)
+	expect(!result.is_valid(), "Employee with incomplete name should not validate")
+
+func test_recursive_external_reference() -> void:
+	# Tree node schema with recursive reference
+	var tree_node_schema = Schema.build_schema({
+		"$id": "http://example.com/tree-node.json",
+		"type": "object",
+		"properties": {
+			"value": {"type": "number"},
+			"children": {
+				"type": "array",
+				"items": {"$ref": "http://example.com/tree-node.json"}
+			}
+		},
+		"required": ["value"]
+	})
+
+	# Valid tree structure
+	var valid_tree = {
+		"value": 1,
+		"children": [
+			{
+				"value": 2,
+				"children": [
+					{"value": 4},
+					{"value": 5}
+				]
+			},
+			{
+				"value": 3,
+				"children": []
+			}
+		]
+	}
+
+	var result = tree_node_schema.validate(valid_tree)
+	expect(result.is_valid(), "Valid tree structure should validate")
+
+	# Invalid: child missing value
+	var invalid_tree = {
+		"value": 1,
+		"children": [
+			{
+				"children": []  # Missing required 'value'
+			}
+		]
+	}
+
+	result = tree_node_schema.validate(invalid_tree)
+	expect(!result.is_valid(), "Tree with invalid child should not validate")
+
+func test_manual_registration_override() -> void:
+	# Create schema without $id
+	var schema = Schema.build_schema({
+		"type": "object",
+		"properties": {
+			"code": {"type": "string"}
+		}
+	})
+
+	# Manually register with custom ID
+	expect(Schema.register_schema(schema, "custom-id"), "Should register with custom ID")
+	expect(Schema.is_schema_registered("custom-id"), "Should be findable by custom ID")
+
+	# Use it in another schema
+	var using_schema = Schema.build_schema({
+		"type": "object",
+		"properties": {
+			"item": {"$ref": "custom-id"}
+		}
+	})
+
+	var result = using_schema.validate({"item": {"code": "ABC123"}})
+	expect(result.is_valid(), "Should resolve manually registered schema")
+
 func test_reference_error_cases() -> void:
 	# Test various error conditions
 

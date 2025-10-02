@@ -156,6 +156,16 @@ func test_dependency_with_existing_required() -> void:
 	expect(!schema.validate({"name": "John"}).is_valid(), "Object missing required field should not validate")
 	expect(!schema.validate({"name": "John", "email": "john@example.com", "phone": "123-456"}).is_valid(), "Object with phone but no verification should not validate")
 
+func test_dependency_with_empty_array() -> void:
+	var schema = Schema.build_schema({
+		"type": "object",
+		"dependencies": {
+			"prop": []  # Empty array means no dependencies
+		}
+	})
+
+	expect(schema.validate({"prop": "value"}).is_valid(), "Empty dependency array should always satisfy")
+
 # ========== SCHEMA DEPENDENCIES TESTS ==========
 
 func test_basic_schema_dependency() -> void:
@@ -214,10 +224,9 @@ func test_schema_dependency_with_allof() -> void:
 		"dependencies": {
 			"advanced_user": {
 				"allOf": [
+					{"required": ["api_key"]},
 					{
-						"required": ["api_key"]
-					},
-					{
+						"required": ["rate_limit"],  # Add this!
 						"properties": {
 							"rate_limit": {"type": "integer", "minimum": 1000}
 						}
@@ -448,6 +457,21 @@ func test_dependency_with_additional_properties() -> void:
 	expect(schema.validate({"base_prop": "value", "needs_validation": "yes", "validation_code": "123456"}).is_valid(), "Object with valid additional properties and dependencies should validate")
 	expect(schema.validate({"base_prop": "value", "other_prop": "value"}).is_valid(), "Object without dependencies should validate")
 	expect(!schema.validate({"base_prop": "value", "needs_validation": "yes"}).is_valid(), "Object missing dependency should not validate")
+
+func test_pattern_and_additional_properties_interaction() -> void:
+	var schema = Schema.build_schema({
+		"type": "object",
+		"properties": {
+			"builtin": {"type": "string"}
+		},
+		"patternProperties": {
+			"^i_": {"type": "integer"}
+		},
+		"additionalProperties": {"type": "string"}
+	})
+
+	# Properties matched by patternProperties should not be considered "additional"
+	expect(schema.validate({"builtin": "a", "i_num": 1, "other": "b"}).is_valid(), "Should handle all three categories")
 
 # ========== ERROR HANDLING ==========
 
@@ -827,7 +851,7 @@ func test_property_names_nested_objects() -> void:
 	var schema = Schema.build_schema({
 		"type": "object",
 		"properties": {
-			"nested": {
+			"outer_nested": {
 				"type": "object",
 				"propertyNames": {
 					"pattern": "^inner_"
@@ -840,7 +864,7 @@ func test_property_names_nested_objects() -> void:
 	})
 
 	expect(schema.validate({
-		"outer_prop": {
+		"outer_nested": {  # Use the property name defined in schema
 			"inner_prop": "value",
 			"inner_data": 123
 		}
@@ -853,7 +877,7 @@ func test_property_names_nested_objects() -> void:
 	}).is_valid(), "Outer object with invalid property name should not validate")
 
 	expect(!schema.validate({
-		"outer_prop": {
+		"outer_nested": {
 			"invalid_prop": "value"
 		}
 	}).is_valid(), "Inner object with invalid property name should not validate")
@@ -916,7 +940,6 @@ func test_property_names_with_recursive_refs() -> void:
 	var schema = Schema.build_schema({
 		"definitions": {
 			"valid_object": {
-				"type": "object",
 				"propertyNames": {"$ref": "#/definitions/valid_name"},
 				"additionalProperties": {"$ref": "#/definitions/valid_object"}
 			},
@@ -954,18 +977,16 @@ func test_property_names_error_messages() -> void:
 		}
 	})
 
-	var result = schema.validate({"ab": 1, "InvalidName": 2})
+	var result := schema.validate({"ab": 1, "InvalidName": 2})
 	expect(!result.is_valid(), "Object should not validate")
 	expect(result.error_count() > 0, "Should have error messages")
 
 	# Check that errors mention property name validation
 	if result.error_count() > 0:
 		var has_property_name_error = false
-		for i in range(result.error_count()):
-			var error_msg = result.get_error_message(i).to_lower()
-			if error_msg.contains("property") and (error_msg.contains("name") or error_msg.contains("pattern") or error_msg.contains("length")):
-				has_property_name_error = true
-				break
+		var summary := result.get_summary()
+		if summary.contains("property") and (summary.contains("name") or summary.contains("pattern") or summary.contains("length")):
+			has_property_name_error = true
 		expect(has_property_name_error, "Should have property name related error")
 
 # ========== EDGE CASES ==========

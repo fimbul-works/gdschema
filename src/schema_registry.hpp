@@ -35,11 +35,11 @@ public:
 	}
 
 	// Core registry
-	void register_schema(const StringName &id, Ref<Schema> schema);
+	bool register_schema(const StringName &id, Ref<Schema> schema);
 	bool has_schema(const StringName &id);
 	Ref<Schema> get_schema(const StringName &id);
 	PackedStringArray get_schema_ids();
-	void unregister_schema(const StringName &id);
+	bool unregister_schema(const StringName &id);
 };
 
 } //namespace godot

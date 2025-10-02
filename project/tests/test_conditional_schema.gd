@@ -386,17 +386,22 @@ func test_if_condition_errors() -> void:
 		"type": "object",
 		"if": {
 			"properties": {
-				"nonexistent": {"type": "string"}
-			}
+				"trigger": {"type": "string"}
+			},
+			"required": ["trigger"]  # Add this to make if false when missing
 		},
 		"then": {
 			"required": ["required_field"]
 		}
 	})
 
-	# Missing property in if condition should make if evaluate to false
-	expect(schema.validate({}).is_valid(), "Object without if condition property should validate")
+	# Now the if condition is false when trigger is missing
+	expect(schema.validate({}).is_valid(), "Object without trigger should validate")
 	expect(schema.validate({"other": "value"}).is_valid(), "Object with other properties should validate")
+
+	# But if trigger exists, then required_field is needed
+	expect(!schema.validate({"trigger": "yes"}).is_valid(), "Object with trigger but no required_field should not validate")
+	expect(schema.validate({"trigger": "yes", "required_field": "present"}).is_valid(), "Object with both should validate")
 
 func test_invalid_then_else_schemas() -> void:
 	# Test that invalid then/else schemas are caught during compilation

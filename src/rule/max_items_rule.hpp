@@ -24,9 +24,6 @@ public:
 	String get_description() const override {
 		return vformat("maxItems(%d)", max_items);
 	}
-
-private:
-	int64_t get_array_size(const Variant &value) const;
 };
 
 } //namespace godot

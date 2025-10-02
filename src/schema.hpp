@@ -136,10 +136,12 @@ public:
 	 * @param schema_dict The JSON Schema definition
 	 * @param p_root_schema Reference to root schema (for child nodes)
 	 * @param p_schema_path Path from root (for debugging)
+	 * @param validate_against_meta If true, validate against meta-schema
 	 */
 	Schema(const Dictionary &schema_dict,
 			const Ref<Schema> &p_root_schema = nullptr,
-			const StringName &p_schema_path = "");
+			const StringName &p_schema_path = "",
+			const bool validate_against_meta = false);
 
 	/**
 	 * @brief Destructor
@@ -156,7 +158,29 @@ public:
 	 * @param schema_dict The JSON Schema definition
 	 * @return New schema instance
 	 */
-	static Ref<Schema> build_schema(const Dictionary &schema_dict);
+	static Ref<Schema> build_schema(const Dictionary &schema_dict, bool validate_against_meta = false);
+
+	/**
+	 * @brief Registers a schema with a ID for reference resolution
+	 * @param id The schema ID (e.g., "http://example.com/schema.json")
+	 * @param schema The schema instance to register
+	 * @return True if registration succeeded, false if ID already registered
+	 */
+	static bool register_schema(const Ref<Schema> &schema, const StringName &id = "");
+
+	/**
+	 * @brief Checks if a schema is registered for a given ID
+	 * @param id The schema ID to check
+	 * @return True if a schema is registered for the URL, false otherwise
+	 */
+	static bool is_schema_registered(const StringName &id);
+
+	/**
+	 * @brief Unregisters a schema by its ID
+	 * @param id The schema ID to unregister
+	 * @return True if unregistration succeeded, false if ID was not found
+	 */
+	static bool unregister_schema(const StringName &id);
 
 	// ========== Tree Navigation ==========
 

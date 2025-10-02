@@ -12,7 +12,7 @@ std::vector<SelectionTarget> ObjectKeysSelector::select_targets(
 		Array keys = dict.keys();
 		for (int i = 0; i < keys.size(); i++) {
 			String key_str = String(keys[i]);
-			targets.emplace_back(keys[i], "key:" + key_str);
+			targets.emplace_back(keys[i], "propertyName:" + key_str);
 		}
 	}
 

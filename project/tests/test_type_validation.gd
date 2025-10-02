@@ -52,3 +52,16 @@ func test_boolean_type() -> void:
 	expect(schema.validate(false).is_valid(), "False should validate")
 	expect(!schema.validate(1).is_valid(), "Number 1 should not validate as boolean")
 	expect(!schema.validate("true").is_valid(), "String 'true' should not validate as boolean")
+
+func test_boolean_schema_true() -> void:
+	var schema = Schema.build_schema({})  # Validates everything
+
+	expect(schema.validate("anything").is_valid(), "True schema should validate any value")
+	expect(schema.validate(null).is_valid(), "True schema should validate null")
+	expect(schema.validate({"complex": "object"}).is_valid(), "True schema should validate complex data")
+
+func test_boolean_schema_false() -> void:
+	var schema = Schema.build_schema({ "not": {} })  # Validates nothing
+
+	expect(!schema.validate("anything").is_valid(), "False schema should not validate any value")
+	expect(!schema.validate(null).is_valid(), "False schema should not validate null")

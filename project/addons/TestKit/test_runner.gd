@@ -108,7 +108,7 @@ func _run_suite_tests(test_class: TestSuite) -> void:
 
 		# Print failure message if needed
 		if not result.passed:
-			print_rich("[color=red]Failed %s - %s: %s[/color]" % [test_class.name, method_name.substr(5).replace("_", " "), ", ".join(result.errors)])
+			print_rich("[color=red]Failed %s - %s: %s[/color]:\n  " % [test_class.name, method_name.substr(5).replace("_", " "), "\n  ".join(result.errors)])
 
 		# Emit method completed
 		test_method_completed.emit(test_class, method_name, result)

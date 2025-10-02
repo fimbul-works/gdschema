@@ -24,9 +24,6 @@ public:
 	String get_description() const override {
 		return vformat("minItems(%d)", min_items);
 	}
-
-private:
-	int64_t get_array_size(const Variant &value) const;
 };
 
 } //namespace godot

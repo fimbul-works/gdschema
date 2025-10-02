@@ -35,6 +35,12 @@ public:
 	 * @return Description string
 	 */
 	virtual String get_description() const = 0;
+
+	/**
+	 * @brief Checks if this rule is empty (no constraints)
+	 * @return True if rule imposes no constraints (always passes)
+	 */
+	virtual bool is_empty() const { return false; }
 };
 
 } // namespace godot
