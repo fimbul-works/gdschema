@@ -154,7 +154,7 @@ if result.has_errors():
 
 ## License
 
-MIT License - See LICENSE file for details.
+MIT License (see [LICENSE](LICENSE) file for details).
 
 ---
 

@@ -2,11 +2,11 @@
 
 This is the **C++ GDExtension implementation** of the GDSchema plugin. It provides a full [JSON Schema Draft-7](https://json-schema.org/) validation plugin for Godot 4.3 and later.
 
-## 🔄 Version History
+## Version History
 
 - **1.0.0** - Initial public release
 
-## 🚀 Quick Start
+## Quick Start
 
 ```gdscript
 var schema = Schema.build_schema({
