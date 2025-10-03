@@ -23,7 +23,7 @@ def get_library_name(env):
     elif platform in ['linux', 'android']:
         return f'libgdschema.{platform}.{debug_or_release}.{arch}.so'
     elif platform == 'macos':
-        return f"libgdschema.{platform}.{debug_or_release}.framework/gdschema.{platform}.{debug_or_release}"
+        return f'libgdschema.{platform}.{debug_or_release}.{arch}.dylib'
     elif platform == 'ios':
         return f'libgdschema.ios.{debug_or_release}.xcframework'
     else:
