@@ -76,6 +76,11 @@ def setup_build_env(base_env):
     else:
         env.Append(CCFLAGS=[f'-std=c++{cpp_std_version}', '-fexceptions'])
 
+        # macOS-specific deployment target
+        if platform == 'macos':
+            env.Append(CCFLAGS=['-mmacosx-version-min=10.15'])
+            env.Append(LINKFLAGS=['-mmacosx-version-min=10.15'])
+
         if is_debug:
             env.Append(CCFLAGS=['-O0', '-g'])
         else:
