@@ -35,52 +35,64 @@ def setup_build_env(base_env):
 
     platform = env.get('platform', '')
     is_debug = env.get('target', '') != 'template_release'
-    arch = env.get('arch', 'x86_64')  # Default to 64-bit
+    arch = env.get('arch', 'x86_64')
 
-    # Configuration: Which platforms use C++20 vs C++17
-    cpp20_platforms = ['windows'] # Add "linux" and "macos
-
-    # Determine C++ standard based on platform
+    # C++ standard configuration
+    cpp20_platforms = ['windows']  # Add 'linux', 'macos' when ready
     use_cpp20 = platform in cpp20_platforms
     cpp_std_version = '20' if use_cpp20 else '17'
-
-    # Store the C++20 flag in the environment for later reference
     env['USE_CPP20'] = use_cpp20
 
     print(f"Building for {platform} with C++{cpp_std_version}")
 
-    # Platform and release/debug flags
+    # ========== WINDOWS ==========
     if platform == 'windows':
+        # C++ standard and exception handling
         env.Append(CCFLAGS=[f'/std:c++{cpp_std_version}', '/EHsc'])
+
         if use_cpp20:
-            env.Append(CCFLAGS=['/Zc:preprocessor'])  # Better preprocessor for C++20
+            env.Append(CCFLAGS=['/Zc:preprocessor'])
 
+        # Debug vs Release
         if is_debug:
-            env.Append(CCFLAGS=['/Z7'])
+            env.Append(CCFLAGS=['/Z7'])    # Debug info
+            # Don't add /RTC1 - conflicts with optimization and godot-cpp handles this
+        else:
+            env.Append(CCFLAGS=[
+                '/O2',    # Optimize for speed
+                '/Oi',    # Intrinsic functions
+            ])
+            env.Append(CPPDEFINES=['NDEBUG'])
 
-        # Add architecture-specific flags for Windows
+        # Architecture
         if arch == 'x86_32':
             env.Append(LINKFLAGS=['/MACHINE:X86'])
-        else:  # x86_64
+        else:
             env.Append(LINKFLAGS=['/MACHINE:X64'])
 
-        # Ensure import library is generated with proper naming
         env.Append(LINKFLAGS=['/IMPLIB:${TARGET.base}.lib'])
-    else:
-        env.Append(CCFLAGS=[f'-std=c++{cpp_std_version}', '-fexceptions'])
 
-        # Add architecture-specific flags for other platforms
+    # ========== UNIX-LIKE ==========
+    else:
+        env.Append(CCFLAGS=[f'-std=c++{cpp_std_version}'])
+
+        if is_debug:
+            env.Append(CCFLAGS=['-O0', '-g'])
+        else:
+            env.Append(CCFLAGS=['-O3', '-ffast-math'])
+            env.Append(CPPDEFINES=['NDEBUG'])
+
+        # Architecture
         if arch == 'x86_32':
             env.Append(CCFLAGS=['-m32'])
             env.Append(LINKFLAGS=['-m32'])
-        else:  # x86_64
+        elif arch == 'x86_64':
             env.Append(CCFLAGS=['-m64'])
             env.Append(LINKFLAGS=['-m64'])
 
-    # Set debug flag
+    # ========== COMMON ==========
     if is_debug:
         env.Append(CPPDEFINES=['GODOT_VALIDATOR_DEBUG'])
-        # Only enable SFT tests on platforms with C++20 support
         if use_cpp20:
             env.Append(CPPDEFINES=['TESTS_ENABLED'])
 
@@ -148,7 +160,7 @@ def build_config(env, variant_dir):
         # Create a custom install action that uses glob at build time
         def install_windows_files(target, source, env):
             # Convert SCons File objects to strings and use glob to find all related files
-            lib_pattern_str = os.path.join(output_lib_dir, f"{lib_base_name}.*")
+            lib_pattern_str = os.path.join(output_lib_dir, f"{lib_base_name}.dll")
             generated_files = glob.glob(lib_pattern_str)
 
             installed_files = []
