@@ -38,13 +38,15 @@ jobs:
 
           # Linux builds
           - name: 🐧 Linux Debug (x86_64)
-            os: ubuntu-20.04
+            os: ubuntu-latest
+            container: ubuntu:20.04
             platform: linux
             target: template_debug
             arch: x86_64
 
           - name: 🐧 Linux Release (x86_64)
-            os: ubuntu-20.04
+            os: ubuntu-latest
+            container: ubuntu:20.04
             platform: linux
             target: template_release
             arch: x86_64
@@ -88,8 +90,8 @@ jobs:
       - name: Setup Linux dependencies
         if: matrix.platform == 'linux'
         run: |
-          sudo apt-get update
-          sudo apt-get install -y build-essential pkg-config
+          apt-get update
+          apt-get install -y build-essential pkg-config python3 python3-pip git
 
       - name: Cache SCons build
         uses: actions/cache@v4

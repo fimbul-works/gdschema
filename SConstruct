@@ -56,7 +56,6 @@ def setup_build_env(base_env):
         # Debug vs Release
         if is_debug:
             env.Append(CCFLAGS=['/Z7'])    # Debug info
-            # Don't add /RTC1 - conflicts with optimization and godot-cpp handles this
         else:
             env.Append(CCFLAGS=[
                 '/O2',    # Optimize for speed
