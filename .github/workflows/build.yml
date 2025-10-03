@@ -51,13 +51,13 @@ jobs:
 
           # macOS builds
           - name: 🍎 macOS Debug (universal)
-            os: macos-latest
+            os: macos-14
             platform: macos
             target: template_debug
             arch: universal
 
           - name: 🍎 macOS Release (universal)
-            os: macos-latest
+            os: macos-14
             platform: macos
             target: template_release
             arch: universal

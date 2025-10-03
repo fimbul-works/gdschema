@@ -78,7 +78,10 @@ def setup_build_env(base_env):
         # macOS-specific deployment target
         if platform == 'macos':
             env.Append(CCFLAGS=['-mmacosx-version-min=10.15'])
-            env.Append(LINKFLAGS=['-mmacosx-version-min=10.15'])
+            env.Append(LINKFLAGS=[
+                '-mmacosx-version-min=10.15',
+                '-Wl,-undefined,dynamic_lookup'
+            ])
 
         if platform == 'linux':
           env.Append(CCFLAGS=['-fPIC'])
