@@ -97,7 +97,7 @@ def setup_build_env(base_env):
 
     # ========== COMMON ==========
     if is_debug:
-        env.Append(CPPDEFINES=['GODOT_VALIDATOR_DEBUG'])
+        env.Append(CPPDEFINES=['GODOT_SCHEMA_DEBUG'])
         if use_cpp20:
             env.Append(CPPDEFINES=['TESTS_ENABLED'])
 
