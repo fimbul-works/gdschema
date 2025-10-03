@@ -24,8 +24,8 @@ func _ready() -> void:
 	example_selector.add_item("Email Validation", 4)
 
 	# Styles
-	for label in [$VBoxContainer/ButtonPanel/Label, $VBoxContainer/SchemaPanel/VBoxContainer/SchemaLabel, $VBoxContainer/SchemaPanel/VBoxContainer2/DataLabel]:
-		label.add_theme_font_size_override("font_size", 14)
+	for label in [$VBoxContainer/MarginContainer/ButtonPanel/Label, $VBoxContainer/SchemaPanel/VBoxContainer/SchemaLabel, $VBoxContainer/SchemaPanel/VBoxContainer2/DataLabel]:
+		label.add_theme_font_size_override("font_size", 16)
 		label.add_theme_color_override("font_color", Color(0.8, 0.8, 0.8))
 
 	for text_edit in [%SchemaInput, %DataInput]:

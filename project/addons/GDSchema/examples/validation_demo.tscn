@@ -1,7 +1,10 @@
-[gd_scene load_steps=5 format=3 uid="uid://catckgonj3xv7"]
+[gd_scene load_steps=7 format=3 uid="uid://catckgonj3xv7"]
 
 [ext_resource type="Script" path="res://addons/GDSchema/examples/validation_demo.gd" id="1_j64ba"]
 [ext_resource type="FontFile" uid="uid://heiy6687h4b7" path="res://addons/GDSchema/examples/JetBrainMono-Regular.tres" id="2_e7uw0"]
+
+[sub_resource type="FontVariation" id="FontVariation_2xr81"]
+variation_embolden = 0.5
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_jbs6m"]
 content_margin_left = 8.0
@@ -10,6 +13,12 @@ content_margin_right = 8.0
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_ngds4"]
 content_margin_left = 8.0
 content_margin_right = 8.0
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_j7a72"]
+content_margin_left = 8.0
+content_margin_top = 4.0
+content_margin_right = 0.0
+content_margin_bottom = 4.0
 
 [node name="ValidationDemo" type="Control"]
 layout_mode = 3
@@ -29,20 +38,28 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/separation = 10
 
-[node name="ButtonPanel" type="HBoxContainer" parent="VBoxContainer"]
+[node name="MarginContainer" type="MarginContainer" parent="VBoxContainer"]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 4
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 4
+
+[node name="ButtonPanel" type="HBoxContainer" parent="VBoxContainer/MarginContainer"]
 layout_mode = 2
 
-[node name="Label" type="Label" parent="VBoxContainer/ButtonPanel"]
+[node name="Label" type="Label" parent="VBoxContainer/MarginContainer/ButtonPanel"]
 layout_mode = 2
 size_flags_horizontal = 2
+theme_override_fonts/font = SubResource("FontVariation_2xr81")
 text = "🎮 Schema & Data Validator"
 
-[node name="ExampleSelectorButton" type="OptionButton" parent="VBoxContainer/ButtonPanel"]
+[node name="ExampleSelectorButton" type="OptionButton" parent="VBoxContainer/MarginContainer/ButtonPanel"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(200, 0)
 layout_mode = 2
 
-[node name="ValidateButton" type="Button" parent="VBoxContainer/ButtonPanel"]
+[node name="ValidateButton" type="Button" parent="VBoxContainer/MarginContainer/ButtonPanel"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(120, 0)
 layout_mode = 2
@@ -66,8 +83,6 @@ unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_fonts/font = ExtResource("2_e7uw0")
-draw_tabs = true
-draw_spaces = true
 
 [node name="VBoxContainer2" type="VBoxContainer" parent="VBoxContainer/SchemaPanel"]
 layout_mode = 2
@@ -89,6 +104,7 @@ layout_mode = 2
 
 [node name="ScrollContainer" type="ScrollContainer" parent="VBoxContainer/ResultPanel"]
 layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxEmpty_j7a72")
 
 [node name="ResultLabel" type="RichTextLabel" parent="VBoxContainer/ResultPanel/ScrollContainer"]
 unique_name_in_owner = true
