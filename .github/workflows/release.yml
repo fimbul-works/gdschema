@@ -130,5 +130,4 @@ jobs:
             sha256sum -c GDSchema-${{ steps.tag_name.outputs.tag }}.zip.sha256
             ```
 
-            [Documentation](https://github.com/${{ github.repository }}/blob/main/project/addons/GDSchema/README.md) |
-            [Examples](https://github.com/${{ github.repository }}/tree/main/project/addons/GDSchema/examples)
+            [Documentation](https://github.com/${{ github.repository }}/blob/main/project/addons/GDSchema/README.md) | [Examples](https://github.com/${{ github.repository }}/tree/main/project/addons/GDSchema/examples)
