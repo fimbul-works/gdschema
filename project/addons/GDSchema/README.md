@@ -6,7 +6,7 @@ Schemas are compiled into navigable tree structures, supporting `$ref` reference
 
 This extension is designed to integrate seamlessly with other Godot workflows, and more advanced tooling is in development.
 
-**New to JSON Schema in Godot?** Check out the [`examples/`](./addons/GDSchema/examples/) directory for practical usage examples.
+**New to JSON Schema in Godot?** Check out the [`examples/`](examples/) directory for practical usage examples.
 
 ## Version History
 
