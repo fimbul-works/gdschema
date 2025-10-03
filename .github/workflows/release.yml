@@ -82,18 +82,17 @@ jobs:
 
       - name: Package addon
         run: |
-          # Package ONLY the addon folder, not the whole project
-          cd project/addons/GDSchema
-          zip -r ../../../GDSchema-${{ steps.tag_name.outputs.tag }}.zip . \
-            -x '*.gitignore' \
-            -x '*.import' \
-            -x '.DS_Store' \
-            -x '__pycache__/*' \
-            -x '*.pyc' \
-            -x '*.md~' \
-            -x '.git/*' \
-            -x '*.lib' \
-            -x '*.exp'
+          cd project
+          zip -r ../GDSchema-${{ steps.tag_name.outputs.tag }}.zip addons/GDSchema/ \
+            -x 'addons/GDSchema/*.gitignore' \
+            -x 'addons/GDSchema/*.import' \
+            -x 'addons/GDSchema/.DS_Store' \
+            -x 'addons/GDSchema/__pycache__/*' \
+            -x 'addons/GDSchema/*.pyc' \
+            -x 'addons/GDSchema/*.md~' \
+            -x 'addons/GDSchema/.git/*' \
+            -x 'addons/GDSchema/bin/*.lib' \
+            -x 'addons/GDSchema/bin/*.exp'
 
       - name: Create SHA256 checksum
         run: |
