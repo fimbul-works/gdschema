@@ -111,13 +111,12 @@ jobs:
         if: matrix.platform == 'macos'
         shell: bash
         run: |
-          # Ad-hoc sign the framework
-          FRAMEWORK_PATH="${{ env.BIN_PATH }}/libgdschema.macos.${{ matrix.target == 'template_release' && 'release' || 'debug' }}.framework"
-          if [ -d "$FRAMEWORK_PATH" ]; then
-            codesign --force --deep --sign - "$FRAMEWORK_PATH"
-            echo "Signed: $FRAMEWORK_PATH"
+          DYLIB_PATH="${{ env.BIN_PATH }}/libgdschema.macos.${{ matrix.target == 'template_release' && 'release' || 'debug' }}.dylib"
+          if [ -f "$DYLIB_PATH" ]; then
+            codesign --force --sign - --options runtime "$DYLIB_PATH"
+            echo "Signed: $DYLIB_PATH"
           else
-            echo "Warning: Framework not found at $FRAMEWORK_PATH"
+            echo "Warning: Dylib not found at $DYLIB_PATH"
             ls -la ${{ env.BIN_PATH }}/
           fi
 
