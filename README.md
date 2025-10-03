@@ -98,9 +98,8 @@ scons platform=linux target=template_release
 
 - **Windows**: ✅ Prebuilt binaries available for **x86 64-bit** architecture.
 - **Linux**: ✅ Prebuilt binaries available for **x86 64-bit** architecture.
-- **macOS**: ✅ Prebuilt binaries available for **universal** architecture.
-
-📌 **Contributions welcome!** If you can help with testing macOS, open a PR.
+- **macOS**: ⚠️ Prebuilt binaries available for **universal** architecture.
+  - **Note**: Some macOS configurations (particularly newer versions with stricter Gatekeeper policies) may prevent loading of GDExtensions generally, not just this plugin. If the extension fails to load, try building from source or test with other GDExtensions to determine if this is a system-wide issue.
 
 ---
 

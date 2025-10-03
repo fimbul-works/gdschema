@@ -125,6 +125,14 @@ jobs:
             - Linux (x86_64): Debug & Release
             - macOS (Universal): Debug & Release
 
+            ### ⚠️ macOS Users
+            Prebuilt binaries are provided for macOS, but some macOS configurations (particularly on Apple Silicon with recent OS versions) may have security policies that prevent loading *any* unsigned GDExtensions. If you encounter loading errors:
+            - Test with other GDExtensions (FMOD, LimboAI, etc.) to determine if this is system-wide
+            - Consider building from source as an alternative
+            - Check Apple's documentation on Gatekeeper and code signing requirements
+
+            This is not specific to GDSchema but affects GDExtensions generally on certain macOS setups.
+
             ### Verify Download
             ```bash
             sha256sum -c GDSchema-${{ steps.tag_name.outputs.tag }}.zip.sha256
