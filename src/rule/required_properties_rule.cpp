@@ -17,9 +17,7 @@ bool RequiredPropertiesRule::validate(const Variant &target, ValidationContext &
 		StringName prop_name = StringName(required_prop);
 
 		if (!dict.has(prop_name)) {
-			context.add_error(
-					vformat("Required property \"%s\" is missing", required_prop),
-					"required");
+			context.add_error(vformat("Required property \"%s\" is missing", required_prop), "required");
 			all_present = false;
 		}
 	}

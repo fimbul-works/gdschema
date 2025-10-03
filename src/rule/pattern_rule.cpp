@@ -6,8 +6,7 @@
 
 using namespace godot;
 
-PatternRule::PatternRule(const String &pattern) :
-		pattern_string(pattern) {
+PatternRule::PatternRule(const String &pattern) : pattern_string(pattern) {
 	pattern_regex = RegEx::create_from_string(pattern);
 
 	if (!pattern_regex.is_valid()) {
@@ -23,9 +22,7 @@ bool PatternRule::validate(const Variant &target, ValidationContext &context) co
 
 	// Check if regex is valid
 	if (!pattern_regex.is_valid()) {
-		context.add_error(
-				vformat("Invalid regex pattern '%s'", pattern_string),
-				"pattern");
+		context.add_error(vformat("Invalid regex pattern '%s'", pattern_string), "pattern");
 		return false;
 	}
 
@@ -33,10 +30,7 @@ bool PatternRule::validate(const Variant &target, ValidationContext &context) co
 	Ref<RegExMatch> match = pattern_regex->search(str);
 
 	if (!match.is_valid()) {
-		context.add_error(
-				vformat("String '%s' does not match pattern '%s'", str, pattern_string),
-				"pattern",
-				target);
+		context.add_error(vformat("String '%s' does not match pattern '%s'", str, pattern_string), "pattern", target);
 		return false;
 	}
 

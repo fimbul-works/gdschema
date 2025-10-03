@@ -17,10 +17,7 @@ bool MinimumRule::validate(const Variant &target, ValidationContext &context) co
 	}
 
 	if (actual_value < minimum) {
-		context.add_error(
-				vformat("Value %d is less than minimum %d", actual_value, minimum),
-				"minimum",
-				target);
+		context.add_error(vformat("Value %f is less than minimum %f", actual_value, minimum), "minimum", target);
 		return false;
 	}
 

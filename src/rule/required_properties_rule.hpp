@@ -20,8 +20,7 @@ private:
 	std::vector<String> required_props;
 
 public:
-	explicit RequiredPropertiesRule(const std::vector<String> &props) :
-			required_props(props) {}
+	explicit RequiredPropertiesRule(const std::vector<String> &props) : required_props(props) {}
 
 	bool validate(const Variant &target, ValidationContext &context) const override;
 	String get_rule_type() const override { return "required"; }

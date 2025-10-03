@@ -15,12 +15,9 @@ namespace godot {
 class ArrayItemsSelector : public Selector {
 public:
 	std::vector<SelectionTarget> select_targets(
-			const Variant &instance,
-			const ValidationContext &context) const override;
+			const Variant &instance, const ValidationContext &context) const override;
 
-	String get_description() const override {
-		return "array[*]";
-	}
+	String get_description() const override { return "array[*]"; }
 };
 
 } // namespace godot

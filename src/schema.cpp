@@ -41,8 +41,10 @@ void Schema::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_compile_errors"), &Schema::get_compile_errors);
 	ClassDB::bind_method(D_METHOD("get_compile_error_summary"), &Schema::get_compile_error_summary);
 
-	ClassDB::bind_static_method("Schema", D_METHOD("build_schema", "schema_dict", "validate_against_meta"), &Schema::build_schema, DEFVAL(false));
-	ClassDB::bind_static_method("Schema", D_METHOD("register_schema", "schema", "id"), &Schema::register_schema, DEFVAL(""));
+	ClassDB::bind_static_method("Schema", D_METHOD("build_schema", "schema_dict", "validate_against_meta"),
+			&Schema::build_schema, DEFVAL(false));
+	ClassDB::bind_static_method(
+			"Schema", D_METHOD("register_schema", "schema", "id"), &Schema::register_schema, DEFVAL(""));
 	ClassDB::bind_static_method("Schema", D_METHOD("is_schema_registered", "id"), &Schema::is_schema_registered);
 	ClassDB::bind_static_method("Schema", D_METHOD("unregister_schema", "id"), &Schema::unregister_schema);
 
@@ -56,7 +58,8 @@ Schema::Schema() {
 	compilation_mutex = Ref<Mutex>(memnew(Mutex));
 }
 
-Schema::Schema(const Dictionary &schema_dict, const Ref<Schema> &p_root_schema, const StringName &p_schema_path, const bool validate_against_meta) {
+Schema::Schema(const Dictionary &schema_dict, const Ref<Schema> &p_root_schema, const StringName &p_schema_path,
+		const bool validate_against_meta) {
 	schema_type = SchemaType::SCHEMA_OBJECT;
 	schema_path = "";
 	is_compiled = false;
@@ -66,7 +69,9 @@ Schema::Schema(const Dictionary &schema_dict, const Ref<Schema> &p_root_schema, 
 		Ref<SchemaValidationResult> validation_result = MetaSchemaDefinitions::validate_schema_definition(schema_dict);
 
 		if (validation_result->has_errors()) {
-			UtilityFunctions::push_warning(vformat("Schema(%s) failed validation:\n%s\n", p_schema_path, validation_result->get_errors()), schema_dict);
+			UtilityFunctions::push_warning(
+					vformat("Schema(%s) failed validation:\n%s\n", p_schema_path, validation_result->get_errors()),
+					schema_dict);
 		}
 	}
 
@@ -183,8 +188,8 @@ Schema::SchemaType Schema::detect_schema_type(const Dictionary &dict) const {
 	}
 
 	// Check for array-specific keywords
-	if (dict.has("items") || dict.has("minItems") || dict.has("maxItems") ||
-			dict.has("uniqueItems") || dict.has("additionalItems") || dict.has("contains")) {
+	if (dict.has("items") || dict.has("minItems") || dict.has("maxItems") || dict.has("uniqueItems") ||
+			dict.has("additionalItems") || dict.has("contains")) {
 		return SchemaType::SCHEMA_ARRAY;
 	}
 
@@ -196,7 +201,8 @@ Schema::SchemaType Schema::detect_schema_type(const Dictionary &dict) const {
 	}
 
 	// Logical schemas
-	if (dict.has("allOf") || dict.has("anyOf") || dict.has("oneOf") || dict.has("not") || dict.has("if") || dict.has("then") || dict.has("else")) {
+	if (dict.has("allOf") || dict.has("anyOf") || dict.has("oneOf") || dict.has("not") || dict.has("if") ||
+			dict.has("then") || dict.has("else")) {
 		return SchemaType::SCHEMA_LOGICAL;
 	}
 
@@ -324,7 +330,7 @@ void Schema::construct_children(const Dictionary &dict) {
 			if (items_var.get_type() == Variant::ARRAY) {
 				// Array of schemas (tuple validation)
 				Array schemas_array = items_var.operator Array();
-				for (int i = 0; i < schemas_array.size(); i++) {
+				for (int64_t i = 0; i < schemas_array.size(); i++) {
 					Variant schema_item = schemas_array[i];
 					Variant schema_dict_var = variant_to_schema_dict(schema_item);
 					if (schema_dict_var.get_type() == Variant::DICTIONARY) {
@@ -390,7 +396,7 @@ void Schema::create_schema_child_if_exists(const Dictionary &dict, const StringN
 void Schema::create_logical_children(const Dictionary &dict, const StringName &key) {
 	if (dict.has(key)) {
 		Array array = dict[key].operator Array();
-		for (int i = 0; i < array.size(); i++) {
+		for (int64_t i = 0; i < array.size(); i++) {
 			Variant sub_schema_dict_var = variant_to_schema_dict(array[i]);
 			if (sub_schema_dict_var.get_type() == Variant::DICTIONARY) {
 				Dictionary sub_schema_dict = sub_schema_dict_var.operator Dictionary();
@@ -688,8 +694,7 @@ bool Schema::is_valid() const {
 	return valid;
 }
 
-void Schema::set_compilation_result(std::shared_ptr<RuleGroup> compiled_rules,
-		std::vector<SchemaCompileError> errors) {
+void Schema::set_compilation_result(std::shared_ptr<RuleGroup> compiled_rules, std::vector<SchemaCompileError> errors) {
 	compilation_mutex->lock();
 	rules = compiled_rules;
 	compile_errors = std::move(errors);
@@ -724,9 +729,9 @@ String Schema::get_compile_error_summary() {
 		return "";
 	}
 
-	String summary = vformat("Schema compilation failed with %d error(s):\n", (int)compile_errors.size());
+	String summary = vformat("Schema compilation failed with %d error(s):\n", (int64_t)compile_errors.size());
 
-	for (size_t i = 0; i < compile_errors.size(); i++) {
+	for (int64_t i = 0; i < compile_errors.size(); i++) {
 		const auto &error = compile_errors[i];
 
 		summary += vformat("  [%d] ", i + 1);
@@ -749,10 +754,10 @@ String Schema::_to_string() const {
 	String type_str;
 	switch (schema_type) {
 		case SchemaType::SCHEMA_OBJECT:
-			type_str = vformat("object, %d properties", get_child_count());
+			type_str = vformat("object, %d properties", (int64_t)get_child_count());
 			break;
 		case SchemaType::SCHEMA_ARRAY:
-			type_str = vformat("array, %d items", get_item_count());
+			type_str = vformat("array, %d items", (int64_t)get_item_count());
 			break;
 		case SchemaType::SCHEMA_SCALAR:
 			type_str = "scalar";

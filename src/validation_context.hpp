@@ -25,11 +25,7 @@ struct ValidationError {
 	String keyword; // Schema keyword that failed
 	Variant invalid_value; // The actual invalid value
 
-	ValidationError(
-			const String &msg,
-			const String &inst_path = "",
-			const String &sch_path = "",
-			const String &kw = "",
+	ValidationError(const String &msg, const String &inst_path = "", const String &sch_path = "", const String &kw = "",
 			const Variant &value = Variant()) :
 			message(msg), instance_path(inst_path), schema_path(sch_path), keyword(kw), invalid_value(value) {}
 
@@ -63,10 +59,7 @@ public:
 	 * @param inst_path Current instance path
 	 * @param sch_path Current schema path
 	 */
-	ValidationContext(
-			const Schema *schema = nullptr,
-			const String &inst_path = "",
-			const String &sch_path = "") :
+	ValidationContext(const Schema *schema = nullptr, const String &inst_path = "", const String &sch_path = "") :
 			source_schema(schema), instance_path(inst_path), schema_path(sch_path) {}
 
 	/**
@@ -95,9 +88,7 @@ public:
 	 * @param schema_segment Schema path segment
 	 * @return New validation context
 	 */
-	ValidationContext create_child_context(
-			const String &instance_segment,
-			const String &schema_segment = "") const {
+	ValidationContext create_child_context(const String &instance_segment, const String &schema_segment = "") const {
 		String new_inst_path = build_path(instance_path, instance_segment);
 		String new_sch_path = schema_segment.is_empty() ? schema_path : build_path(schema_path, schema_segment);
 		return ValidationContext(source_schema, new_inst_path, new_sch_path);
@@ -109,10 +100,7 @@ public:
 	 * @param keyword Schema keyword that failed (optional)
 	 * @param invalid_value The value that failed validation (optional)
 	 */
-	void add_error(
-			const String &message,
-			const String &keyword = "",
-			const Variant &invalid_value = Variant()) {
+	void add_error(const String &message, const String &keyword = "", const Variant &invalid_value = Variant()) {
 		errors.emplace_back(message, instance_path, schema_path, keyword, invalid_value);
 	}
 
@@ -170,12 +158,12 @@ public:
 			return "Validation successful - no errors";
 		}
 
-		String summary = vformat("Schema validation failed with %d error(s):\n", (int)errors.size());
+		String summary = vformat("Schema validation failed with %d error(s):\n", (int64_t)errors.size());
 
-		for (size_t i = 0; i < errors.size(); i++) {
+		for (int64_t i = 0; i < errors.size(); i++) {
 			const auto &error = errors[i];
 
-			summary += vformat("  [%d] ", (int)i + 1);
+			summary += vformat("  [%d] ", i + 1);
 
 			if (!error.instance_path.is_empty()) {
 				summary += vformat("At '%s': ", error.instance_path);

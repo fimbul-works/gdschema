@@ -21,14 +21,11 @@ namespace godot {
 class ValueSelector : public Selector {
 public:
 	std::vector<SelectionTarget> select_targets(
-			const Variant &instance,
-			const ValidationContext &context) const override {
+			const Variant &instance, const ValidationContext &context) const override {
 		return { SelectionTarget(instance) };
 	}
 
-	String get_description() const override {
-		return "value";
-	}
+	String get_description() const override { return "value"; }
 };
 
 } // namespace godot

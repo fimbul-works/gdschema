@@ -26,13 +26,8 @@ struct YAMLValidationError {
 	String schema_path; // Schema location: "/properties/user/properties/name/minLength"
 	Variant invalid_value; // The actual value that failed validation
 
-	YAMLValidationError(
-			const String &msg,
-			const String &instance_path,
-			const Array &path_segments,
-			const String &constraint_type,
-			const String &schema_location,
-			const Variant &value) :
+	YAMLValidationError(const String &msg, const String &instance_path, const Array &path_segments,
+			const String &constraint_type, const String &schema_location, const Variant &value) :
 			message(msg),
 			path(instance_path),
 			path_array(path_segments),
@@ -77,8 +72,7 @@ public:
 	/**
 	 * @brief Default constructor - creates successful result
 	 */
-	SchemaValidationResult() :
-			validation_succeeded(true) {}
+	SchemaValidationResult() : validation_succeeded(true) {}
 
 	/**
 	 * @brief Creates result from internal ValidationContext
@@ -99,9 +93,7 @@ public:
 	 * @brief Checks if validation succeeded
 	 * @return True if no errors occurred
 	 */
-	bool is_valid() const {
-		return validation_succeeded && errors.empty();
-	}
+	bool is_valid() const { return validation_succeeded && errors.empty(); }
 
 	/**
 	 * @brief Checks if there are validation errors

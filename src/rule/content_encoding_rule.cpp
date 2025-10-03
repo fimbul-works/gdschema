@@ -53,8 +53,8 @@ bool ContentEncodingRule::validate_base64(const String &str, ValidationContext &
 		} else if (padding_started) {
 			context.add_error("Base64 content has characters after padding", "contentEncoding", str);
 			return false;
-		} else if (!((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') ||
-						   (c >= '0' && c <= '9') || c == '+' || c == '/')) {
+		} else if (!((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '+' ||
+						   c == '/')) {
 			context.add_error(vformat("Base64 content contains invalid character: '%c'", c), "contentEncoding", str);
 			return false;
 		}
@@ -77,8 +77,7 @@ bool ContentEncodingRule::validate_base64url(const String &str, ValidationContex
 	// Base64url uses - and _ instead of + and /, and no padding
 	for (int i = 0; i < str.length(); i++) {
 		char c = str[i];
-		if (!((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') ||
-					(c >= '0' && c <= '9') || c == '-' || c == '_')) {
+		if (!((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '-' || c == '_')) {
 			context.add_error(vformat("Base64url content contains invalid character: '%c'", c), "contentEncoding", str);
 			return false;
 		}

@@ -14,15 +14,12 @@ private:
 	double multiple_of;
 
 public:
-	explicit MultipleOfRule(double multiplier) :
-			multiple_of(multiplier) {}
+	explicit MultipleOfRule(double multiplier) : multiple_of(multiplier) {}
 
 	bool validate(const Variant &target, ValidationContext &context) const override;
 
 	String get_rule_type() const override { return "multipleOf"; }
-	String get_description() const override {
-		return vformat("multipleOf(%f)", multiple_of);
-	}
+	String get_description() const override { return vformat("multipleOf(%f)", multiple_of); }
 };
 
 } //namespace godot

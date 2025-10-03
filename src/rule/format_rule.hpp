@@ -18,8 +18,7 @@ private:
 	String format;
 
 public:
-	explicit FormatRule(const String &value) :
-			format(value) {}
+	explicit FormatRule(const String &value) : format(value) {}
 
 	bool validate(const Variant &target, ValidationContext &context) const override;
 	String get_rule_type() const override { return "format"; }

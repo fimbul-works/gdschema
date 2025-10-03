@@ -14,9 +14,7 @@ bool MaxLengthRule::validate(const Variant &target, ValidationContext &context) 
 
 	if (actual_length > max_length) {
 		context.add_error(
-				vformat("String length %d exceeds maximum %d", actual_length, max_length),
-				"maxLength",
-				target);
+				vformat("String length %d exceeds maximum %d", actual_length, max_length), "maxLength", target);
 		return false;
 	}
 

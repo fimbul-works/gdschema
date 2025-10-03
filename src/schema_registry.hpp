@@ -21,9 +21,7 @@ private:
 	 */
 	Ref<Mutex> registry_mutex;
 
-	SchemaRegistry() {
-		registry_mutex = Ref<Mutex>(memnew(Mutex));
-	}
+	SchemaRegistry() { registry_mutex = Ref<Mutex>(memnew(Mutex)); }
 
 	SchemaRegistry(SchemaRegistry const &); // Don't Implement
 	void operator=(SchemaRegistry const &); // Don't implement

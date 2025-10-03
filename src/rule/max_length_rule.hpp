@@ -18,14 +18,11 @@ private:
 	int64_t max_length;
 
 public:
-	explicit MaxLengthRule(int64_t max) :
-			max_length(max) {}
+	explicit MaxLengthRule(int64_t max) : max_length(max) {}
 
 	bool validate(const Variant &target, ValidationContext &context) const override;
 	String get_rule_type() const override { return "maxLength"; }
-	String get_description() const override {
-		return vformat("maxLength(%d)", max_length);
-	}
+	String get_description() const override { return vformat("maxLength(%d)", max_length); }
 };
 
 } // namespace godot

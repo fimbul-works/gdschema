@@ -53,13 +53,8 @@ Ref<SchemaValidationResult> SchemaValidationResult::from_context(const Validatio
 			}
 		}
 
-		YAMLValidationError error(
-				ctx_error.message,
-				ctx_error.instance_path,
-				path_segments,
-				ctx_error.keyword,
-				ctx_error.schema_path,
-				ctx_error.invalid_value);
+		YAMLValidationError error(ctx_error.message, ctx_error.instance_path, path_segments, ctx_error.keyword,
+				ctx_error.schema_path, ctx_error.invalid_value);
 
 		result->add_error(error);
 	}
@@ -127,9 +122,9 @@ String SchemaValidationResult::get_summary() const {
 		return "Validation successful - no errors";
 	}
 
-	String summary = vformat("Schema validation failed with %d error(s):\n", (int)errors.size());
+	String summary = vformat("Schema validation failed with %d error(s):\n", (int64_t)errors.size());
 
-	for (size_t i = 0; i < errors.size(); i++) {
+	for (int64_t i = 0; i < errors.size(); i++) {
 		const auto &error = errors[i];
 
 		summary += vformat("  [%d] ", i + 1);
@@ -154,9 +149,9 @@ String SchemaValidationResult::get_summary() const {
 
 String SchemaValidationResult::get_brief_summary() const {
 	if (is_valid()) {
-		return "Validation passed";
+		return "Validation successful";
 	}
-	return vformat("Validation failed: %d error(s)", (int)errors.size());
+	return vformat("Validation failed: %d error(s)", (int64_t)errors.size());
 }
 
 Array SchemaValidationResult::get_all_error_paths() const {

@@ -24,10 +24,7 @@ bool MultipleOfRule::validate(const Variant &target, ValidationContext &context)
 
 	// Check if the remainder is close to zero (accounting for floating point precision)
 	if (abs(remainder) > 1e-10 && abs(remainder - multiple_of) > 1e-10) {
-		context.add_error(
-				vformat("Value %f is not a multiple of %f", actual_value, multiple_of),
-				"multipleOf",
-				target);
+		context.add_error(vformat("Value %f is not a multiple of %f", actual_value, multiple_of), "multipleOf", target);
 		return false;
 	}
 

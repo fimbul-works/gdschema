@@ -20,8 +20,7 @@ struct SchemaCompileError {
 			schema_path_parts(path_parts), message(msg) {}
 
 	// Convenience constructor for single path part
-	SchemaCompileError(const String &msg, const String &single_path_part) :
-			message(msg) {
+	SchemaCompileError(const String &msg, const String &single_path_part) : message(msg) {
 		if (!single_path_part.is_empty()) {
 			schema_path_parts.push_back(single_path_part);
 		}

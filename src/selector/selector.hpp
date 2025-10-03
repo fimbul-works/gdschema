@@ -22,8 +22,7 @@ struct SelectionTarget {
 	Variant value;
 	String path_segment; // For building instance paths
 
-	SelectionTarget(const Variant &val, const String &segment = "") :
-			value(val), path_segment(segment) {}
+	SelectionTarget(const Variant &val, const String &segment = "") : value(val), path_segment(segment) {}
 };
 
 /**
@@ -41,8 +40,7 @@ public:
 	 * @return Array of SelectionTarget structs
 	 */
 	virtual std::vector<SelectionTarget> select_targets(
-			const Variant &instance,
-			const ValidationContext &context) const = 0;
+			const Variant &instance, const ValidationContext &context) const = 0;
 
 	/**
 	 * @brief Gets a description of this selector for debugging

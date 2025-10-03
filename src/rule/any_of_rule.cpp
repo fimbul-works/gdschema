@@ -19,7 +19,7 @@ bool AnyOfRule::validate(const Variant &target, ValidationContext &context) cons
 	bool any_passed = false;
 	std::vector<ValidationContext> failed_contexts;
 
-	for (size_t i = 0; i < sub_rules.size(); i++) {
+	for (int64_t i = 0; i < sub_rules.size(); i++) {
 		ValidationContext sub_context = context.create_child_schema(vformat("anyOf/%d", i));
 
 		if (sub_rules[i]->validate(target, sub_context)) {
@@ -31,9 +31,7 @@ bool AnyOfRule::validate(const Variant &target, ValidationContext &context) cons
 	}
 
 	if (!any_passed) {
-		context.add_error(
-				vformat("Value failed all %d anyOf schemas", (int)sub_rules.size()),
-				"anyOf");
+		context.add_error(vformat("Value failed all %d anyOf schemas", (int64_t)sub_rules.size()), "anyOf");
 
 		// Optionally merge some failed context errors for debugging
 		// (but don't overwhelm with all of them)

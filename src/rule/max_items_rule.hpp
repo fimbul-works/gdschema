@@ -15,15 +15,12 @@ private:
 	int64_t max_items;
 
 public:
-	explicit MaxItemsRule(int64_t max) :
-			max_items(max) {}
+	explicit MaxItemsRule(int64_t max) : max_items(max) {}
 
 	bool validate(const Variant &target, ValidationContext &context) const override;
 
 	String get_rule_type() const override { return "maxItems"; }
-	String get_description() const override {
-		return vformat("maxItems(%d)", max_items);
-	}
+	String get_description() const override { return vformat("maxItems(%d)", max_items); }
 };
 
 } //namespace godot

@@ -138,18 +138,15 @@ public:
 	 * @param p_schema_path Path from root (for debugging)
 	 * @param validate_against_meta If true, validate against meta-schema
 	 */
-	Schema(const Dictionary &schema_dict,
-			const Ref<Schema> &p_root_schema = nullptr,
-			const StringName &p_schema_path = "",
-			const bool validate_against_meta = false);
+	Schema(const Dictionary &schema_dict, const Ref<Schema> &p_root_schema = nullptr,
+			const StringName &p_schema_path = "", const bool validate_against_meta = false);
 
 	/**
 	 * @brief Destructor
 	 */
 	virtual ~Schema();
 
-	void set_compilation_result(std::shared_ptr<RuleGroup> compiled_rules,
-			std::vector<SchemaCompileError> errors);
+	void set_compilation_result(std::shared_ptr<RuleGroup> compiled_rules, std::vector<SchemaCompileError> errors);
 
 	// ========== Factory Methods ==========
 
@@ -269,17 +266,13 @@ public:
 	 * @brief Checks if this node has properties
 	 * @return True if any properties exist
 	 */
-	bool has_children() const {
-		return !children.empty();
-	}
+	bool has_children() const { return !children.empty(); }
 
 	/**
 	 * @brief Gets the number of properties
 	 * @return Property count
 	 */
-	int get_child_count() const {
-		return children.size();
-	}
+	int get_child_count() const { return children.size(); }
 
 	/**
 	 * @brief Gets all property keys
@@ -292,9 +285,7 @@ public:
 	 * @param key The property key to check
 	 * @return True if property exists
 	 */
-	bool has_child(const StringName &key) const {
-		return children.find(key) != children.end();
-	}
+	bool has_child(const StringName &key) const { return children.find(key) != children.end(); }
 
 	/**
 	 * @brief Gets a child property by key
@@ -333,9 +324,7 @@ public:
 	 * @brief Gets the number of array items (for array schemas)
 	 * @return Item count
 	 */
-	int get_item_count() const {
-		return schema_type == SCHEMA_ARRAY ? item_schemas.size() : 0;
-	}
+	int get_item_count() const { return schema_type == SCHEMA_ARRAY ? item_schemas.size() : 0; }
 
 	// ========== General Navigation ==========
 

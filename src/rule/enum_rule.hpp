@@ -18,8 +18,7 @@ private:
 	Array allowed_values;
 
 public:
-	explicit EnumRule(const Array &values) :
-			allowed_values(values) {}
+	explicit EnumRule(const Array &values) : allowed_values(values) {}
 
 	bool validate(const Variant &target, ValidationContext &context) const override;
 	String get_rule_type() const override { return "enum"; }

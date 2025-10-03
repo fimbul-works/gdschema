@@ -15,14 +15,11 @@ private:
 	int64_t max_properties;
 
 public:
-	explicit MaxPropertiesRule(int64_t max) :
-			max_properties(max) {}
+	explicit MaxPropertiesRule(int64_t max) : max_properties(max) {}
 
 	bool validate(const Variant &target, ValidationContext &context) const override;
 	String get_rule_type() const override { return "maxProperties"; }
-	String get_description() const override {
-		return vformat("maxProperties(%d)", max_properties);
-	}
+	String get_description() const override { return vformat("maxProperties(%d)", max_properties); }
 };
 
 } // namespace godot

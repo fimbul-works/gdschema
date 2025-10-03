@@ -17,9 +17,7 @@ public:
 	bool validate(const Variant &target, ValidationContext &context) const override;
 
 	String get_rule_type() const override { return "uniqueItems"; }
-	String get_description() const override {
-		return "uniqueItems";
-	}
+	String get_description() const override { return "uniqueItems"; }
 };
 
 } //namespace godot

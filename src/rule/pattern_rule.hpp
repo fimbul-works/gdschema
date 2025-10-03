@@ -24,9 +24,7 @@ public:
 
 	bool validate(const Variant &target, ValidationContext &context) const override;
 	String get_rule_type() const override { return "pattern"; }
-	String get_description() const override {
-		return vformat("pattern(/%s/)", pattern_string);
-	}
+	String get_description() const override { return vformat("pattern(/%s/)", pattern_string); }
 };
 
 } // namespace godot

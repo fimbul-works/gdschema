@@ -19,17 +19,13 @@ private:
 
 public:
 	AdditionalPropertiesSelector(
-			const std::vector<StringName> &defined_props,
-			const std::vector<String> &pattern_props) :
+			const std::vector<StringName> &defined_props, const std::vector<String> &pattern_props) :
 			defined_properties(defined_props), pattern_properties(pattern_props) {}
 
 	std::vector<SelectionTarget> select_targets(
-			const Variant &instance,
-			const ValidationContext &context) const override;
+			const Variant &instance, const ValidationContext &context) const override;
 
-	String get_description() const override {
-		return "additionalProperties";
-	}
+	String get_description() const override { return "additionalProperties"; }
 };
 
 } // namespace godot

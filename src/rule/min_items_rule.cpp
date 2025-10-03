@@ -10,10 +10,7 @@ bool MinItemsRule::validate(const Variant &target, ValidationContext &context) c
 	}
 
 	if (actual_size < min_items) {
-		context.add_error(
-				vformat("Array has %d items but minimum is %d", actual_size, min_items),
-				"minItems",
-				target);
+		context.add_error(vformat("Array has %d items but minimum is %d", actual_size, min_items), "minItems", target);
 		return false;
 	}
 

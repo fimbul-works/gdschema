@@ -18,14 +18,11 @@ private:
 	double maximum;
 
 public:
-	explicit MaximumRule(double max) :
-			maximum(max) {}
+	explicit MaximumRule(double max) : maximum(max) {}
 
 	bool validate(const Variant &target, ValidationContext &context) const override;
 	String get_rule_type() const override { return "maximum"; }
-	String get_description() const override {
-		return vformat("maximum(%d)", maximum);
-	}
+	String get_description() const override { return vformat("maximum(%f)", maximum); }
 };
 
 } // namespace godot

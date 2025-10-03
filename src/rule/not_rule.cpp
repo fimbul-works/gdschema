@@ -3,8 +3,7 @@
 
 using namespace godot;
 
-NotRule::NotRule(std::shared_ptr<ValidationRule> rule) :
-		sub_rule(rule) {}
+NotRule::NotRule(std::shared_ptr<ValidationRule> rule) : sub_rule(rule) {}
 
 bool NotRule::validate(const Variant &target, ValidationContext &context) const {
 	if (!sub_rule) {
@@ -21,8 +20,7 @@ bool NotRule::validate(const Variant &target, ValidationContext &context) const 
 	if (sub_rule_passed) {
 		// Sub-rule passed, but we need it to fail for NOT to succeed
 		context.add_error(
-				vformat("Value matched the negated schema when it should not have: %s",
-						sub_rule->get_description()),
+				vformat("Value matched the negated schema when it should not have: %s", sub_rule->get_description()),
 				"not");
 		return false;
 	}

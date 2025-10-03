@@ -14,14 +14,11 @@ private:
 	double exclusive_maximum;
 
 public:
-	explicit ExclusiveMaximumRule(double max) :
-			exclusive_maximum(max) {}
+	explicit ExclusiveMaximumRule(double max) : exclusive_maximum(max) {}
 
 	bool validate(const Variant &target, ValidationContext &context) const override;
 	String get_rule_type() const override { return "exclusiveMaximum"; }
-	String get_description() const override {
-		return vformat("exclusiveMaximum(%d)", exclusive_maximum);
-	}
+	String get_description() const override { return vformat("exclusiveMaximum(%f)", exclusive_maximum); }
 };
 
 } //namespace godot

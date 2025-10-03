@@ -11,7 +11,7 @@ bool UniqueItemsRule::validate(const Variant &target, ValidationContext &context
 	Array arr = target.operator Array();
 	std::vector<Variant> seen_items;
 
-	for (int i = 0; i < arr.size(); i++) {
+	for (int64_t i = 0; i < arr.size(); i++) {
 		Variant current_item = arr[i];
 
 		// Check if we've seen this item before
@@ -20,11 +20,10 @@ bool UniqueItemsRule::validate(const Variant &target, ValidationContext &context
 				continue;
 			}
 
-			if (current_item == seen_item || (should_hash_variant(current_item) && current_item.hash_compare(seen_item))) {
-				context.add_error(
-						vformat("Array contains duplicate item at index %d: %s", i, current_item.stringify()),
-						"uniqueItems",
-						target);
+			if (current_item == seen_item ||
+					(should_hash_variant(current_item) && current_item.hash_compare(seen_item))) {
+				context.add_error(vformat("Array contains duplicate item at index %d: %s", i, current_item.stringify()),
+						"uniqueItems", target);
 				return false;
 			}
 		}

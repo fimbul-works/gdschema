@@ -45,9 +45,7 @@ public:
 
 	String get_rule_type() const override { return "ref"; }
 
-	String get_description() const override {
-		return vformat("$ref(%s)", reference_uri);
-	}
+	String get_description() const override { return vformat("$ref(%s)", reference_uri); }
 };
 
 } // namespace godot

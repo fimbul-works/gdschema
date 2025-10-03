@@ -17,14 +17,11 @@ bool DependencyRule::validate(const Variant &target, ValidationContext &context)
 	if (is_schema_dependency) {
 		// Schema dependency: validate entire object against dependency schema
 		if (!dependency_schema) {
-			context.add_error(
-					vformat("Schema dependency for '%s' is not defined", trigger_property),
-					"dependencies");
+			context.add_error(vformat("Schema dependency for '%s' is not defined", trigger_property), "dependencies");
 			return false;
 		}
 
-		ValidationContext dep_context = context.create_child_schema(
-				vformat("dependencies/%s", trigger_property));
+		ValidationContext dep_context = context.create_child_schema(vformat("dependencies/%s", trigger_property));
 
 		bool result = dependency_schema->validate(target, dep_context);
 		context.merge_errors(dep_context);
@@ -38,8 +35,7 @@ bool DependencyRule::validate(const Variant &target, ValidationContext &context)
 			StringName prop_name = StringName(required_prop);
 			if (!dict.has(prop_name)) {
 				context.add_error(
-						vformat("Property '%s' is required when '%s' is present",
-								required_prop, trigger_property),
+						vformat("Property '%s' is required when '%s' is present", required_prop, trigger_property),
 						"dependencies");
 				all_present = false;
 			}

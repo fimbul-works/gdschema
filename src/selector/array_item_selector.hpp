@@ -14,19 +14,15 @@ namespace godot {
  */
 class ArrayItemSelector : public Selector {
 private:
-	int index;
+	int64_t index;
 
 public:
-	explicit ArrayItemSelector(int idx) :
-			index(idx) {}
+	explicit ArrayItemSelector(int idx) : index(idx) {}
 
 	std::vector<SelectionTarget> select_targets(
-			const Variant &instance,
-			const ValidationContext &context) const override;
+			const Variant &instance, const ValidationContext &context) const override;
 
-	String get_description() const override {
-		return vformat("array[%d]", index);
-	}
+	String get_description() const override { return vformat("array[%d]", index); }
 };
 
 } // namespace godot

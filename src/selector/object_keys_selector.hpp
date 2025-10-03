@@ -15,12 +15,9 @@ namespace godot {
 class ObjectKeysSelector : public Selector {
 public:
 	std::vector<SelectionTarget> select_targets(
-			const Variant &instance,
-			const ValidationContext &context) const override;
+			const Variant &instance, const ValidationContext &context) const override;
 
-	String get_description() const override {
-		return "object.keys()";
-	}
+	String get_description() const override { return "object.keys()"; }
 };
 
 } // namespace godot

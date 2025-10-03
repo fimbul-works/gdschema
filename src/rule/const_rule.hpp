@@ -18,14 +18,11 @@ private:
 	Variant constant_value;
 
 public:
-	explicit ConstRule(const Variant &value) :
-			constant_value(value) {}
+	explicit ConstRule(const Variant &value) : constant_value(value) {}
 
 	bool validate(const Variant &target, ValidationContext &context) const override;
 	String get_rule_type() const override { return "const"; }
-	String get_description() const override {
-		return vformat("const(%s)", constant_value.stringify());
-	}
+	String get_description() const override { return vformat("const(%s)", constant_value.stringify()); }
 };
 
 } // namespace godot

@@ -22,9 +22,7 @@ private:
 	std::shared_ptr<ValidationRule> else_rule;
 
 public:
-	ConditionalRule(
-			std::shared_ptr<ValidationRule> if_schema,
-			std::shared_ptr<ValidationRule> then_schema = nullptr,
+	ConditionalRule(std::shared_ptr<ValidationRule> if_schema, std::shared_ptr<ValidationRule> then_schema = nullptr,
 			std::shared_ptr<ValidationRule> else_schema = nullptr) :
 			if_rule(if_schema), then_rule(then_schema), else_rule(else_schema) {}
 

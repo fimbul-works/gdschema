@@ -12,9 +12,7 @@ thread_local int validation_depth = 0;
 const int MAX_VALIDATION_DEPTH = 50; // Reasonable limit
 
 RefRule::RefRule(const String &ref_uri, const Schema *schema) :
-		reference_uri(ref_uri),
-		source_schema(schema),
-		resolution_attempted(false) {}
+		reference_uri(ref_uri), source_schema(schema), resolution_attempted(false) {}
 
 bool RefRule::validate(const Variant &target, ValidationContext &context) const {
 	// Simple depth-based recursion protection

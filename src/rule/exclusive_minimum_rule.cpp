@@ -15,10 +15,8 @@ bool ExclusiveMinimumRule::validate(const Variant &target, ValidationContext &co
 	}
 
 	if (actual_value <= exclusive_minimum) {
-		context.add_error(
-				vformat("Value %d is not greater than exclusive minimum %d", actual_value, exclusive_minimum),
-				"exclusiveMinimum",
-				target);
+		context.add_error(vformat("Value %f is not greater than exclusive minimum %f", actual_value, exclusive_minimum),
+				"exclusiveMinimum", target);
 		return false;
 	}
 

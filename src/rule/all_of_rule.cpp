@@ -13,7 +13,7 @@ bool AllOfRule::validate(const Variant &target, ValidationContext &context) cons
 	bool all_valid = true;
 
 	// All sub-rules must pass
-	for (size_t i = 0; i < sub_rules.size(); i++) {
+	for (int64_t i = 0; i < sub_rules.size(); i++) {
 		ValidationContext sub_context = context.create_child_schema(vformat("allOf/%d", i));
 
 		if (!sub_rules[i]->validate(target, sub_context)) {
@@ -26,9 +26,8 @@ bool AllOfRule::validate(const Variant &target, ValidationContext &context) cons
 	}
 
 	if (!all_valid) {
-		context.add_error(
-				vformat("Value failed %d out of %d allOf schemas",
-						sub_rules.size(), sub_rules.size()),
+		context.add_error(vformat("Value failed %d out of %d allOf schemas", (int64_t)sub_rules.size(),
+								  (int64_t)sub_rules.size()),
 				"allOf");
 	}
 

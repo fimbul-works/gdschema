@@ -17,10 +17,7 @@ bool MaximumRule::validate(const Variant &target, ValidationContext &context) co
 	}
 
 	if (actual_value > maximum) {
-		context.add_error(
-				vformat("Value %d exceeds maximum %d", actual_value, maximum),
-				"maximum",
-				target);
+		context.add_error(vformat("Value %f exceeds maximum %f", actual_value, maximum), "maximum", target);
 		return false;
 	}
 

@@ -14,19 +14,15 @@ namespace godot {
  */
 class AdditionalItemsSelector : public Selector {
 private:
-	int tuple_length; // Number of items in the tuple schema
+	int64_t tuple_length; // Number of items in the tuple schema
 
 public:
-	explicit AdditionalItemsSelector(int tuple_len) :
-			tuple_length(tuple_len) {}
+	explicit AdditionalItemsSelector(int tuple_len) : tuple_length(tuple_len) {}
 
 	std::vector<SelectionTarget> select_targets(
-			const Variant &instance,
-			const ValidationContext &context) const override;
+			const Variant &instance, const ValidationContext &context) const override;
 
-	String get_description() const override {
-		return vformat("array[%d:]", tuple_length);
-	}
+	String get_description() const override { return vformat("array[%d:]", tuple_length); }
 };
 
 } // namespace godot

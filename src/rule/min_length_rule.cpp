@@ -14,9 +14,7 @@ bool MinLengthRule::validate(const Variant &target, ValidationContext &context) 
 
 	if (actual_length < min_length) {
 		context.add_error(
-				vformat("String length %d is less than minimum %d", actual_length, min_length),
-				"minLength",
-				target);
+				vformat("String length %d is less than minimum %d", actual_length, min_length), "minLength", target);
 		return false;
 	}
 

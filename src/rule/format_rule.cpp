@@ -24,7 +24,8 @@ bool FormatRule::validate(const Variant &target, ValidationContext &context) con
 	} else if (format == "email") {
 		return validate_email(str, context);
 	} else if (format == "hostname") {
-		const String hostname_pattern = "^[a-zA-Z0-9]([a-zA-Z0-9\\-]{0,61}[a-zA-Z0-9])?(\\.[a-zA-Z0-9]([a-zA-Z0-9\\-]{0,61}[a-zA-Z0-9])?)*$";
+		const String hostname_pattern =
+				"^[a-zA-Z0-9]([a-zA-Z0-9\\-]{0,61}[a-zA-Z0-9])?(\\.[a-zA-Z0-9]([a-zA-Z0-9\\-]{0,61}[a-zA-Z0-9])?)*$";
 		return validate_regex(hostname_pattern, str, context);
 	} else if (format == "ipv4") {
 		return validate_ipv4(str, context);
@@ -119,9 +120,9 @@ bool FormatRule::validate_date(const String &str, ValidationContext &context) co
 		return false;
 	}
 
-	int year = groups[1].to_int();
-	int month = groups[2].to_int();
-	int day = groups[3].to_int();
+	int64_t year = groups[1].to_int();
+	int64_t month = groups[2].to_int();
+	int64_t day = groups[3].to_int();
 
 	// Validate ranges
 	if (month < 1 || month > 12) {
@@ -135,9 +136,9 @@ bool FormatRule::validate_date(const String &str, ValidationContext &context) co
 	}
 
 	// Days per month validation
-	const int days_in_month[] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
+	const int64_t days_in_month[] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
 	bool is_leap = (year % 4 == 0) && ((year % 100 != 0) || (year % 400 == 0));
-	int max_day = days_in_month[month - 1];
+	int64_t max_day = days_in_month[month - 1];
 	if (month == 2 && is_leap) {
 		max_day = 29;
 	}
@@ -152,7 +153,8 @@ bool FormatRule::validate_date(const String &str, ValidationContext &context) co
 
 bool FormatRule::validate_time(const String &str, ValidationContext &context) const {
 	// RFC 3339 time format: HH:MM:SS[.sss][Z|±HH:MM]
-	const String time_pattern = "^([0-9]{2}):([0-9]{2}):([0-9]{2})(?:\\.([0-9]+))?(?:([Zz])|([+-])([0-9]{2}):([0-9]{2}))?$";
+	const String time_pattern =
+			"^([0-9]{2}):([0-9]{2}):([0-9]{2})(?:\\.([0-9]+))?(?:([Zz])|([+-])([0-9]{2}):([0-9]{2}))?$";
 	Ref<RegEx> regex = RegEx::create_from_string(time_pattern);
 	if (!regex.is_valid()) {
 		context.add_error("Internal error: invalid time regex", "format", str);
@@ -211,7 +213,8 @@ bool FormatRule::validate_time(const String &str, ValidationContext &context) co
 
 bool FormatRule::validate_date_time(const String &str, ValidationContext &context) const {
 	// RFC 3339 date-time: YYYY-MM-DDTHH:MM:SS[.sss][Z|±HH:MM]
-	const String dt_pattern = "^([0-9]{4})-([0-9]{2})-([0-9]{2})[Tt]([0-9]{2}):([0-9]{2}):([0-9]{2})(?:\\.([0-9]+))?(?:([Zz])|([+-])([0-9]{2}):([0-9]{2}))?$";
+	const String dt_pattern = "^([0-9]{4})-([0-9]{2})-([0-9]{2})[Tt]([0-9]{2}):([0-9]{2}):([0-9]{2})(?:\\.([0-9]+))?(?:"
+							  "([Zz])|([+-])([0-9]{2}):([0-9]{2}))?$";
 	Ref<RegEx> regex = RegEx::create_from_string(dt_pattern);
 	if (!regex.is_valid()) {
 		context.add_error("Internal error: invalid date-time regex", "format", str);
@@ -278,7 +281,8 @@ bool FormatRule::validate_date_time(const String &str, ValidationContext &contex
 bool FormatRule::validate_ipv4(const String &str, ValidationContext &context) const {
 	PackedStringArray octets = str.split(".");
 	if (octets.size() != 4) {
-		context.add_error(vformat("IPv4 address must have exactly 4 octets, got %d", (int)octets.size()), "format", str);
+		context.add_error(
+				vformat("IPv4 address must have exactly 4 octets, got %d", (int64_t)octets.size()), "format", str);
 		return false;
 	}
 
@@ -340,7 +344,9 @@ bool FormatRule::validate_ipv6(const String &str, ValidationContext &context) co
 		// No compression - should have exactly 8 groups
 		PackedStringArray groups = str.split(":");
 		if (groups.size() != 8) {
-			context.add_error(vformat("IPv6 address without :: must have exactly 8 groups, got %d", (int)groups.size()), "format", str);
+			context.add_error(
+					vformat("IPv6 address without :: must have exactly 8 groups, got %d", (int64_t)groups.size()),
+					"format", str);
 			return false;
 		}
 		parts.push_back(str);
@@ -365,7 +371,8 @@ bool FormatRule::validate_ipv6(const String &str, ValidationContext &context) co
 
 			// Each group must be 1-4 hex digits
 			if (group.length() > 4) {
-				context.add_error(vformat("IPv6 group cannot be longer than 4 characters: \"%s\"", group), "format", str);
+				context.add_error(
+						vformat("IPv6 group cannot be longer than 4 characters: \"%s\"", group), "format", str);
 				return false;
 			}
 
@@ -373,7 +380,8 @@ bool FormatRule::validate_ipv6(const String &str, ValidationContext &context) co
 			for (int j = 0; j < group.length(); j++) {
 				char c = group[j];
 				if (!((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F'))) {
-					context.add_error(vformat("IPv6 group contains invalid hex character: \"%s\"", group), "format", str);
+					context.add_error(
+							vformat("IPv6 group contains invalid hex character: \"%s\"", group), "format", str);
 					return false;
 				}
 			}
