@@ -175,7 +175,7 @@ public:
 		for (size_t i = 0; i < errors.size(); i++) {
 			const auto &error = errors[i];
 
-			summary += vformat("  [%d] ", i + 1);
+			summary += vformat("  [%d] ", (int)i + 1);
 
 			if (!error.instance_path.is_empty()) {
 				summary += vformat("At '%s': ", error.instance_path);
