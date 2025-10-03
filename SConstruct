@@ -81,7 +81,8 @@ def setup_build_env(base_env):
             env.Append(LINKFLAGS=['-mmacosx-version-min=10.15'])
 
         if platform == 'linux':
-            env.Append(LINKFLAGS=['-static-libstdc++', '-static-libgcc'])
+          env.Append(CCFLAGS=['-fPIC'])
+          env.Append(LINKFLAGS=["-Wl,-R,'$$ORIGIN'"])
 
         if is_debug:
             env.Append(CCFLAGS=['-O0', '-g'])

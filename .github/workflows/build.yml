@@ -38,15 +38,13 @@ jobs:
 
           # Linux builds
           - name: 🐧 Linux Debug (x86_64)
-            os: ubuntu-latest
-            container: ubuntu:20.04
+            os: ubuntu-22.04
             platform: linux
             target: template_debug
             arch: x86_64
 
           - name: 🐧 Linux Release (x86_64)
-            os: ubuntu-latest
-            container: ubuntu:20.04
+            os: ubuntu-22.04
             platform: linux
             target: template_release
             arch: x86_64
