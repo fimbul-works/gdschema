@@ -74,7 +74,7 @@ def setup_build_env(base_env):
 
     # ========== UNIX-LIKE ==========
     else:
-        env.Append(CCFLAGS=[f'-std=c++{cpp_std_version}'])
+        env.Append(CCFLAGS=[f'-std=c++{cpp_std_version}', '-fexceptions'])
 
         if is_debug:
             env.Append(CCFLAGS=['-O0', '-g'])
