@@ -90,8 +90,8 @@ jobs:
       - name: Setup Linux dependencies
         if: matrix.platform == 'linux'
         run: |
-          apt-get update
-          apt-get install -y build-essential pkg-config python3 python3-pip git
+          sudo apt-get update
+          sudo apt-get install -y build-essential pkg-config python3 python3-pip git
 
       - name: Cache SCons build
         uses: actions/cache@v4
