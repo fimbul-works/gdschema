@@ -96,11 +96,11 @@ scons platform=linux target=template_release
 
 ## Supported Platforms
 
-- **Windows**: ✅ Prebuilt binaries available.
+- **Windows**: ✅ Prebuilt binaries available for **x86 64-bit** architecture.
 - **Linux**: ✅ Prebuilt binaries available for **x86 64-bit** architecture.
-- **macOS**: 🚧 Not yet prebuilt, but **should compile without issues**.
+- **macOS**: ✅ Prebuilt binaries available for **universal** architecture.
 
-📌 **Contributions welcome!** If you can help with Linux/macOS, open a PR.
+📌 **Contributions welcome!** If you can help with testing macOS, open a PR.
 
 ---
 

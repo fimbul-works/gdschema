@@ -1,0 +1,133 @@
+name: 🚀 Release
+on:
+  push:
+    tags:
+      - 'v*.*.*'        # Matches v1.0.0, v1.0.0-rc1, v2.1.3-beta, etc.
+      - '*.*.*'         # Matches 1.0.0, 1.0.0-rc1, etc. (without v prefix)
+
+env:
+  ADDON_PATH: project/addons/GDSchema
+
+jobs:
+  # Build for all platforms
+  build:
+    name: Build All Platforms
+    uses: ./.github/workflows/build.yml
+
+  # Package and create release
+  release:
+    name: Create Release
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write  # Needed to create releases
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Get version from tag
+        id: tag_name
+        run: |
+          # Remove 'refs/tags/' prefix and store the tag
+          TAG=${GITHUB_REF#refs/tags/}
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+          echo "Building release for tag: $TAG"
+
+      - name: Create bin directory
+        run: mkdir -p ${{ env.ADDON_PATH }}/bin
+
+      # Download all build artifacts
+      - name: Download Windows Debug artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: gdschema-windows-template_debug-x86_64
+          path: ${{ env.ADDON_PATH }}/bin/
+
+      - name: Download Windows Release artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: gdschema-windows-template_release-x86_64
+          path: ${{ env.ADDON_PATH }}/bin/
+
+      - name: Download Linux Debug artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: gdschema-linux-template_debug-x86_64
+          path: ${{ env.ADDON_PATH }}/bin/
+
+      - name: Download Linux Release artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: gdschema-linux-template_release-x86_64
+          path: ${{ env.ADDON_PATH }}/bin/
+
+      - name: Download macOS Debug artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: gdschema-macos-template_debug-universal
+          path: ${{ env.ADDON_PATH }}/bin/
+
+      - name: Download macOS Release artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: gdschema-macos-template_release-universal
+          path: ${{ env.ADDON_PATH }}/bin/
+
+      - name: List downloaded files
+        run: |
+          echo "Contents of bin directory:"
+          ls -lah ${{ env.ADDON_PATH }}/bin/
+
+      - name: Package addon
+        run: |
+          # Package ONLY the addon folder, not the whole project
+          cd project/addons/GDSchema
+          zip -r ../../../GDSchema-${{ steps.tag_name.outputs.tag }}.zip . \
+            -x '*.gitignore' \
+            -x '*.import' \
+            -x '.DS_Store' \
+            -x '__pycache__/*' \
+            -x '*.pyc' \
+            -x '*.md~' \
+            -x '.git/*'
+
+      - name: Create SHA256 checksum
+        run: |
+          sha256sum GDSchema-${{ steps.tag_name.outputs.tag }}.zip > GDSchema-${{ steps.tag_name.outputs.tag }}.zip.sha256
+
+      - name: Create Release
+        id: create_release
+        uses: softprops/action-gh-release@v1
+        with:
+          name: GDSchema ${{ steps.tag_name.outputs.tag }}
+          draft: false
+          prerelease: ${{ contains(steps.tag_name.outputs.tag, 'rc') || contains(steps.tag_name.outputs.tag, 'beta') || contains(steps.tag_name.outputs.tag, 'alpha') }}
+          generate_release_notes: true
+          files: |
+            GDSchema-${{ steps.tag_name.outputs.tag }}.zip
+            GDSchema-${{ steps.tag_name.outputs.tag }}.zip.sha256
+          body: |
+            ## GDSchema ${{ steps.tag_name.outputs.tag }}
+
+            Full JSON Schema Draft-7 validation for Godot 4.3+
+
+            ### Installation
+            1. Download `GDSchema-${{ steps.tag_name.outputs.tag }}.zip`
+            2. Extract the contents into your project's `addons/` directory
+            3. The folder structure should be: `res://addons/GDSchema/`
+            4. Enable the plugin in Project Settings → Plugins
+
+            ### What's Included
+            - Windows (x86_64): Debug & Release
+            - Linux (x86_64): Debug & Release
+            - macOS (Universal): Debug & Release
+
+            ### Verify Download
+            ```bash
+            sha256sum -c GDSchema-${{ steps.tag_name.outputs.tag }}.zip.sha256
+            ```
+
+            📖 [Documentation](https://github.com/${{ github.repository }}/blob/main/project/addons/GDSchema/README.md) |
+            💡 [Examples](https://github.com/${{ github.repository }}/tree/main/project/addons/GDSchema/examples)
