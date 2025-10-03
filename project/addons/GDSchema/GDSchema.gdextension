@@ -6,16 +6,14 @@ reloadable = true
 
 [libraries]
 
-windows.debug.x86_32 = "res://addons/GDSchema/bin/libgdschema.windows.debug.x86_32.dll"
-windows.release.x86_32 = "res://addons/GDSchema/bin/libgdschema.windows.release.x86_32.dll"
 windows.debug.x86_64 = "res://addons/GDSchema/bin/libgdschema.windows.debug.x86_64.dll"
 windows.release.x86_64 = "res://addons/GDSchema/bin/libgdschema.windows.release.x86_64.dll"
 
 linux.debug.x86_64 = "res://addons/GDSchema/bin/libgdschema.linux.debug.x86_64.so"
 linux.release.x86_64 = "res://addons/GDSchema/bin/libgdschema.linux.release.x86_64.so"
 
-macos.debug.arm64 = "res://addons/GDSchema/bin/libgdschema.macos.debug"
-macos.release.arm64 = "res://addons/GDSchema/bin/libgdschema.macos.release"
+macos.debug.universal = "res://addons/GDSchema/bin/libgdschema.macos.debug.framework"
+macos.release.universal = "res://addons/GDSchema/bin/libgdschema.macos.release.framework"
 
 [icons]
 
