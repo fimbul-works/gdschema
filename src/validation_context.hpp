@@ -170,7 +170,7 @@ public:
 			return "Validation successful - no errors";
 		}
 
-		String summary = vformat("Schema validation failed with %d error(s):\n", errors.size());
+		String summary = vformat("Schema validation failed with %d error(s):\n", (int)errors.size());
 
 		for (size_t i = 0; i < errors.size(); i++) {
 			const auto &error = errors[i];

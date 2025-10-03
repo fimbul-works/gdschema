@@ -724,7 +724,7 @@ String Schema::get_compile_error_summary() {
 		return "";
 	}
 
-	String summary = vformat("Schema compilation failed with %d error(s):\n", compile_errors.size());
+	String summary = vformat("Schema compilation failed with %d error(s):\n", (int)compile_errors.size());
 
 	for (size_t i = 0; i < compile_errors.size(); i++) {
 		const auto &error = compile_errors[i];

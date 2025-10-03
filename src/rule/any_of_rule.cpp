@@ -32,7 +32,7 @@ bool AnyOfRule::validate(const Variant &target, ValidationContext &context) cons
 
 	if (!any_passed) {
 		context.add_error(
-				vformat("Value failed all %d anyOf schemas", sub_rules.size()),
+				vformat("Value failed all %d anyOf schemas", (int)sub_rules.size()),
 				"anyOf");
 
 		// Optionally merge some failed context errors for debugging

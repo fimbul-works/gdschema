@@ -127,7 +127,7 @@ String SchemaValidationResult::get_summary() const {
 		return "Validation successful - no errors";
 	}
 
-	String summary = vformat("Schema validation failed with %d error(s):\n", errors.size());
+	String summary = vformat("Schema validation failed with %d error(s):\n", (int)errors.size());
 
 	for (size_t i = 0; i < errors.size(); i++) {
 		const auto &error = errors[i];
@@ -156,7 +156,7 @@ String SchemaValidationResult::get_brief_summary() const {
 	if (is_valid()) {
 		return "Validation passed";
 	}
-	return vformat("Validation failed: %d error(s)", errors.size());
+	return vformat("Validation failed: %d error(s)", (int)errors.size());
 }
 
 Array SchemaValidationResult::get_all_error_paths() const {

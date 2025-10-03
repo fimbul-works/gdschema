@@ -278,7 +278,7 @@ bool FormatRule::validate_date_time(const String &str, ValidationContext &contex
 bool FormatRule::validate_ipv4(const String &str, ValidationContext &context) const {
 	PackedStringArray octets = str.split(".");
 	if (octets.size() != 4) {
-		context.add_error(vformat("IPv4 address must have exactly 4 octets, got %d", octets.size()), "format", str);
+		context.add_error(vformat("IPv4 address must have exactly 4 octets, got %d", (int)octets.size()), "format", str);
 		return false;
 	}
 
@@ -340,7 +340,7 @@ bool FormatRule::validate_ipv6(const String &str, ValidationContext &context) co
 		// No compression - should have exactly 8 groups
 		PackedStringArray groups = str.split(":");
 		if (groups.size() != 8) {
-			context.add_error(vformat("IPv6 address without :: must have exactly 8 groups, got %d", groups.size()), "format", str);
+			context.add_error(vformat("IPv6 address without :: must have exactly 8 groups, got %d", (int)groups.size()), "format", str);
 			return false;
 		}
 		parts.push_back(str);
