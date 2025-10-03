@@ -107,6 +107,20 @@ jobs:
         run: |
           scons platform=${{ matrix.platform }} target=${{ matrix.target }} arch=${{ matrix.arch }} -j$(nproc || sysctl -n hw.ncpu || echo 2)
 
+      - name: Code sign macOS build
+        if: matrix.platform == 'macos'
+        shell: bash
+        run: |
+          # Ad-hoc sign the framework
+          FRAMEWORK_PATH="${{ env.BIN_PATH }}/libgdschema.macos.${{ matrix.target == 'template_release' && 'release' || 'debug' }}.framework"
+          if [ -d "$FRAMEWORK_PATH" ]; then
+            codesign --force --deep --sign - "$FRAMEWORK_PATH"
+            echo "Signed: $FRAMEWORK_PATH"
+          else
+            echo "Warning: Framework not found at $FRAMEWORK_PATH"
+            ls -la ${{ env.BIN_PATH }}/
+          fi
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
