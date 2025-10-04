@@ -190,9 +190,8 @@ public:
 	 */
 	String _to_string() const;
 
-private:
 	/**
-	 * @brief Internal helper to add error to list
+	 * @brief Add error to list
 	 * @param error The error to add
 	 */
 	void add_error(const YAMLValidationError &error);
