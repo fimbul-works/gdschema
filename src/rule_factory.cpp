@@ -332,6 +332,12 @@ void RuleFactory::create_value_rules(const Dictionary &schema_def, RuleCompileRe
 			result.rules->add_rule(std::make_unique<SelectorRule>(std::move(selector), std::move(rule)));
 		}
 	}
+
+	// default
+	if (schema_def.has("default")) {
+		// This is documentation/metadata, not a validation constraint
+		// Default value is stored in schema definition, not as validation rule
+	}
 }
 
 void RuleFactory::create_object_rules(
@@ -678,19 +684,11 @@ void RuleFactory::create_array_rules(
 
 	// contains - at least one array item must validate against the schema
 	if (schema_def.has("contains")) {
-		UtilityFunctions::print("DEBUG: Processing contains constraint");
-
 		Ref<Schema> child_schema = schema->get_child("contains");
-
-		UtilityFunctions::print("CONTAINS ", schema_def, " child valid? ", child_schema.is_valid());
-
 		if (child_schema.is_valid()) {
 			Dictionary child_def = child_schema->get_schema_definition();
-			UtilityFunctions::print("DEBUG: Contains child schema def: ", child_def);
-
 			// Check if this is boolean schema detection
 			if (child_def.is_empty()) {
-				UtilityFunctions::print("DEBUG: Creating TrueRule for contains: true");
 				// contains: true (empty schema) - always matches any item
 				auto selector = std::make_unique<ValueSelector>();
 				auto rule = std::make_shared<TrueRule>();
@@ -699,14 +697,12 @@ void RuleFactory::create_array_rules(
 			} else if (child_def.size() == 1 && child_def.has("not") &&
 					child_def["not"].get_type() == Variant::DICTIONARY &&
 					child_def["not"].operator Dictionary().is_empty()) {
-				UtilityFunctions::print("DEBUG: Creating FalseRule for contains: false");
 				// contains: false pattern {"not": {}} - never matches any item
 				auto selector = std::make_unique<ValueSelector>();
 				auto rule = std::make_shared<FalseRule>();
 				auto contains_rule = std::make_unique<ContainsRule>(rule);
 				result.rules->add_rule(std::make_unique<SelectorRule>(std::move(selector), std::move(contains_rule)));
 			} else {
-				UtilityFunctions::print("DEBUG: Creating normal contains rule");
 				// Normal schema - compile recursively
 				auto contains_result = create_rules(child_schema);
 				result.errors.insert(result.errors.end(), contains_result.errors.begin(), contains_result.errors.end());
@@ -717,8 +713,6 @@ void RuleFactory::create_array_rules(
 					result.rules->add_rule(std::make_unique<SelectorRule>(std::move(selector), std::move(rule)));
 				}
 			}
-		} else {
-			UtilityFunctions::print("DEBUG: Contains child schema is invalid!");
 		}
 	}
 }
@@ -870,6 +864,15 @@ void RuleFactory::create_logical_rules(
 			auto conditional_rule = std::make_unique<ConditionalRule>(if_rule, then_rule, else_rule);
 			auto selector = std::make_unique<ValueSelector>();
 			result.rules->add_rule(std::make_unique<SelectorRule>(std::move(selector), std::move(conditional_rule)));
+		}
+	}
+}
+
+void RuleFactory::create_custom_rules(
+		const Dictionary &schema_def, const Ref<Schema> &schema, RuleCompileResult &result) {
+	for (const auto &[keyword, factory] : custom_rule_factories) {
+		if (schema_def.has(keyword)) {
+			factory(schema_def, schema, result);
 		}
 	}
 }

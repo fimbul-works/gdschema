@@ -20,7 +20,6 @@ bool ContentMediaTypeRule::validate(const Variant &target, ValidationContext &co
 		return true;
 	} else {
 		// For other media types, we assume the content is valid
-		// In a real implementation, you might want to add more specific validation
 		return true;
 	}
 }

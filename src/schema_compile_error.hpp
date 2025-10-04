@@ -19,7 +19,11 @@ struct SchemaCompileError {
 	SchemaCompileError(const String &msg, const PackedStringArray &path_parts = PackedStringArray()) :
 			schema_path_parts(path_parts), message(msg) {}
 
-	// Convenience constructor for single path part
+	/**
+	 * @brief Convenience constructor for single path part
+	 * @param msg Error message
+	 * @param single_path_part Single path part (e.g., "minimum")
+	 */
 	SchemaCompileError(const String &msg, const String &single_path_part) : message(msg) {
 		if (!single_path_part.is_empty()) {
 			schema_path_parts.push_back(single_path_part);
@@ -37,7 +41,10 @@ struct SchemaCompileError {
 		return "/" + String("/").join(schema_path_parts);
 	}
 
-	// Convert to Dictionary for debugging/GDScript access
+	/**
+	 * @brief Convert to Dictionary for debugging/GDScript access
+	 * @return Dictionary with keys: schema_path_parts, schema_path_string, message
+	 */
 	Dictionary to_dict() const {
 		Dictionary result;
 		result["schema_path_parts"] = schema_path_parts;

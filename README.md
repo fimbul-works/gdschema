@@ -4,6 +4,7 @@ This is the **C++ GDExtension implementation** of the GDSchema plugin. It provid
 
 ## Version History
 
+- **1.1.0** (Current) - Enabled storing custom data in `ValidationContext`, and support for external implementations of the `"default"` keyword
 - **1.0.0** - Initial public release
 
 ## Quick Start
@@ -43,12 +44,12 @@ if result.has_errors():
 
 ## Features
 
-* 📏 **Full JSON Schema Draft-7**: All validation keywords supported, including `type`, `minimum`, `maxLength`, `pattern`, `required`, `enum`, and logical composition (`allOf`, `oneOf`, `anyOf`, `not`)
-* 🗂️ **Schema Registry**: Schemas with `$id` are auto-registered and can be referenced across documents with `$ref`
-* 🔍 **Rich Validation Errors**: Detailed error messages with JSON Pointer paths, violated constraints, and invalid values
-* 🧩 **Editor Integration**: Navigate schema trees, retrieve child nodes, and inspect definitions for editor auto-complete and tooling
-* 🛡️ **Thread-Safe and Lazy**: Schemas compile lazily with caching for performance and thread safety
-* ✅ **Comprehensive Results**: Validation returns a `SchemaValidationResult` with all errors collected at once
+- 📏 **Full JSON Schema Draft-7**: All validation keywords supported, including `type`, `minimum`, `maxLength`, `pattern`, `required`, `enum`, and logical composition (`allOf`, `oneOf`, `anyOf`, `not`)
+- 🗂️ **Schema Registry**: Schemas with `$id` are auto-registered and can be referenced across documents with `$ref`
+- 🔍 **Rich Validation Errors**: Detailed error messages with JSON Pointer paths, violated constraints, and invalid values
+- 🧩 **Editor Integration**: Navigate schema trees, retrieve child nodes, and inspect definitions for editor auto-complete and tooling
+- 🛡️ **Thread-Safe and Lazy**: Schemas compile lazily with caching for performance and thread safety
+- ✅ **Comprehensive Results**: Validation returns a `SchemaValidationResult` with all errors collected at once
 
 ## Installation & Setup
 
@@ -106,6 +107,7 @@ scons platform=linux target=template_release
 ## **Contributing**
 
 ### **Development Guidelines**
+
 1. **Follow Godot's API design patterns.**
 4. **Thread safety**: No global state; ensure **safe multithreading**.
 5. **Write tests**: Every new feature should have **test coverage**. See [the test suite](project/tests/) in the project folder.

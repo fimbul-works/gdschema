@@ -51,6 +51,7 @@ private:
 	String schema_path;
 	const Schema *source_schema; // Weak reference to avoid cycles
 	std::vector<ValidationError> errors;
+	Dictionary custom_data;
 
 public:
 	/**
@@ -200,6 +201,30 @@ public:
 	 * @return Source schema (can be null)
 	 */
 	const Schema *get_source_schema() const { return source_schema; }
+
+	/**
+	 * @brief Sets custom data associated with this context
+	 * @param key The key for the custom data
+	 * @param value The value to store
+	 */
+	void set_custom_data(const String &key, const Variant &value) { custom_data[key] = value; }
+
+	/**
+	 * @brief Gets custom data associated with this context
+	 * @param key The key for the custom data
+	 * @param default_value Value to return if key not found
+	 * @return The stored value or default if not found
+	 */
+	Variant get_custom_data(const String &key, const Variant &default_value = Variant()) const {
+		return custom_data.get(key, default_value);
+	}
+
+	/**
+	 * @brief Checks if custom data exists for a given key
+	 * @param key The key to check
+	 * @return True if the key exists
+	 */
+	bool has_custom_data(const String &key) const { return custom_data.has(key); }
 
 	/**
 	 * @brief Gets the JSON Schema type name for a Variant

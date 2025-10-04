@@ -96,7 +96,7 @@ public:
 	RuleCompileResult create_rules(const Ref<Schema> &schema);
 
 	/**
-	 * @brief Register a new schema rule factory function
+	 * @brief Register a new schema rule factory function to enable custom keywords and rules
 	 * @param keyword The schema keyword to look for
 	 * @param factory The factory function
 	 */
@@ -171,13 +171,7 @@ private:
 	 * @param schema The source schema
 	 * @param result Result to add rules/errors to
 	 */
-	void create_custom_rules(const Dictionary &schema_def, const Ref<Schema> &schema, RuleCompileResult &result) {
-		for (const auto &[keyword, factory] : custom_rule_factories) {
-			if (schema_def.has(keyword)) {
-				factory(schema_def, schema, result);
-			}
-		}
-	}
+	void create_custom_rules(const Dictionary &schema_def, const Ref<Schema> &schema, RuleCompileResult &result);
 
 	/**
 	 * @brief Helper to get variant type name for error messages

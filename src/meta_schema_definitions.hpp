@@ -37,30 +37,6 @@ public:
 	static Dictionary get_draft7_meta_schema();
 
 	/**
-	 * @brief Gets the meta-schema for string constraints
-	 * @return Dictionary for validating string constraint objects
-	 */
-	static Dictionary get_string_constraints_schema();
-
-	/**
-	 * @brief Gets the meta-schema for numeric constraints
-	 * @return Dictionary for validating numeric constraint objects
-	 */
-	static Dictionary get_numeric_constraints_schema();
-
-	/**
-	 * @brief Gets the meta-schema for array constraints
-	 * @return Dictionary for validating array constraint objects
-	 */
-	static Dictionary get_array_constraints_schema();
-
-	/**
-	 * @brief Gets the meta-schema for object constraints
-	 * @return Dictionary for validating object constraint objects
-	 */
-	static Dictionary get_object_constraints_schema();
-
-	/**
 	 * @brief Validates a schema definition using meta-validation
 	 * @param schema_def The schema definition to validate
 	 * @return Validation context with results

@@ -77,16 +77,46 @@ private:
 	 */
 	void construct_children(const Dictionary &dict);
 
+	/**
+	 * @brief Creates a child schema node from a dictionary
+	 * @param child_schema The child schema definition
+	 * @param child_key The key or index identifying the child
+	 * @return New child schema instance
+	 */
 	Ref<Schema> create_schema_child(const Dictionary &child_schema, const StringName &child_key);
 
+	/**
+	 * @brief Creates a child schema node if the key exists in the dictionary
+	 * @param dict The parent dictionary
+	 * @param key The key to check and create child for
+	 */
 	void create_schema_child_if_exists(const Dictionary &dict, const StringName &key);
 
+	/**
+	 * @brief Creates child schemas for logical keywords (anyOf, allOf, oneOf, not, if, then, else)
+	 * @param dict The parent dictionary
+	 * @param key The logical keyword
+	 */
 	void create_logical_children(const Dictionary &dict, const StringName &key);
 
+	/**
+	 * @brief Creates definitions child schemas from "definitions" or "$defs"
+	 * @param dict The parent dictionary
+	 * @param key The definitions keyword ("definitions" or "$defs")
+	 */
 	void create_definitions_children(const Dictionary &dict, const StringName &key);
 
+	/**
+	 * @brief Converts a Variant value to a schema-compatible dictionary
+	 * @param value The Variant value to convert
+	 * @return Dictionary representation suitable for schema validation
+	 */
 	Variant variant_to_schema_dict(const Variant &value) const;
 
+	/**
+	 * @brief Adds a compilation error to the list
+	 * @param error_message The error message
+	 */
 	void add_compile_error(const String error_message);
 
 	/**
@@ -146,6 +176,11 @@ public:
 	 */
 	virtual ~Schema();
 
+	/**
+	 * @brief Sets the compilation result (rules and errors)
+	 * @param compiled_rules The compiled rule group
+	 * @param errors List of compilation errors
+	 */
 	void set_compilation_result(std::shared_ptr<RuleGroup> compiled_rules, std::vector<SchemaCompileError> errors);
 
 	// ========== Factory Methods ==========
@@ -342,6 +377,25 @@ public:
 	 * @return The schema definition dictionary
 	 */
 	Dictionary get_schema_definition() const { return schema_definition; }
+
+	/**
+	 * @brief Gets the default value for this schema node if defined
+	 * @return The default value or null if not defined
+	 */
+	Variant get_default_value() const { return schema_definition.get("default", Variant()); }
+
+	/**
+	 * @brief Checks if this schema has a default value
+	 * @return True if default is defined
+	 */
+	bool has_default_value() const { return schema_definition.has("default"); }
+
+	/**
+	 * @brief Gets custom metadata if present
+	 * @param key The custom key (e.g., "x-yaml-tag")
+	 * @return The value or null if not found
+	 */
+	Variant get_custom_metadata(const String &key) const { return schema_definition.get(key, Variant()); }
 
 	// ========== Validation ==========
 

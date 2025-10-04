@@ -12,7 +12,7 @@ bool SchemaRegistry::register_schema(const StringName &id, Ref<Schema> schema) {
 	schemas[id] = schema;
 	registry_mutex->unlock();
 
-#ifdef GODOT_YAML_DEBUG
+#ifdef GODOT_SCHEMA_DEBUG
 	UtilityFunctions::print(vformat("Registered Schema %s", id));
 #endif
 	return true;
