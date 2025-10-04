@@ -17,7 +17,7 @@ private:
 	int64_t index;
 
 public:
-	explicit ArrayItemSelector(int idx) : index(idx) {}
+	explicit ArrayItemSelector(int64_t idx) : index(idx) {}
 
 	std::vector<SelectionTarget> select_targets(
 			const Variant &instance, const ValidationContext &context) const override;

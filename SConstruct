@@ -37,21 +37,12 @@ def setup_build_env(base_env):
     is_debug = env.get('target', '') != 'template_release'
     arch = env.get('arch', 'x86_64')
 
-    # C++ standard configuration
-    cpp20_platforms = ['windows']  # Add 'linux', 'macos' when ready
-    use_cpp20 = platform in cpp20_platforms
-    cpp_std_version = '20' if use_cpp20 else '17'
-    env['USE_CPP20'] = use_cpp20
-
-    print(f"Building for {platform} with C++{cpp_std_version}")
+    print(f"Building for {platform}, {'Debug' if is_debug else 'Release'}, {arch}")
 
     # ========== WINDOWS ==========
     if platform == 'windows':
         # C++ standard and exception handling
-        env.Append(CCFLAGS=[f'/std:c++{cpp_std_version}', '/EHsc'])
-
-        if use_cpp20:
-            env.Append(CCFLAGS=['/Zc:preprocessor'])
+        env.Append(CCFLAGS=['/EHsc'])
 
         # Debug vs Release
         if is_debug:
@@ -73,7 +64,7 @@ def setup_build_env(base_env):
 
     # ========== UNIX-LIKE ==========
     else:
-        env.Append(CCFLAGS=[f'-std=c++{cpp_std_version}', '-fexceptions'])
+        env.Append(CCFLAGS=['-fexceptions'])
 
         if platform == 'macos':
             env.Append(CCFLAGS=['-mmacosx-version-min=10.15'])
@@ -103,8 +94,6 @@ def setup_build_env(base_env):
     # ========== COMMON ==========
     if is_debug:
         env.Append(CPPDEFINES=['GODOT_SCHEMA_DEBUG'])
-        if use_cpp20:
-            env.Append(CPPDEFINES=['TESTS_ENABLED'])
 
     env.Append(CPPPATH=['src'])
     return env
@@ -128,12 +117,6 @@ def build_config(env, variant_dir):
     sources += Glob(os.path.join(variant_dir, 'src', 'extension', '*.cpp'))
     sources += Glob(os.path.join(variant_dir, 'src', 'rule', '*.cpp'))
     sources += Glob(os.path.join(variant_dir, 'src', 'selector', '*.cpp'))
-
-    # Add test sources only for debug builds with C++20 support
-    # This prevents compilation errors on C++17 platforms
-    # if env["target"] == "template_debug" and env.get('USE_CPP20', False):
-    #     sources += Glob(os.path.join(variant_dir, 'src', 'tests', '*.cpp'))
-    #     print(f"Including {len(Glob(os.path.join(variant_dir, 'src', 'tests', '*.cpp')))} test files")
 
     # Embed documentation
     if env["target"] in ["editor", "template_debug"]:
@@ -169,7 +152,7 @@ def build_config(env, variant_dir):
 
         # Create a custom install action that uses glob at build time
         def install_windows_files(target, source, env):
-            # Convert SCons File objects to strings and use glob to find all related files
+            # Convert SCons File objects to strings and grab DLL
             lib_pattern_str = os.path.join(output_lib_dir, f"{lib_base_name}.dll")
             generated_files = glob.glob(lib_pattern_str)
 
