@@ -4,12 +4,12 @@
 
 using namespace godot;
 
-PatternPropertiesSelector::PatternPropertiesSelector(const String &pattern) : pattern_string(pattern) {
+PatternPropertiesSelector::PatternPropertiesSelector(const String &pattern) :
+		pattern_string(pattern) {
 	pattern_regex = RegEx::create_from_string(pattern);
 }
 
-std::vector<SelectionTarget> PatternPropertiesSelector::select_targets(
-		const Variant &instance, const ValidationContext &context) const {
+std::vector<SelectionTarget> PatternPropertiesSelector::select_targets(const Variant &instance, const ValidationContext &context) const {
 	std::vector<SelectionTarget> targets;
 
 	if (!pattern_regex.is_valid()) {

@@ -281,8 +281,7 @@ bool FormatRule::validate_date_time(const String &str, ValidationContext &contex
 bool FormatRule::validate_ipv4(const String &str, ValidationContext &context) const {
 	PackedStringArray octets = str.split(".");
 	if (octets.size() != 4) {
-		context.add_error(
-				vformat("IPv4 address must have exactly 4 octets, got %d", (int64_t)octets.size()), "format", str);
+		context.add_error(vformat("IPv4 address must have exactly 4 octets, got %d", (int64_t)octets.size()), "format", str);
 		return false;
 	}
 
@@ -344,9 +343,7 @@ bool FormatRule::validate_ipv6(const String &str, ValidationContext &context) co
 		// No compression - should have exactly 8 groups
 		PackedStringArray groups = str.split(":");
 		if (groups.size() != 8) {
-			context.add_error(
-					vformat("IPv6 address without :: must have exactly 8 groups, got %d", (int64_t)groups.size()),
-					"format", str);
+			context.add_error(vformat("IPv6 address without :: must have exactly 8 groups, got %d", (int64_t)groups.size()), "format", str);
 			return false;
 		}
 		parts.push_back(str);
@@ -371,8 +368,7 @@ bool FormatRule::validate_ipv6(const String &str, ValidationContext &context) co
 
 			// Each group must be 1-4 hex digits
 			if (group.length() > 4) {
-				context.add_error(
-						vformat("IPv6 group cannot be longer than 4 characters: \"%s\"", group), "format", str);
+				context.add_error(vformat("IPv6 group cannot be longer than 4 characters: \"%s\"", group), "format", str);
 				return false;
 			}
 
@@ -380,8 +376,7 @@ bool FormatRule::validate_ipv6(const String &str, ValidationContext &context) co
 			for (int j = 0; j < group.length(); j++) {
 				char c = group[j];
 				if (!((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F'))) {
-					context.add_error(
-							vformat("IPv6 group contains invalid hex character: \"%s\"", group), "format", str);
+					context.add_error(vformat("IPv6 group contains invalid hex character: \"%s\"", group), "format", str);
 					return false;
 				}
 			}
@@ -392,8 +387,7 @@ bool FormatRule::validate_ipv6(const String &str, ValidationContext &context) co
 }
 
 bool FormatRule::validate_ipv6_with_ipv4(const String &str, ValidationContext &context) const {
-	// Handle IPv4-mapped IPv6 addresses like ::ffff:192.168.1.1
-	// or IPv4-compatible like ::192.168.1.1
+	// Handle IPv4-mapped IPv6 addresses like ::ffff:192.168.1.1 or IPv4-compatible like ::192.168.1.1
 
 	int last_colon = str.rfind(":");
 	if (last_colon == -1) {
@@ -418,8 +412,7 @@ bool FormatRule::validate_ipv6_with_ipv4(const String &str, ValidationContext &c
 		return true; // IPv4-compatible IPv6
 	}
 
-	// For other cases, we need to validate that the IPv6 part is valid
-	// and that the total doesn't exceed 8 groups
+	// For other cases, we need to validate that the IPv6 part is valid and that the total doesn't exceed 8 groups
 	String ipv6_without_ipv4 = ipv6_part.substr(0, ipv6_part.length() - 1); // Remove trailing colon
 
 	// Count colons to estimate groups

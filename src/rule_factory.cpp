@@ -171,9 +171,7 @@ void RuleFactory::create_type_rules(const Variant &type_def, RuleCompileResult &
 			if (type_array[i].get_type() == Variant::STRING) {
 				types.push_back(type_array[i].operator String());
 			} else {
-				result.add_error(
-						vformat("Type array element must be string, got %s", get_variant_type_name(type_array[i])),
-						vformat("type/%d", i));
+				result.add_error(vformat("Type array element must be string, got %s", get_variant_type_name(type_array[i])), vformat("type/%d", i));
 				return;
 			}
 		}
@@ -340,8 +338,7 @@ void RuleFactory::create_value_rules(const Dictionary &schema_def, RuleCompileRe
 	}
 }
 
-void RuleFactory::create_object_rules(
-		const Dictionary &schema_def, const Ref<Schema> &schema, RuleCompileResult &result) {
+void RuleFactory::create_object_rules(const Dictionary &schema_def, const Ref<Schema> &schema, RuleCompileResult &result) {
 	// minProperties
 	if (schema_def.has("minProperties")) {
 		Variant min_props_var = schema_def["minProperties"];
@@ -406,8 +403,7 @@ void RuleFactory::create_object_rules(
 					// If child schema is valid, create a selector rule for this property
 					if (child_result.is_valid() && !child_result.rules->is_empty()) {
 						auto selector = std::make_unique<PropertySelector>(prop_name);
-						result.rules->add_rule(
-								std::make_unique<SelectorRule>(std::move(selector), std::move(child_result.rules)));
+						result.rules->add_rule(std::make_unique<SelectorRule>(std::move(selector), std::move(child_result.rules)));
 					}
 				}
 			}
@@ -423,8 +419,7 @@ void RuleFactory::create_object_rules(
 
 			if (prop_names_result.is_valid() && !prop_names_result.rules->is_empty()) {
 				auto selector = std::make_unique<ObjectKeysSelector>();
-				result.rules->add_rule(
-						std::make_unique<SelectorRule>(std::move(selector), std::move(prop_names_result.rules)));
+				result.rules->add_rule(std::make_unique<SelectorRule>(std::move(selector), std::move(prop_names_result.rules)));
 			}
 		}
 	}
@@ -445,13 +440,11 @@ void RuleFactory::create_object_rules(
 					Ref<Schema> child_schema = schema->get_child(child_path);
 					if (child_schema.is_valid()) {
 						auto pattern_result = create_rules(child_schema);
-						result.errors.insert(
-								result.errors.end(), pattern_result.errors.begin(), pattern_result.errors.end());
+						result.errors.insert(result.errors.end(), pattern_result.errors.begin(), pattern_result.errors.end());
 
 						if (pattern_result.is_valid() && !pattern_result.rules->is_empty()) {
 							auto selector = std::make_unique<PatternPropertiesSelector>(pattern);
-							result.rules->add_rule(std::make_unique<SelectorRule>(
-									std::move(selector), std::move(pattern_result.rules)));
+							result.rules->add_rule(std::make_unique<SelectorRule>(std::move(selector), std::move(pattern_result.rules)));
 						}
 					}
 				}
@@ -487,8 +480,7 @@ void RuleFactory::create_object_rules(
 
 			// Create a rule that fails validation for any additional properties
 			auto selector = std::make_unique<AdditionalPropertiesSelector>(defined_properties, pattern_properties_list);
-			auto rule = std::make_unique<ConstRule>(
-					Variant()); // This will always fail since no value equals null in this context
+			auto rule = std::make_unique<ConstRule>(Variant()); // This will always fail since no value equals null in this context
 			result.rules->add_rule(std::make_unique<SelectorRule>(std::move(selector), std::move(rule)));
 		} else if (additional_props_var.get_type() == Variant::DICTIONARY) {
 			// additionalProperties: {...} - additional properties must match this schema
@@ -496,8 +488,7 @@ void RuleFactory::create_object_rules(
 			Ref<Schema> child_schema = schema->get_child("additionalProperties");
 			if (child_schema.is_valid()) {
 				auto additional_result = create_rules(child_schema);
-				result.errors.insert(
-						result.errors.end(), additional_result.errors.begin(), additional_result.errors.end());
+				result.errors.insert(result.errors.end(), additional_result.errors.begin(), additional_result.errors.end());
 
 				if (additional_result.is_valid() && !additional_result.rules->is_empty()) {
 					std::vector<StringName> defined_properties;
@@ -520,10 +511,8 @@ void RuleFactory::create_object_rules(
 						}
 					}
 
-					auto selector =
-							std::make_unique<AdditionalPropertiesSelector>(defined_properties, pattern_properties_list);
-					result.rules->add_rule(
-							std::make_unique<SelectorRule>(std::move(selector), std::move(additional_result.rules)));
+					auto selector = std::make_unique<AdditionalPropertiesSelector>(defined_properties, pattern_properties_list);
+					result.rules->add_rule(std::make_unique<SelectorRule>(std::move(selector), std::move(additional_result.rules)));
 				}
 			}
 		}
@@ -575,8 +564,7 @@ void RuleFactory::create_object_rules(
 	}
 }
 
-void RuleFactory::create_array_rules(
-		const Dictionary &schema_def, const Ref<Schema> &schema, RuleCompileResult &result) {
+void RuleFactory::create_array_rules(const Dictionary &schema_def, const Ref<Schema> &schema, RuleCompileResult &result) {
 	// minItems
 	if (schema_def.has("minItems")) {
 		Variant min_items_var = schema_def["minItems"];
@@ -626,8 +614,7 @@ void RuleFactory::create_array_rules(
 
 				if (items_result.is_valid() && !items_result.rules->is_empty()) {
 					auto selector = std::make_unique<ArrayItemsSelector>();
-					result.rules->add_rule(
-							std::make_unique<SelectorRule>(std::move(selector), std::move(items_result.rules)));
+					result.rules->add_rule(std::make_unique<SelectorRule>(std::move(selector), std::move(items_result.rules)));
 				}
 			}
 		} else if (items_var.get_type() == Variant::ARRAY) {
@@ -646,8 +633,7 @@ void RuleFactory::create_array_rules(
 					if (item_result.is_valid() && !item_result.rules->is_empty()) {
 						// Create selector for this specific array position
 						auto selector = std::make_unique<ArrayItemSelector>(i);
-						result.rules->add_rule(
-								std::make_unique<SelectorRule>(std::move(selector), std::move(item_result.rules)));
+						result.rules->add_rule(std::make_unique<SelectorRule>(std::move(selector), std::move(item_result.rules)));
 					}
 				}
 			}
@@ -669,13 +655,11 @@ void RuleFactory::create_array_rules(
 			Ref<Schema> child_schema = schema->get_child("additionalItems");
 			if (child_schema.is_valid()) {
 				auto additional_result = create_rules(child_schema);
-				result.errors.insert(
-						result.errors.end(), additional_result.errors.begin(), additional_result.errors.end());
+				result.errors.insert(result.errors.end(), additional_result.errors.begin(), additional_result.errors.end());
 
 				if (additional_result.is_valid() && !additional_result.rules->is_empty()) {
 					auto selector = std::make_unique<AdditionalItemsSelector>(tuple_length);
-					result.rules->add_rule(
-							std::make_unique<SelectorRule>(std::move(selector), std::move(additional_result.rules)));
+					result.rules->add_rule(std::make_unique<SelectorRule>(std::move(selector), std::move(additional_result.rules)));
 				}
 			}
 		}
@@ -717,8 +701,7 @@ void RuleFactory::create_array_rules(
 	}
 }
 
-void RuleFactory::create_logical_rules(
-		const Dictionary &schema_def, const Ref<Schema> &schema, RuleCompileResult &result) {
+void RuleFactory::create_logical_rules(const Dictionary &schema_def, const Ref<Schema> &schema, RuleCompileResult &result) {
 	// allOf
 	if (schema_def.has("allOf")) {
 		Variant all_of_var = schema_def["allOf"];
@@ -868,8 +851,7 @@ void RuleFactory::create_logical_rules(
 	}
 }
 
-void RuleFactory::create_custom_rules(
-		const Dictionary &schema_def, const Ref<Schema> &schema, RuleCompileResult &result) {
+void RuleFactory::create_custom_rules(const Dictionary &schema_def, const Ref<Schema> &schema, RuleCompileResult &result) {
 	for (const auto &[keyword, factory] : custom_rule_factories) {
 		if (schema_def.has(keyword)) {
 			factory(schema_def, schema, result);

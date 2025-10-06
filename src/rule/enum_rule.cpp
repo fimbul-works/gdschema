@@ -21,8 +21,7 @@ bool EnumRule::validate(const Variant &target, ValidationContext &context) const
 		allowed_str += allowed_values[i].stringify();
 	}
 
-	context.add_error(
-			vformat("Value %s is not one of the allowed values: %s", target_str, allowed_str), "enum", target);
+	context.add_error(vformat("Value %s is not one of the allowed values: %s", target_str, allowed_str), "enum", target);
 
 	return false;
 }

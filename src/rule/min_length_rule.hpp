@@ -18,7 +18,8 @@ private:
 	int64_t min_length;
 
 public:
-	explicit MinLengthRule(int64_t min) : min_length(min) {}
+	explicit MinLengthRule(int64_t min) :
+			min_length(min) {}
 
 	bool validate(const Variant &target, ValidationContext &context) const override;
 	String get_rule_type() const override { return "minLength"; }

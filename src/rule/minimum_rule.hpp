@@ -18,7 +18,8 @@ private:
 	double minimum;
 
 public:
-	explicit MinimumRule(double min) : minimum(min) {}
+	explicit MinimumRule(double min) :
+			minimum(min) {}
 
 	bool validate(const Variant &target, ValidationContext &context) const override;
 	String get_rule_type() const override { return "minimum"; }

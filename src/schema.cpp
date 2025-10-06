@@ -41,10 +41,8 @@ void Schema::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_compile_errors"), &Schema::get_compile_errors);
 	ClassDB::bind_method(D_METHOD("get_compile_error_summary"), &Schema::get_compile_error_summary);
 
-	ClassDB::bind_static_method("Schema", D_METHOD("build_schema", "schema_dict", "validate_against_meta"),
-			&Schema::build_schema, DEFVAL(false));
-	ClassDB::bind_static_method(
-			"Schema", D_METHOD("register_schema", "schema", "id"), &Schema::register_schema, DEFVAL(""));
+	ClassDB::bind_static_method("Schema", D_METHOD("build_schema", "schema_dict", "validate_against_meta"), &Schema::build_schema, DEFVAL(false));
+	ClassDB::bind_static_method("Schema", D_METHOD("register_schema", "schema", "id"), &Schema::register_schema, DEFVAL(""));
 	ClassDB::bind_static_method("Schema", D_METHOD("is_schema_registered", "id"), &Schema::is_schema_registered);
 	ClassDB::bind_static_method("Schema", D_METHOD("unregister_schema", "id"), &Schema::unregister_schema);
 
@@ -58,8 +56,7 @@ Schema::Schema() {
 	compilation_mutex = Ref<Mutex>(memnew(Mutex));
 }
 
-Schema::Schema(const Dictionary &schema_dict, const Ref<Schema> &p_root_schema, const StringName &p_schema_path,
-		const bool validate_against_meta) {
+Schema::Schema(const Dictionary &schema_dict, const Ref<Schema> &p_root_schema, const StringName &p_schema_path, const bool validate_against_meta) {
 	schema_type = SchemaType::SCHEMA_OBJECT;
 	schema_path = "";
 	is_compiled = false;
@@ -69,9 +66,7 @@ Schema::Schema(const Dictionary &schema_dict, const Ref<Schema> &p_root_schema, 
 		Ref<SchemaValidationResult> validation_result = MetaSchemaDefinitions::validate_schema_definition(schema_dict);
 
 		if (validation_result->has_errors()) {
-			UtilityFunctions::push_warning(
-					vformat("Schema(%s) failed validation:\n%s\n", p_schema_path, validation_result->get_errors()),
-					schema_dict);
+			UtilityFunctions::push_warning(vformat("Schema(%s) failed validation:\n%s\n", p_schema_path, validation_result->get_errors()), schema_dict);
 		}
 	}
 
@@ -133,9 +128,7 @@ bool Schema::register_schema(const Ref<Schema> &schema, const StringName &id) {
 		}
 	} else if (!schema->schema_id.is_empty() && schema->schema_id != registration_id) {
 		// Warn if explicit ID conflicts with $id
-		UtilityFunctions::push_warning(vformat(
-				"Registering schema with ID '%s' but schema has $id '%s' - this may cause reference resolution issues",
-				registration_id, schema->schema_id));
+		UtilityFunctions::push_warning(vformat("Registering Schema with ID '%s' but Schema has $id '%s' - this may cause reference resolution issues", registration_id, schema->schema_id));
 	}
 
 	return SchemaRegistry::get_singleton().register_schema(registration_id, schema);

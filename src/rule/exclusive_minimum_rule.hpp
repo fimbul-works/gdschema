@@ -14,7 +14,8 @@ private:
 	double exclusive_minimum;
 
 public:
-	explicit ExclusiveMinimumRule(double min) : exclusive_minimum(min) {}
+	explicit ExclusiveMinimumRule(double min) :
+			exclusive_minimum(min) {}
 
 	bool validate(const Variant &target, ValidationContext &context) const override;
 	String get_rule_type() const override { return "exclusiveMinimum"; }

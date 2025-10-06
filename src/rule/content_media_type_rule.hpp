@@ -13,7 +13,8 @@ private:
 	String media_type;
 
 public:
-	ContentMediaTypeRule(const String &media_type) : media_type(media_type) {}
+	ContentMediaTypeRule(const String &media_type) :
+			media_type(media_type) {}
 
 	bool validate(const Variant &target, ValidationContext &context) const override;
 	String get_rule_type() const override { return "contentMediaType"; }

@@ -34,9 +34,7 @@ bool DependencyRule::validate(const Variant &target, ValidationContext &context)
 		for (const String &required_prop : required_properties) {
 			StringName prop_name = StringName(required_prop);
 			if (!dict.has(prop_name)) {
-				context.add_error(
-						vformat("Property '%s' is required when '%s' is present", required_prop, trigger_property),
-						"dependencies");
+				context.add_error(vformat("Property '%s' is required when '%s' is present", required_prop, trigger_property), "dependencies");
 				all_present = false;
 			}
 		}

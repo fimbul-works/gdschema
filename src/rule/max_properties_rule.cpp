@@ -11,8 +11,7 @@ bool MaxPropertiesRule::validate(const Variant &target, ValidationContext &conte
 	int64_t actual_count = dict.size();
 
 	if (actual_count > max_properties) {
-		context.add_error(vformat("Object has %d properties but maximum is %d", actual_count, max_properties),
-				"maxProperties", target);
+		context.add_error(vformat("Object has %d properties but maximum is %d", actual_count, max_properties), "maxProperties", target);
 		return false;
 	}
 

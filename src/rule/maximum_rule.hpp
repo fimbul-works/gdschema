@@ -18,7 +18,8 @@ private:
 	double maximum;
 
 public:
-	explicit MaximumRule(double max) : maximum(max) {}
+	explicit MaximumRule(double max) :
+			maximum(max) {}
 
 	bool validate(const Variant &target, ValidationContext &context) const override;
 	String get_rule_type() const override { return "maximum"; }

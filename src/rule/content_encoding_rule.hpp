@@ -11,7 +11,8 @@ private:
 	String encoding;
 
 public:
-	ContentEncodingRule(const String &encoding) : encoding(encoding) {}
+	ContentEncodingRule(const String &encoding) :
+			encoding(encoding) {}
 
 	bool validate(const Variant &target, ValidationContext &context) const override;
 	String get_rule_type() const override { return "contentEncoding"; }

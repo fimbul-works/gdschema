@@ -21,7 +21,8 @@ private:
 	std::shared_ptr<ValidationRule> item_rule;
 
 public:
-	explicit ContainsRule(std::shared_ptr<ValidationRule> rule) : item_rule(rule) {}
+	explicit ContainsRule(std::shared_ptr<ValidationRule> rule) :
+			item_rule(rule) {}
 
 	bool validate(const Variant &target, ValidationContext &context) const override;
 	String get_rule_type() const override { return "contains"; }

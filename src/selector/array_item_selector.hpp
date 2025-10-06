@@ -17,10 +17,10 @@ private:
 	int64_t index;
 
 public:
-	explicit ArrayItemSelector(int64_t idx) : index(idx) {}
+	explicit ArrayItemSelector(int64_t idx) :
+			index(idx) {}
 
-	std::vector<SelectionTarget> select_targets(
-			const Variant &instance, const ValidationContext &context) const override;
+	std::vector<SelectionTarget> select_targets(const Variant &instance, const ValidationContext &context) const override;
 
 	String get_description() const override { return vformat("array[%d]", index); }
 };

@@ -14,7 +14,8 @@ private:
 	double multiple_of;
 
 public:
-	explicit MultipleOfRule(double multiplier) : multiple_of(multiplier) {}
+	explicit MultipleOfRule(double multiplier) :
+			multiple_of(multiplier) {}
 
 	bool validate(const Variant &target, ValidationContext &context) const override;
 

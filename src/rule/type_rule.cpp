@@ -7,7 +7,8 @@ TypeRule::TypeRule(const String &type) {
 	allowed_types.push_back(type);
 }
 
-TypeRule::TypeRule(const std::vector<String> &types) : allowed_types(types) {}
+TypeRule::TypeRule(const std::vector<String> &types) :
+		allowed_types(types) {}
 
 bool TypeRule::validate(const Variant &target, ValidationContext &context) const {
 	String actual_type = get_variant_json_type(target);

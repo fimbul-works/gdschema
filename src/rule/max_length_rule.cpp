@@ -13,8 +13,7 @@ bool MaxLengthRule::validate(const Variant &target, ValidationContext &context) 
 	int64_t actual_length = str.utf8().length(); // Use UTF-8 byte length for proper Unicode handling
 
 	if (actual_length > max_length) {
-		context.add_error(
-				vformat("String length %d exceeds maximum %d", actual_length, max_length), "maxLength", target);
+		context.add_error(vformat("String length %d exceeds maximum %d", actual_length, max_length), "maxLength", target);
 		return false;
 	}
 

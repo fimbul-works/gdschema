@@ -21,8 +21,7 @@ private:
 public:
 	explicit PatternPropertiesSelector(const String &pattern);
 
-	std::vector<SelectionTarget> select_targets(
-			const Variant &instance, const ValidationContext &context) const override;
+	std::vector<SelectionTarget> select_targets(const Variant &instance, const ValidationContext &context) const override;
 
 	String get_description() const override { return vformat("properties[/%s/]", pattern_string); }
 };

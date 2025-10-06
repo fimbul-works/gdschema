@@ -25,11 +25,15 @@ private:
 public:
 	// Constructor for property dependencies
 	DependencyRule(const StringName &trigger, const std::vector<String> &required_props) :
-			trigger_property(trigger), required_properties(required_props), is_schema_dependency(false) {}
+			trigger_property(trigger),
+			required_properties(required_props),
+			is_schema_dependency(false) {}
 
 	// Constructor for schema dependencies
 	DependencyRule(const StringName &trigger, std::shared_ptr<ValidationRule> schema) :
-			trigger_property(trigger), dependency_schema(schema), is_schema_dependency(true) {}
+			trigger_property(trigger),
+			dependency_schema(schema),
+			is_schema_dependency(true) {}
 
 	bool validate(const Variant &target, ValidationContext &context) const override;
 	String get_rule_type() const override { return "dependency"; }

@@ -25,9 +25,12 @@ struct ValidationError {
 	String keyword; // Schema keyword that failed
 	Variant invalid_value; // The actual invalid value
 
-	ValidationError(const String &msg, const String &inst_path = "", const String &sch_path = "", const String &kw = "",
-			const Variant &value = Variant()) :
-			message(msg), instance_path(inst_path), schema_path(sch_path), keyword(kw), invalid_value(value) {}
+	ValidationError(const String &msg, const String &inst_path = "", const String &sch_path = "", const String &kw = "", const Variant &value = Variant()) :
+			message(msg),
+			instance_path(inst_path),
+			schema_path(sch_path),
+			keyword(kw),
+			invalid_value(value) {}
 
 	// Convert to Dictionary for GDScript access
 	Dictionary to_dict() const {
@@ -61,7 +64,9 @@ public:
 	 * @param sch_path Current schema path
 	 */
 	ValidationContext(const Schema *schema = nullptr, const String &inst_path = "", const String &sch_path = "") :
-			source_schema(schema), instance_path(inst_path), schema_path(sch_path) {}
+			source_schema(schema),
+			instance_path(inst_path),
+			schema_path(sch_path) {}
 
 	/**
 	 * @brief Creates a child context for validating a sub-instance

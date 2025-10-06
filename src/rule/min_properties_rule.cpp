@@ -11,8 +11,7 @@ bool MinPropertiesRule::validate(const Variant &target, ValidationContext &conte
 	int64_t actual_count = dict.size();
 
 	if (actual_count < min_properties) {
-		context.add_error(vformat("Object has %d properties but minimum is %d", actual_count, min_properties),
-				"minProperties", target);
+		context.add_error(vformat("Object has %d properties but minimum is %d", actual_count, min_properties), "minProperties", target);
 		return false;
 	}
 

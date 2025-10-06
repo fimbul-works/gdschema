@@ -2,13 +2,13 @@
 
 using namespace godot;
 
-std::vector<SelectionTarget> AdditionalItemsSelector::select_targets(
-		const Variant &instance, const ValidationContext &context) const {
+std::vector<SelectionTarget> AdditionalItemsSelector::select_targets(const Variant &instance, const ValidationContext &context) const {
 	std::vector<SelectionTarget> targets;
+
+	// Select items at indices >= tuple_length
 
 	if (instance.get_type() == Variant::ARRAY) {
 		Array arr = instance.operator Array();
-		// Select items at indices >= tuple_length
 		for (int i = tuple_length; i < arr.size(); i++) {
 			targets.emplace_back(arr[i], String::num(i));
 		}

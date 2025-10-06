@@ -53,8 +53,7 @@ bool ContentEncodingRule::validate_base64(const String &str, ValidationContext &
 		} else if (padding_started) {
 			context.add_error("Base64 content has characters after padding", "contentEncoding", str);
 			return false;
-		} else if (!((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '+' ||
-						   c == '/')) {
+		} else if (!((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '+' || c == '/')) {
 			context.add_error(vformat("Base64 content contains invalid character: '%c'", c), "contentEncoding", str);
 			return false;
 		}

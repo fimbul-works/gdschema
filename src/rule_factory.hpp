@@ -34,7 +34,8 @@ public:
 		std::shared_ptr<RuleGroup> rules;
 		std::vector<SchemaCompileError> errors;
 
-		RuleCompileResult() : rules(std::make_shared<RuleGroup>()) {}
+		RuleCompileResult() :
+				rules(std::make_shared<RuleGroup>()) {}
 
 		bool has_errors() const { return !errors.empty(); }
 		bool is_valid() const { return !has_errors(); }
@@ -71,9 +72,11 @@ private:
 	/**
 	 * @brief Factory functions for custom rules
 	 */
-	std::unordered_map<String, std::function<void(const Dictionary &, const Ref<Schema> &, RuleCompileResult &)>>
-			custom_rule_factories;
+	std::unordered_map<String, std::function<void(const Dictionary &, const Ref<Schema> &, RuleCompileResult &)>> custom_rule_factories;
 
+	/**
+	 * @brief Private constructor for singleton pattern
+	 */
 	RuleFactory() { cache_mutex = Ref<Mutex>(memnew(Mutex)); }
 
 	RuleFactory(RuleFactory const &); // Don't Implement
@@ -100,8 +103,7 @@ public:
 	 * @param keyword The schema keyword to look for
 	 * @param factory The factory function
 	 */
-	void register_rule_factory(const String &keyword,
-			std::function<void(const Dictionary &, const Ref<Schema> &, RuleCompileResult &)> factory) {
+	void register_rule_factory(const String &keyword, std::function<void(const Dictionary &, const Ref<Schema> &, RuleCompileResult &)> factory) {
 		custom_rule_factories[keyword] = factory;
 	}
 

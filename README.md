@@ -113,12 +113,6 @@ scons platform=linux target=template_release
 5. **Write tests**: Every new feature should have **test coverage**. See [the test suite](project/tests/) in the project folder.
 6. **Document your changes**: All public APIs **must be documented**.
 
-### **Code Formatting**
-```bash
-# Format code (requires clang-format)
-clang-format -i src/*.cpp src/*.hpp src/rule/*.cpp src/rule/*.hpp src/selector/*.cpp src/selector/*.hpp src/extension/*.cpp src/extension/*.hpp
-```
-
 ---
 
 ## **License**

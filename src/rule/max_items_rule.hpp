@@ -15,7 +15,8 @@ private:
 	int64_t max_items;
 
 public:
-	explicit MaxItemsRule(int64_t max) : max_items(max) {}
+	explicit MaxItemsRule(int64_t max) :
+			max_items(max) {}
 
 	bool validate(const Variant &target, ValidationContext &context) const override;
 

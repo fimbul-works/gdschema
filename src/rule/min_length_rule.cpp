@@ -13,8 +13,7 @@ bool MinLengthRule::validate(const Variant &target, ValidationContext &context) 
 	int64_t actual_length = str.utf8().length(); // Use UTF-8 byte length for proper Unicode handling
 
 	if (actual_length < min_length) {
-		context.add_error(
-				vformat("String length %d is less than minimum %d", actual_length, min_length), "minLength", target);
+		context.add_error(vformat("String length %d is less than minimum %d", actual_length, min_length), "minLength", target);
 		return false;
 	}
 

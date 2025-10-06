@@ -44,9 +44,7 @@ bool ContainsRule::validate(const Variant &target, ValidationContext &context) c
 	}
 
 	if (!found_match) {
-		context.add_error(
-				vformat("Array with %d items does not contain any item matching the required schema", array_size),
-				"contains", target);
+		context.add_error(vformat("Array with %d items does not contain any item matching the required schema", array_size), "contains", target);
 		return false;
 	}
 

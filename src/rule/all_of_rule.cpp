@@ -26,9 +26,7 @@ bool AllOfRule::validate(const Variant &target, ValidationContext &context) cons
 	}
 
 	if (!all_valid) {
-		context.add_error(vformat("Value failed %d out of %d allOf schemas", (int64_t)sub_rules.size(),
-								  (int64_t)sub_rules.size()),
-				"allOf");
+		context.add_error(vformat("Value failed %d out of %d allOf schemas", (int64_t)sub_rules.size(), (int64_t)sub_rules.size()), "allOf");
 	}
 
 	return all_valid;

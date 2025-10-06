@@ -151,6 +151,7 @@ String SchemaValidationResult::get_brief_summary() const {
 	if (is_valid()) {
 		return "Validation successful";
 	}
+
 	return vformat("Validation failed: %d error(s)", (int64_t)errors.size());
 }
 

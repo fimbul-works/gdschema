@@ -2,8 +2,7 @@
 
 using namespace godot;
 
-std::vector<SelectionTarget> ObjectValuesSelector::select_targets(
-		const Variant &instance, const ValidationContext &context) const {
+std::vector<SelectionTarget> ObjectValuesSelector::select_targets(const Variant &instance, const ValidationContext &context) const {
 	std::vector<SelectionTarget> targets;
 
 	if (instance.get_type() == Variant::DICTIONARY) {

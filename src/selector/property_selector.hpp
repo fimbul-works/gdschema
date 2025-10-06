@@ -22,10 +22,11 @@ private:
 	bool is_required;
 
 public:
-	PropertySelector(const StringName &name, bool required = false) : property_name(name), is_required(required) {}
+	PropertySelector(const StringName &name, bool required = false) :
+			property_name(name),
+			is_required(required) {}
 
-	std::vector<SelectionTarget> select_targets(
-			const Variant &instance, const ValidationContext &context) const override;
+	std::vector<SelectionTarget> select_targets(const Variant &instance, const ValidationContext &context) const override;
 
 	String get_description() const override {
 		return vformat("property[%s%s]", property_name, is_required ? ", required" : "");

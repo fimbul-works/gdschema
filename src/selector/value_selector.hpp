@@ -20,8 +20,7 @@ namespace godot {
  */
 class ValueSelector : public Selector {
 public:
-	std::vector<SelectionTarget> select_targets(
-			const Variant &instance, const ValidationContext &context) const override {
+	std::vector<SelectionTarget> select_targets(const Variant &instance, const ValidationContext &context) const override {
 		return { SelectionTarget(instance) };
 	}
 

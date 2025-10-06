@@ -6,7 +6,8 @@
 
 using namespace godot;
 
-PatternRule::PatternRule(const String &pattern) : pattern_string(pattern) {
+PatternRule::PatternRule(const String &pattern) :
+		pattern_string(pattern) {
 	pattern_regex = RegEx::create_from_string(pattern);
 
 	if (!pattern_regex.is_valid()) {

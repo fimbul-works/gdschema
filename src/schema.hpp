@@ -164,12 +164,11 @@ public:
 	/**
 	 * @brief Constructor that builds tree from dictionary
 	 * @param schema_dict The JSON Schema definition
-	 * @param p_root_schema Reference to root schema (for child nodes)
-	 * @param p_schema_path Path from root (for debugging)
+	 * @param root_schema Reference to root schema (for child nodes)
+	 * @param schema_path Path from root (for debugging)
 	 * @param validate_against_meta If true, validate against meta-schema
 	 */
-	Schema(const Dictionary &schema_dict, const Ref<Schema> &p_root_schema = nullptr,
-			const StringName &p_schema_path = "", const bool validate_against_meta = false);
+	Schema(const Dictionary &schema_dict, const Ref<Schema> &root_schema = nullptr, const StringName &schema_path = "", const bool validate_against_meta = false);
 
 	/**
 	 * @brief Destructor

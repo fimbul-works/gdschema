@@ -14,7 +14,8 @@ private:
 	double exclusive_maximum;
 
 public:
-	explicit ExclusiveMaximumRule(double max) : exclusive_maximum(max) {}
+	explicit ExclusiveMaximumRule(double max) :
+			exclusive_maximum(max) {}
 
 	bool validate(const Variant &target, ValidationContext &context) const override;
 	String get_rule_type() const override { return "exclusiveMaximum"; }
