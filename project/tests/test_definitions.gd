@@ -276,7 +276,7 @@ func test_defs_error_messages() -> void:
 
 	# The error should reference the actual property path, not the $defs path
 	if errors.size() > 0:
-		var error_path = errors[0]["path"]
+		var error_path = errors[0]["instance_path"]
 		expect(error_path == "/contact", "Error path should be /contact, got: " + str(error_path))
 
 func test_mixed_defs_and_definitions() -> void:

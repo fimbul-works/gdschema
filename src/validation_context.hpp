@@ -1,5 +1,7 @@
 #pragma once
 
+#include "validation_error.hpp"
+
 #include <godot_cpp/variant/array.hpp>
 #include <godot_cpp/variant/dictionary.hpp>
 #include <godot_cpp/variant/packed_string_array.hpp>
@@ -15,43 +17,13 @@ namespace godot {
 class Schema;
 
 /**
- * @struct ValidationError
- * @brief Represents a single validation error
- */
-struct ValidationError {
-	String instance_path; // Path to invalid data: "/user/age"
-	String schema_path; // Path to violated rule: "/properties/user/minimum"
-	String message; // Human-readable error message
-	String keyword; // Schema keyword that failed
-	Variant invalid_value; // The actual invalid value
-
-	ValidationError(const String &msg, const String &inst_path = "", const String &sch_path = "", const String &kw = "", const Variant &value = Variant()) :
-			message(msg),
-			instance_path(inst_path),
-			schema_path(sch_path),
-			keyword(kw),
-			invalid_value(value) {}
-
-	// Convert to Dictionary for GDScript access
-	Dictionary to_dict() const {
-		Dictionary result;
-		result["instance_path"] = instance_path;
-		result["schema_path"] = schema_path;
-		result["message"] = message;
-		result["keyword"] = keyword;
-		result["invalid_value"] = invalid_value;
-		return result;
-	}
-};
-
-/**
  * @class ValidationContext
  * @brief Context for tracking validation state and collecting errors
  */
 class ValidationContext {
 private:
-	String instance_path;
-	String schema_path;
+	PackedStringArray instance_path_parts;
+	PackedStringArray schema_path_parts;
 	const Schema *source_schema; // Weak reference to avoid cycles
 	std::vector<ValidationError> errors;
 	Dictionary custom_data;
@@ -63,29 +35,35 @@ public:
 	 * @param inst_path Current instance path
 	 * @param sch_path Current schema path
 	 */
-	ValidationContext(const Schema *schema = nullptr, const String &inst_path = "", const String &sch_path = "") :
-			source_schema(schema),
-			instance_path(inst_path),
-			schema_path(sch_path) {}
+	ValidationContext(const Schema *schema = nullptr,
+			const PackedStringArray &inst_parts = PackedStringArray(),
+			const PackedStringArray &sch_parts = PackedStringArray()) :
+			source_schema(schema), instance_path_parts(inst_parts), schema_path_parts(sch_parts) {}
 
 	/**
 	 * @brief Creates a child context for validating a sub-instance
-	 * @param path_segment Path segment to append to instance path
+	 * @param segment Path segment to append to instance path
 	 * @return New validation context with updated instance path
 	 */
-	ValidationContext create_child_instance(const String &path_segment) const {
-		String new_path = build_path(instance_path, path_segment);
-		return ValidationContext(source_schema, new_path, schema_path);
+	ValidationContext create_child_instance(const String &segment) const {
+		PackedStringArray new_parts = instance_path_parts;
+		if (!segment.is_empty()) {
+			new_parts.push_back(segment);
+		}
+		return ValidationContext(source_schema, new_parts, schema_path_parts);
 	}
 
 	/**
 	 * @brief Creates a child context for a sub-schema
-	 * @param path_segment Path segment to append to schema path
+	 * @param segment Path segment to append to schema path
 	 * @return New validation context with updated schema path
 	 */
-	ValidationContext create_child_schema(const String &path_segment) const {
-		String new_path = build_path(schema_path, path_segment);
-		return ValidationContext(source_schema, instance_path, new_path);
+	ValidationContext create_child_schema(const String &segment) const {
+		PackedStringArray new_parts = schema_path_parts;
+		if (!segment.is_empty()) {
+			new_parts.push_back(segment);
+		}
+		return ValidationContext(source_schema, instance_path_parts, new_parts);
 	}
 
 	/**
@@ -95,9 +73,16 @@ public:
 	 * @return New validation context
 	 */
 	ValidationContext create_child_context(const String &instance_segment, const String &schema_segment = "") const {
-		String new_inst_path = build_path(instance_path, instance_segment);
-		String new_sch_path = schema_segment.is_empty() ? schema_path : build_path(schema_path, schema_segment);
-		return ValidationContext(source_schema, new_inst_path, new_sch_path);
+		PackedStringArray new_instance_parts = instance_path_parts;
+		if (!instance_segment.is_empty()) {
+			new_instance_parts.push_back(instance_segment);
+		}
+
+		PackedStringArray new_schema_parts = schema_path_parts;
+		if (!schema_segment.is_empty()) {
+			new_schema_parts.push_back(schema_segment);
+		}
+		return ValidationContext(source_schema, new_instance_parts, new_schema_parts);
 	}
 
 	/**
@@ -106,8 +91,10 @@ public:
 	 * @param keyword Schema keyword that failed (optional)
 	 * @param invalid_value The value that failed validation (optional)
 	 */
-	void add_error(const String &message, const String &keyword = "", const Variant &invalid_value = Variant()) {
-		errors.emplace_back(message, instance_path, schema_path, keyword, invalid_value);
+	void add_error(const String &message, const String &keyword = "",
+			const Variant &invalid_value = Variant()) {
+		errors.emplace_back(message, instance_path_parts, schema_path_parts,
+				keyword, invalid_value);
 	}
 
 	/**
@@ -156,50 +143,25 @@ public:
 	}
 
 	/**
-	 * @brief Gets a formatted summary of all validation errors
-	 * @return Multi-line string with all errors
-	 */
-	String get_error_summary() const {
-		if (errors.empty()) {
-			return "Validation successful - no errors";
-		}
-
-		String summary = vformat("Schema validation failed with %d error(s):\n", (int64_t)errors.size());
-
-		for (int64_t i = 0; i < errors.size(); i++) {
-			const auto &error = errors[i];
-
-			summary += vformat("  [%d] ", i + 1);
-
-			if (!error.instance_path.is_empty()) {
-				summary += vformat("At '%s': ", error.instance_path);
-			}
-
-			summary += error.message;
-
-			if (!error.keyword.is_empty()) {
-				summary += vformat(" (%s)", error.keyword);
-			}
-
-			if (i < errors.size() - 1) {
-				summary += "\n";
-			}
-		}
-
-		return summary;
-	}
-
-	/**
 	 * @brief Gets the current instance path
 	 * @return Instance path string
 	 */
-	String get_instance_path() const { return instance_path; }
-
+	String get_instance_path() const {
+		if (instance_path_parts.is_empty()) {
+			return String();
+		}
+		return "/" + String("/").join(instance_path_parts);
+	}
 	/**
 	 * @brief Gets the current schema path
 	 * @return Schema path string
 	 */
-	String get_schema_path() const { return schema_path; }
+	String get_schema_path() const {
+		if (schema_path_parts.is_empty()) {
+			return String();
+		}
+		return "/" + String("/").join(schema_path_parts);
+	}
 
 	/**
 	 * @brief Gets the source schema reference

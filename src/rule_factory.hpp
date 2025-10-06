@@ -176,43 +176,6 @@ private:
 	void create_custom_rules(const Dictionary &schema_def, const Ref<Schema> &schema, RuleCompileResult &result);
 
 	/**
-	 * @brief Helper to get variant type name for error messages
-	 * @param value The variant to analyze
-	 * @return Type name string
-	 */
-	static String get_variant_type_name(const Variant &value) {
-		switch (value.get_type()) {
-			case Variant::NIL:
-				return "null";
-			case Variant::BOOL:
-				return "boolean";
-			case Variant::INT:
-				return "integer";
-			case Variant::FLOAT:
-				return "number";
-			case Variant::STRING:
-			case Variant::STRING_NAME:
-				return "string";
-			case Variant::ARRAY:
-			case Variant::PACKED_COLOR_ARRAY:
-			case Variant::PACKED_FLOAT32_ARRAY:
-			case Variant::PACKED_FLOAT64_ARRAY:
-			case Variant::PACKED_INT32_ARRAY:
-			case Variant::PACKED_INT64_ARRAY:
-			case Variant::PACKED_STRING_ARRAY:
-			case Variant::PACKED_VECTOR2_ARRAY:
-			case Variant::PACKED_VECTOR3_ARRAY:
-			case Variant::PACKED_VECTOR4_ARRAY:
-				return "array";
-			case Variant::DICTIONARY:
-			case Variant::OBJECT:
-				return "object";
-			default:
-				return "unknown";
-		}
-	}
-
-	/**
 	 * @brief Helper to convert numeric variant to double safely
 	 * @param value The variant to convert
 	 * @param out_value Output double value
@@ -240,6 +203,12 @@ private:
 			int64_t int_val = value.operator int64_t();
 			if (int_val >= 0) {
 				out_value = int_val;
+				return true;
+			}
+		} else if (value.get_type() == Variant::FLOAT) {
+			double float_val = value.operator double();
+			if (float_val >= 0 && float_val == static_cast<double>(static_cast<int64_t>(float_val))) {
+				out_value = static_cast<int64_t>(float_val);
 				return true;
 			}
 		}

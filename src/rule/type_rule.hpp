@@ -22,7 +22,6 @@ private:
 	std::vector<String> allowed_types;
 
 	bool is_type_compatible(const Variant &instance, const String &schema_type) const;
-	String get_variant_json_type(const Variant &instance) const;
 
 public:
 	explicit TypeRule(const String &type);

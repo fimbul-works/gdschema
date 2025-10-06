@@ -61,6 +61,46 @@ public:
 				return Variant(); // Invalid array type
 		}
 	}
+
+	/**
+	 * @brief Helper to get variant type name for error messages
+	 * @param value The variant to analyze
+	 * @return Type name string
+	 */
+	static String get_variant_json_type(const Variant &value) {
+		switch (value.get_type()) {
+			case Variant::NIL:
+				return "null";
+			case Variant::BOOL:
+				return "boolean";
+			case Variant::INT:
+				return "integer";
+			case Variant::FLOAT:
+				if (value.operator double() == static_cast<double>(static_cast<int64_t>(value.operator double()))) {
+					return "integer"; // Float with no fractional part is considered integer
+				}
+				return "number";
+			case Variant::STRING:
+			case Variant::STRING_NAME:
+				return "string";
+			case Variant::ARRAY:
+			case Variant::PACKED_COLOR_ARRAY:
+			case Variant::PACKED_FLOAT32_ARRAY:
+			case Variant::PACKED_FLOAT64_ARRAY:
+			case Variant::PACKED_INT32_ARRAY:
+			case Variant::PACKED_INT64_ARRAY:
+			case Variant::PACKED_STRING_ARRAY:
+			case Variant::PACKED_VECTOR2_ARRAY:
+			case Variant::PACKED_VECTOR3_ARRAY:
+			case Variant::PACKED_VECTOR4_ARRAY:
+				return "array";
+			case Variant::DICTIONARY:
+			case Variant::OBJECT:
+				return "object";
+			default:
+				return "unknown";
+		}
+	}
 };
 
 } //namespace godot

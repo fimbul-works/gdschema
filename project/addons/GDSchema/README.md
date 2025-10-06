@@ -10,7 +10,8 @@ This extension is designed to integrate seamlessly with other Godot workflows, a
 
 ## Version History
 
-- **1.1.0** (Current) - Enabled storing custom data in `ValidationContext`, and support for external implementations of the `"default"` keyword
+- **1.2.0** (Current) - Added `Schema.load_json` and `Schema.load_json_file` methods, and fixed schema meta validation
+- **1.1.0** - Enabled storing custom data in `ValidationContext`, and support for external implementations of the `"default"` keyword
 - **1.0.0** - First release with full JSON Schema Draft-7 support, schema registry, validation results, and editor-friendly API
 
 ## Features

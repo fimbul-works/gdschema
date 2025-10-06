@@ -408,13 +408,110 @@
 				Returns [code]true[/code] if the schema compiled successfully without errors.
 				[codeblock]
 				var good_schema = Schema.build_schema({"type": "string"})
-				print(good_schema.is_valid())  # true
+				print(good_schema.is_valid()) # true
 
 				var bad_schema = Schema.build_schema({
-				    "$ref": "http://example.com/missing.json"  # Reference not found
+				    "$ref": "http://example.com/missing.json" # Reference not found
 				})
-				print(bad_schema.is_valid())  # false
+				print(bad_schema.is_valid()) # false
 				[/codeblock]
+			</description>
+		</method>
+		<method name="load_from_json" qualifiers="static">
+			<return type="Schema" />
+			<param index="0" name="json_string" type="String" />
+			<param index="1" name="validate_against_meta" type="bool" default="false" />
+			<description>
+				Parses a JSON string and builds a schema from it. Returns a [Schema] object ready for validation, or [code]null[/code] if the JSON is invalid.
+				This is a convenience method that combines JSON parsing with [method build_schema]. If [param validate_against_meta] is [code]true[/code], the schema will be validated against the JSON Schema Draft-7 meta-schema.
+				Schemas with a [code]$id[/code] field are automatically registered globally.
+				[codeblock]
+				var json_text = '''
+				{
+				    "type": "object",
+				    "properties": {
+				        "username": {
+				            "type": "string",
+				            "minLength": 3,
+				            "maxLength": 20
+				        },
+				        "email": {
+				            "type": "string",
+				            "format": "email"
+				        }
+				    },
+				    "required": ["username", "email"]
+				}
+				'''
+
+				var schema = Schema.load_from_json(json_text)
+				if schema:
+				    var result = schema.validate({
+				        "username": "alice",
+				        "email": "alice@example.com"
+				    })
+				    print(result.is_valid()) # true
+				else:
+				    print("Failed to parse schema JSON")
+				[/codeblock]
+				[b]Note:[/b] Returns [code]null[/code] if the JSON is malformed. Check the error output for parsing details.
+			</description>
+		</method>
+		<method name="load_from_json_file" qualifiers="static">
+			<return type="Schema" />
+			<param index="0" name="path" type="String" />
+			<param index="1" name="validate_against_meta" type="bool" default="false" />
+			<description>
+				Loads a JSON Schema from a file and builds it. Returns a [Schema] object ready for validation, or [code]null[/code] if the file cannot be read or the JSON is invalid.
+				This is a convenience method for loading external schema files. If [param validate_against_meta] is [code]true[/code], the schema will be validated against the JSON Schema Draft-7 meta-schema.
+				Schemas with a [code]$id[/code] field are automatically registered globally, making this useful for loading reusable schema definitions.
+				[codeblock]
+				# Load a user validation schema
+				var user_schema = Schema.load_from_json_file("res://schemas/user.json")
+				if not user_schema:
+				    push_error("Failed to load user schema")
+				    return
+
+				# Load and automatically register an address schema with $id
+				var address_schema = Schema.load_from_json_file("res://schemas/address.json")
+				# If address.json contains "$id": "http://example.com/address.json",
+				# it's now available for $ref
+
+				# Use the loaded schema
+				var validation_result = user_schema.validate({
+				    "username": "alice",
+				    "email": "alice@example.com"
+				})
+
+				if not validation_result.is_valid():
+				    print(validation_result.get_summary())
+				[/codeblock]
+				[b]Example schema file[/b] ([code]res://schemas/user.json[/code]):
+				[codeblock]
+				{
+				    "$id": "http://example.com/user.json",
+				    "$schema": "http://json-schema.org/draft-07/schema#",
+				    "type": "object",
+				    "properties": {
+				        "username": {
+				            "type": "string",
+				            "minLength": 3,
+				            "maxLength": 20,
+				            "pattern": "^[a-zA-Z0-9_]+$"
+				        },
+				        "email": {
+				            "type": "string",
+				            "format": "email"
+				        },
+				        "age": {
+				            "type": "integer",
+				            "minimum": 13
+				        }
+				    },
+				    "required": ["username", "email"]
+				}
+				[/codeblock]
+				[b]Note:[/b] Returns [code]null[/code] if the file doesn't exist, cannot be read, or contains malformed JSON. Check the error output for details.
 			</description>
 		</method>
 		<method name="register_schema" qualifiers="static">

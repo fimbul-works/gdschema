@@ -31,7 +31,7 @@
 			</description>
 		</method>
 		<method name="get_all_error_paths" qualifiers="const">
-			<return type="Array" />
+			<return type="PackedStringArray" />
 			<description>
 				Returns an array of JSON Pointer paths for all validation errors.
 				[codeblock]
@@ -170,7 +170,7 @@
 			</description>
 		</method>
 		<method name="get_error_path_array" qualifiers="const">
-			<return type="Array" />
+			<return type="PackedStringArray" />
 			<param index="0" name="index" type="int" />
 			<description>
 				Returns the path to the invalid data as an array of segments. Returns an empty array if the index is out of range.
@@ -262,7 +262,7 @@
 			</description>
 		</method>
 		<method name="get_violated_constraints" qualifiers="const">
-			<return type="Array" />
+			<return type="PackedStringArray" />
 			<description>
 				Returns an array of unique constraint names that were violated during validation. Useful for categorizing errors or filtering by constraint type.
 				[codeblock]

@@ -33,29 +33,8 @@ void SchemaValidationResult::_bind_methods() {
 Ref<SchemaValidationResult> SchemaValidationResult::from_context(const ValidationContext &context) {
 	Ref<SchemaValidationResult> result = memnew(SchemaValidationResult);
 
-	// Convert ValidationContext errors to YAMLValidationError format
 	const std::vector<ValidationError> &context_errors = context.get_errors();
-
-	for (const ValidationError &ctx_error : context_errors) {
-		// Convert instance path string to array of path segments
-		Array path_segments;
-		String path_str = ctx_error.instance_path;
-
-		if (!path_str.is_empty() && path_str != "/") {
-			// Remove leading slash and split by slash
-			if (path_str.begins_with("/")) {
-				path_str = path_str.substr(1);
-			}
-			PackedStringArray parts = path_str.split("/");
-			path_segments.resize(parts.size());
-			for (int i = 0; i < parts.size(); i++) {
-				path_segments[i] = parts[i];
-			}
-		}
-
-		YAMLValidationError error(ctx_error.message, ctx_error.instance_path, path_segments, ctx_error.keyword,
-				ctx_error.schema_path, ctx_error.invalid_value);
-
+	for (const ValidationError &error : context_errors) {
 		result->add_error(error);
 	}
 
@@ -91,21 +70,21 @@ String SchemaValidationResult::get_error_message(int index) const {
 
 String SchemaValidationResult::get_error_path(int index) const {
 	if (index >= 0 && index < static_cast<int>(errors.size())) {
-		return errors[index].path;
+		return errors[index].get_instance_path();
 	}
 	return "";
 }
 
-Array SchemaValidationResult::get_error_path_array(int index) const {
+PackedStringArray SchemaValidationResult::get_error_path_array(int index) const {
 	if (index >= 0 && index < static_cast<int>(errors.size())) {
-		return errors[index].path_array;
+		return errors[index].instance_path_parts;
 	}
 	return Array();
 }
 
 String SchemaValidationResult::get_error_constraint(int index) const {
 	if (index >= 0 && index < static_cast<int>(errors.size())) {
-		return errors[index].constraint;
+		return errors[index].keyword;
 	}
 	return "";
 }
@@ -119,7 +98,7 @@ Variant SchemaValidationResult::get_error_value(int index) const {
 
 String SchemaValidationResult::get_summary() const {
 	if (is_valid()) {
-		return "Validation successful - no errors";
+		return "Validation successful";
 	}
 
 	String summary = vformat("Schema validation failed with %d error(s):\n", (int64_t)errors.size());
@@ -129,14 +108,15 @@ String SchemaValidationResult::get_summary() const {
 
 		summary += vformat("  [%d] ", i + 1);
 
-		if (!error.path.is_empty()) {
-			summary += vformat("At '%s': ", error.path);
+		String err_path = error.get_instance_path();
+		if (!err_path.is_empty()) {
+			summary += vformat("At '%s': ", err_path);
 		}
 
 		summary += error.message;
 
-		if (!error.constraint.is_empty()) {
-			summary += vformat(" (%s)", error.constraint);
+		if (!error.keyword.is_empty()) {
+			summary += vformat(" (%s)", error.keyword);
 		}
 
 		if (i < errors.size() - 1) {
@@ -155,31 +135,31 @@ String SchemaValidationResult::get_brief_summary() const {
 	return vformat("Validation failed: %d error(s)", (int64_t)errors.size());
 }
 
-Array SchemaValidationResult::get_all_error_paths() const {
-	Array paths;
+PackedStringArray SchemaValidationResult::get_all_error_paths() const {
+	PackedStringArray paths;
 	paths.resize(errors.size());
 	for (size_t i = 0; i < errors.size(); i++) {
-		paths[i] = errors[i].path;
+		paths[i] = errors[i].get_instance_path();
 	}
 	return paths;
 }
 
-Array SchemaValidationResult::get_violated_constraints() const {
-	Array constraints;
+PackedStringArray SchemaValidationResult::get_violated_constraints() const {
+	PackedStringArray constraints;
 	std::vector<String> unique_constraints;
 
 	for (const auto &error : errors) {
-		if (!error.constraint.is_empty()) {
+		if (!error.keyword.is_empty()) {
 			// Check if already added
 			bool found = false;
 			for (const String &existing : unique_constraints) {
-				if (existing == error.constraint) {
+				if (existing == error.keyword) {
 					found = true;
 					break;
 				}
 			}
 			if (!found) {
-				unique_constraints.push_back(error.constraint);
+				unique_constraints.push_back(error.keyword);
 			}
 		}
 	}
@@ -196,7 +176,7 @@ String SchemaValidationResult::_to_string() const {
 	return get_brief_summary();
 }
 
-void SchemaValidationResult::add_error(const YAMLValidationError &error) {
+void SchemaValidationResult::add_error(const ValidationError &error) {
 	errors.push_back(error);
 	validation_succeeded = false;
 }

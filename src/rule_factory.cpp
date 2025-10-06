@@ -41,6 +41,7 @@
 #include "selector/pattern_properties_selector.hpp"
 #include "selector/property_selector.hpp"
 #include "selector/value_selector.hpp"
+#include "util.hpp"
 
 using namespace godot;
 
@@ -171,7 +172,7 @@ void RuleFactory::create_type_rules(const Variant &type_def, RuleCompileResult &
 			if (type_array[i].get_type() == Variant::STRING) {
 				types.push_back(type_array[i].operator String());
 			} else {
-				result.add_error(vformat("Type array element must be string, got %s", get_variant_type_name(type_array[i])), vformat("type/%d", i));
+				result.add_error(vformat("Type array element must be string, got %s", SchemaUtil::get_variant_json_type(type_array[i])), vformat("type/%d", i));
 				return;
 			}
 		}
@@ -195,7 +196,6 @@ void RuleFactory::create_string_rules(const Dictionary &schema_def, RuleCompileR
 			auto rule = std::make_unique<MinLengthRule>(min_length);
 			result.rules->add_rule(std::make_unique<SelectorRule>(std::move(selector), std::move(rule)));
 		}
-		// Note: Meta-validation ensures this is a non-negative integer
 	}
 
 	// maxLength

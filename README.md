@@ -4,7 +4,8 @@ This is the **C++ GDExtension implementation** of the GDSchema plugin. It provid
 
 ## Version History
 
-- **1.1.0** (Current) - Enabled storing custom data in `ValidationContext`, and support for external implementations of the `"default"` keyword
+- **1.2.0** (Current) - Added `Schema.load_json` and `Schema.load_json_file` methods, and fixed schema meta-validation
+- **1.1.0** - Enabled storing custom data in `ValidationContext`, and support for external implementations of the `"default"` keyword
 - **1.0.0** - Initial public release
 
 ## Quick Start

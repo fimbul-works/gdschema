@@ -3,6 +3,8 @@
 #include "rule_factory.hpp"
 #include "schema_registry.hpp"
 
+#include <godot_cpp/classes/file_access.hpp>
+#include <godot_cpp/classes/json.hpp>
 #include <godot_cpp/core/memory.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
 
@@ -45,6 +47,8 @@ void Schema::_bind_methods() {
 	ClassDB::bind_static_method("Schema", D_METHOD("register_schema", "schema", "id"), &Schema::register_schema, DEFVAL(""));
 	ClassDB::bind_static_method("Schema", D_METHOD("is_schema_registered", "id"), &Schema::is_schema_registered);
 	ClassDB::bind_static_method("Schema", D_METHOD("unregister_schema", "id"), &Schema::unregister_schema);
+	ClassDB::bind_static_method("Schema", D_METHOD("load_from_json", "json_string", "validate_against_meta"), &Schema::load_from_json, DEFVAL(false));
+	ClassDB::bind_static_method("Schema", D_METHOD("load_from_json_file", "path", "validate_against_meta"), &Schema::load_from_json_file, DEFVAL(false));
 
 	BIND_VIRTUAL_METHOD(Schema, _to_string);
 }
@@ -66,7 +70,15 @@ Schema::Schema(const Dictionary &schema_dict, const Ref<Schema> &p_root_schema, 
 		Ref<SchemaValidationResult> validation_result = MetaSchemaDefinitions::validate_schema_definition(schema_dict);
 
 		if (validation_result->has_errors()) {
-			UtilityFunctions::push_warning(vformat("Schema(%s) failed validation:\n%s\n", p_schema_path, validation_result->get_errors()), schema_dict);
+			// Convert meta-validation errors to compilation errors
+			for (int i = 0; i < validation_result->error_count(); i++) {
+				String message = validation_result->get_error_message(i);
+				PackedStringArray path_parts = validation_result->get_error_path_array(i);
+				compile_errors.emplace_back(vformat("Meta-schema validation failed: %s", message), path_parts);
+			}
+
+			is_compiled = true;
+			return; // Don't construct children or attempt compilation
 		}
 	}
 
@@ -95,7 +107,7 @@ Schema::~Schema() {
 }
 
 Ref<Schema> Schema::build_schema(const Dictionary &schema_dict, bool validate_against_meta) {
-	Ref<Schema> schema = memnew(Schema(schema_dict));
+	Ref<Schema> schema = memnew(Schema(schema_dict, nullptr, "", validate_against_meta));
 	schema->compile();
 	if (schema->compile_errors.size() > 0) {
 		UtilityFunctions::push_error("Building schema failed failed:\n", schema->get_compile_error_summary());
@@ -140,6 +152,38 @@ bool Schema::is_schema_registered(const StringName &id) {
 
 bool Schema::unregister_schema(const StringName &id) {
 	return SchemaRegistry::get_singleton().unregister_schema(id);
+}
+
+Ref<Schema> Schema::load_from_json_file(const String &path, bool validate_against_meta) {
+	Ref<FileAccess> file = FileAccess::open(path, FileAccess::READ);
+	if (file.is_null()) {
+		UtilityFunctions::push_error(vformat("Failed to open schema file: %s", path));
+		return Ref<Schema>();
+	}
+
+	String json_text = file->get_as_text();
+	file->close();
+
+	return load_from_json(json_text, validate_against_meta);
+}
+
+Ref<Schema> Schema::load_from_json(const String &json_string, bool validate_against_meta) {
+	Ref<JSON> json;
+	json.instantiate();
+	Error err = json->parse(json_string);
+
+	if (err != OK) {
+		UtilityFunctions::push_error(vformat("Failed to parse JSON schema: %s at line %d", json->get_error_message(), json->get_error_line()));
+		return Ref<Schema>();
+	}
+
+	Variant result = json->get_data();
+	if (result.get_type() != Variant::DICTIONARY) {
+		UtilityFunctions::push_error("JSON schema root must be an object");
+		return Ref<Schema>();
+	}
+
+	return build_schema(result.operator Dictionary(), validate_against_meta);
 }
 
 void Schema::compile() {

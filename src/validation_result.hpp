@@ -1,5 +1,7 @@
 #pragma once
 
+#include "validation_error.hpp"
+
 #include <godot_cpp/classes/ref_counted.hpp>
 #include <godot_cpp/core/class_db.hpp>
 #include <godot_cpp/variant/array.hpp>
@@ -15,42 +17,6 @@ namespace godot {
 class ValidationContext;
 
 /**
- * @struct YAMLValidationError
- * @brief Individual validation error with clear path and message information
- */
-struct YAMLValidationError {
-	String message; // Human-readable error description
-	String path; // Path as string: "/user/name"
-	Array path_array; // Path as array: ["user", "name"]
-	String constraint; // Violated constraint: "minLength", "pattern", etc.
-	String schema_path; // Schema location: "/properties/user/properties/name/minLength"
-	Variant invalid_value; // The actual value that failed validation
-
-	YAMLValidationError(const String &msg, const String &instance_path, const Array &path_segments, const String &constraint_type, const String &schema_location, const Variant &value) :
-			message(msg),
-			path(instance_path),
-			path_array(path_segments),
-			constraint(constraint_type),
-			schema_path(schema_location),
-			invalid_value(value) {}
-
-	/**
-	 * @brief Convert to Dictionary for GDScript access
-	 * @return Dictionary with all error information
-	 */
-	Dictionary to_dict() const {
-		Dictionary result;
-		result["message"] = message;
-		result["path"] = path;
-		result["path_array"] = path_array;
-		result["constraint"] = constraint;
-		result["schema_path"] = schema_path;
-		result["invalid_value"] = invalid_value;
-		return result;
-	}
-};
-
-/**
  * @class SchemaValidationResult
  * @brief Clean, user-facing validation result with flat error list
  *
@@ -61,7 +27,7 @@ class SchemaValidationResult : public RefCounted {
 	GDCLASS(SchemaValidationResult, RefCounted)
 
 private:
-	std::vector<YAMLValidationError> errors;
+	std::vector<ValidationError> errors;
 	bool validation_succeeded;
 
 protected:
@@ -141,7 +107,7 @@ public:
 	 * @param index Error index
 	 * @return Path array like ["user", "name"] or empty array if index out of range
 	 */
-	Array get_error_path_array(int index) const;
+	PackedStringArray get_error_path_array(int index) const;
 
 	/**
 	 * @brief Gets the constraint that was violated at specific index
@@ -175,13 +141,13 @@ public:
 	 * @brief Gets all error paths as array of strings
 	 * @return Array of path strings for all errors
 	 */
-	Array get_all_error_paths() const;
+	PackedStringArray get_all_error_paths() const;
 
 	/**
 	 * @brief Gets all unique constraints that were violated
 	 * @return Array of unique constraint names
 	 */
-	Array get_violated_constraints() const;
+	PackedStringArray get_violated_constraints() const;
 
 	// ========== Debugging ==========
 
@@ -194,7 +160,7 @@ public:
 	 * @brief Add error to list
 	 * @param error The error to add
 	 */
-	void add_error(const YAMLValidationError &error);
+	void add_error(const ValidationError &error);
 };
 
 } // namespace godot

@@ -288,7 +288,6 @@ func test_nested_references() -> void:
 
 	expect(schema.validate(valid_data).is_valid(), "Nested references should resolve correctly")
 	expect(!schema.validate(invalid_data).is_valid(), "Nested references should validate all levels")
-	print("Unexpected!")
 
 func test_circular_references() -> void:
 	# Test circular reference detection and handling

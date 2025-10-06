@@ -213,6 +213,22 @@ public:
 	 */
 	static bool unregister_schema(const StringName &id);
 
+	/**
+	 * @brief Loads a schema from a JSON file
+	 * @param path Path to the JSON schema file
+	 * @param validate_against_meta If true, validate against meta-schema
+	 * @return New schema instance or null on error
+	 */
+	static Ref<Schema> load_from_json_file(const String &path, bool validate_against_meta = false);
+
+	/**
+	 * @brief Loads a schema from a JSON string
+	 * @param json_string JSON schema as string
+	 * @param validate_against_meta If true, validate against meta-schema
+	 * @return New schema instance or null on error
+	 */
+	static Ref<Schema> load_from_json(const String &json_string, bool validate_against_meta = false);
+
 	// ========== Tree Navigation ==========
 
 	/**

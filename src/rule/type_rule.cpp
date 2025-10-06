@@ -1,4 +1,5 @@
 #include "type_rule.hpp"
+#include "../util.hpp"
 #include "../validation_context.hpp"
 
 using namespace godot;
@@ -11,7 +12,7 @@ TypeRule::TypeRule(const std::vector<String> &types) :
 		allowed_types(types) {}
 
 bool TypeRule::validate(const Variant &target, ValidationContext &context) const {
-	String actual_type = get_variant_json_type(target);
+	String actual_type = SchemaUtil::get_variant_json_type(target);
 
 	// Check if actual type matches any allowed type
 	for (const String &allowed_type : allowed_types) {
@@ -51,7 +52,7 @@ String TypeRule::get_description() const {
 }
 
 bool TypeRule::is_type_compatible(const Variant &instance, const String &schema_type) const {
-	String actual_type = get_variant_json_type(instance);
+	String actual_type = SchemaUtil::get_variant_json_type(instance);
 
 	// Direct match
 	if (actual_type == schema_type) {
@@ -64,37 +65,4 @@ bool TypeRule::is_type_compatible(const Variant &instance, const String &schema_
 	}
 
 	return false;
-}
-
-String TypeRule::get_variant_json_type(const Variant &instance) const {
-	switch (instance.get_type()) {
-		case Variant::NIL:
-			return "null";
-		case Variant::BOOL:
-			return "boolean";
-		case Variant::INT:
-			return "integer";
-		case Variant::FLOAT:
-			return "number";
-		case Variant::STRING:
-		case Variant::STRING_NAME:
-			return "string";
-		case Variant::ARRAY:
-		case Variant::PACKED_BYTE_ARRAY:
-		case Variant::PACKED_COLOR_ARRAY:
-		case Variant::PACKED_FLOAT32_ARRAY:
-		case Variant::PACKED_FLOAT64_ARRAY:
-		case Variant::PACKED_INT32_ARRAY:
-		case Variant::PACKED_INT64_ARRAY:
-		case Variant::PACKED_STRING_ARRAY:
-		case Variant::PACKED_VECTOR2_ARRAY:
-		case Variant::PACKED_VECTOR3_ARRAY:
-		case Variant::PACKED_VECTOR4_ARRAY:
-			return "array";
-		case Variant::DICTIONARY:
-		case Variant::OBJECT:
-			return "object";
-		default:
-			return "unknown";
-	}
 }
