@@ -27,7 +27,7 @@ func test_validation_result_structure() -> void:
 
 func test_load_from_json_string() -> void:
 	# Test valid JSON schema
-	var json_string = '''
+	var json_string = """
 	{
 		"type": "object",
 		"properties": {
@@ -43,7 +43,7 @@ func test_load_from_json_string() -> void:
 		},
 		"required": ["username"]
 	}
-	'''
+	"""
 
 	var schema = Schema.load_from_json(json_string)
 
@@ -70,13 +70,13 @@ func test_load_from_json_invalid() -> void:
 
 func test_load_from_json_with_id() -> void:
 	# Test that schemas with $id are auto-registered
-	var json_with_id = '''
+	var json_with_id = """
 	{
 		"$id": "http://example.com/test-schema-from-json",
 		"type": "string",
 		"minLength": 5
 	}
-	'''
+	"""
 
 	var schema = Schema.load_from_json(json_with_id)
 

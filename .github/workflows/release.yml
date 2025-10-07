@@ -110,17 +110,7 @@ jobs:
             GDSchema-${{ steps.tag_name.outputs.tag }}.zip
             GDSchema-${{ steps.tag_name.outputs.tag }}.zip.sha256
           body: |
-            ## GDSchema ${{ steps.tag_name.outputs.tag }}
-
-            Full JSON Schema Draft-7 validation for Godot 4.3+
-
-            ### Installation
-            1. Download `GDSchema-${{ steps.tag_name.outputs.tag }}.zip`
-            2. Extract the contents into your project's `addons/` directory
-            3. The folder structure should be: `res://addons/GDSchema/`
-            4. Enable the plugin in Project Settings → Plugins
-
-            ### What's Included
+            ## What's Included
             - Windows (x86_64): Debug & Release
             - Linux (x86_64): Debug & Release
             - macOS (Universal): Debug & Release
@@ -131,9 +121,9 @@ jobs:
             - Consider building from source as an alternative
             - Check Apple's documentation on Gatekeeper and code signing requirements
 
-            This is not specific to GDSchema but affects GDExtensions generally on certain macOS setups.
+            This is not specific to GDSchema and affects GDExtensions generally on certain macOS setups.
 
-            ### Verify Download
+            ## Verify Download
             ```bash
             sha256sum -c GDSchema-${{ steps.tag_name.outputs.tag }}.zip.sha256
             ```
