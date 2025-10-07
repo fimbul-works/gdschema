@@ -34,7 +34,7 @@ bool OneOfRule::validate(const Variant &target, ValidationContext &context) cons
 	}
 
 	if (passed_count == 0) {
-		context.add_error(vformat("Value failed all %d oneOf schemas", (int64_t)sub_rules.size()), "oneOf");
+		context.add_error(vformat("Value failed all %d oneOf schemas", static_cast<int64_t>(sub_rules.size())), "oneOf");
 
 		// Show errors from first failed schema for debugging
 		if (!failed_contexts.empty()) {

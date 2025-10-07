@@ -766,7 +766,7 @@ String Schema::get_compile_error_summary() {
 		return "";
 	}
 
-	String summary = vformat("Schema compilation failed with %d error(s):\n", (int64_t)compile_errors.size());
+	String summary = vformat("Schema compilation failed with %d error(s):\n", static_cast<int64_t>(compile_errors.size()));
 
 	for (int64_t i = 0; i < compile_errors.size(); i++) {
 		const auto &error = compile_errors[i];
@@ -791,10 +791,10 @@ String Schema::_to_string() const {
 	String type_str;
 	switch (schema_type) {
 		case SchemaType::SCHEMA_OBJECT:
-			type_str = vformat("object, %d properties", (int64_t)get_child_count());
+			type_str = vformat("object, %d properties", static_cast<int64_t>(get_child_count()));
 			break;
 		case SchemaType::SCHEMA_ARRAY:
-			type_str = vformat("array, %d items", (int64_t)get_item_count());
+			type_str = vformat("array, %d items", static_cast<int64_t>(get_item_count()));
 			break;
 		case SchemaType::SCHEMA_SCALAR:
 			type_str = "scalar";
