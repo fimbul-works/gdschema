@@ -10,7 +10,7 @@ This extension is designed to integrate seamlessly with other Godot workflows, a
 
 ## Version History
 
-- **1.2.1** (Current) - Added support for Android (x86 64-bit, ARM 64-bit) platforms
+- **1.2.1** (Current) - Added support for Android (arm64, x86_64) platforms
 - **1.2.0** - Added `Schema.load_json` and `Schema.load_json_file` methods, and fixed schema meta validation
 - **1.1.0** - Enabled storing custom data in `ValidationContext`, and support for external implementations of the `"default"` keyword
 - **1.0.0** - First release with full JSON Schema Draft-7 support, schema registry, validation results, and editor-friendly API
@@ -32,7 +32,7 @@ This extension is designed to integrate seamlessly with other Godot workflows, a
   - Linux (x86 64-bit)
   - macOS: (Universal)
     - **Note**: Some macOS configurations (particularly newer versions with stricter Gatekeeper policies) may prevent loading of GDExtensions generally, not just this plugin. If the extension fails to load, try building from source or test with other GDExtensions to determine if this is a system-wide issue.
-  - Android (x86 64-bit, ARM 64-bit)
+  - Android (arm64, x86_64)
 
 ## Basic Usage
 

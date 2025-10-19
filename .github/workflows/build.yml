@@ -131,11 +131,21 @@ jobs:
 
       - name: Setup Android NDK (Android only)
         if: matrix.platform == 'android'
-        uses: nttld/setup-ndk@v1
-        with:
-          ndk-version: r23c
-          add-to-path: true
-          local-cache: true
+        run: |
+          # Install Android SDK command line tools
+          wget -q https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdline-tools.zip
+          mkdir -p $ANDROID_HOME/cmdline-tools
+          unzip -q cmdline-tools.zip -d $ANDROID_HOME/cmdline-tools
+          mv $ANDROID_HOME/cmdline-tools/cmdline-tools $ANDROID_HOME/cmdline-tools/latest
+
+          # Accept licenses and install specific NDK version
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
+          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "ndk;23.2.8568313"
+
+          # Set environment variable
+          echo "ANDROID_NDK_ROOT=$ANDROID_HOME/ndk/23.2.8568313" >> $GITHUB_ENV
+        env:
+          ANDROID_HOME: /usr/local/lib/android/sdk
 
       - name: Cache SCons build
         uses: actions/cache@v4
