@@ -15,6 +15,12 @@ linux.release.x86_64 = "res://addons/GDSchema/bin/libgdschema.linux.release.x86_
 macos.debug = "res://addons/GDSchema/bin/libgdschema.macos.debug.dylib"
 macos.release = "res://addons/GDSchema/bin/libgdschema.macos.release.dylib"
 
+android.debug.arm64 = "res://addons/GDSchema/bin/libgdschema.android.debug.arm64.so"
+android.release.arm64 = "res://addons/GDSchema/bin/libgdschema.android.release.arm64.so"
+
+android.debug.x86_64 = "res://addons/GDSchema/bin/libgdschema.android.debug.x86_64.so"
+android.release.x86_64 = "res://addons/GDSchema/bin/libgdschema.android.release.x86_64.so"
+
 [icons]
 
 Schema = "res://addons/GDSchema/icon.svg"

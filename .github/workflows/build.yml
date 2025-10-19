@@ -62,6 +62,31 @@ jobs:
             target: template_release
             arch: universal
 
+          # Android builds
+          - name: 🤖 Android Debug (arm64)
+            os: ubuntu-22.04
+            platform: android
+            target: template_debug
+            arch: arm64
+
+          - name: 🤖 Android Release (arm64)
+            os: ubuntu-22.04
+            platform: android
+            target: template_release
+            arch: arm64
+
+          - name: 🤖 Android Debug (x86_64)
+            os: ubuntu-22.04
+            platform: android
+            target: template_debug
+            arch: x86_64
+
+          - name: 🤖 Android Release (x86_64)
+            os: ubuntu-22.04
+            platform: android
+            target: template_release
+            arch: x86_64
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -90,6 +115,27 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y build-essential pkg-config python3 python3-pip git
+
+      - name: Setup Android dependencies
+        if: matrix.platform == 'android'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential pkg-config python3 python3-pip git
+
+      - name: Set up JDK 20 (Android only)
+        if: matrix.platform == 'android'
+        uses: actions/setup-java@v4
+        with:
+          java-version: '20'
+          distribution: 'temurin'
+
+      - name: Setup Android NDK (Android only)
+        if: matrix.platform == 'android'
+        uses: nttld/setup-ndk@v1
+        with:
+          ndk-version: r23c
+          add-to-path: true
+          local-cache: true
 
       - name: Cache SCons build
         uses: actions/cache@v4

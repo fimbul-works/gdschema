@@ -4,7 +4,8 @@ This is the **C++ GDExtension implementation** of the GDSchema plugin. It provid
 
 ## Version History
 
-- **1.2.0** (Current) - Added `Schema.load_json` and `Schema.load_json_file` methods, and fixed schema meta-validation
+- **1.2.1** (Current) - Added support for Android (x86 64-bit, ARM 64-bit) platforms
+- **1.2.0** - Added `Schema.load_json` and `Schema.load_json_file` methods, and fixed schema meta validation
 - **1.1.0** - Enabled storing custom data in `ValidationContext`, and support for external implementations of the `"default"` keyword
 - **1.0.0** - Initial public release
 
@@ -54,17 +55,22 @@ if result.has_errors():
 
 ## Installation & Setup
 
-### **Building From Source**
+GDSchema is available on the [Godot Asset Library](https://godotengine.org/asset-library/asset/4383). Be sure to enable the plugin in your project settings after installing.
 
-#### **Prerequisites**
+### Building From Source
+
+Alternatively you can build the binaries yourself. For the [latest versions of macOS](#supported-platforms) this may be necessary.
+
+#### Prerequisites
 - **Git** (for cloning and submodules)
 - **Python 3.x** (for SCons build system)
 - **C++ compiler** with C++17 support:
   - **Windows**: Visual Studio 2022 with C++ workload
   - **Linux/macOS**: GCC 9+ or Clang 10+
 - **SCons** build system (`pip install scons`)
+- **Android**: JDK version 20 and NDK version 23.2.8568313
 
-#### **Step 1: Clone the Repository**
+#### Step 1: Clone the Repository
 ```bash
 # Clone with submodules
 git clone --recursive https://github.com/fimbul-works/GDSchema
@@ -73,7 +79,7 @@ git clone --recursive https://github.com/fimbul-works/GDSchema
 git submodule update --init --recursive
 ```
 
-#### **Step 2: Build the Extension**
+#### Step 2: Build the Extension
 ```bash
 # Debug build
 scons target=template_debug
@@ -86,8 +92,8 @@ scons platform=windows target=template_release
 scons platform=linux target=template_release
 ```
 
-#### **Build Options**
-- `platform`: Target (`windows`, `linux`, `macos`, etc.)
+#### Build Options
+- `platform`: Target (`windows`, `linux`, `macos`, `android`, etc.)
 - `target`: Build type (`template_debug`, `template_release`)
 - `arch`: CPU architecture (`x86_32`, `x86_64`, `arm64`, etc.)
 - `dev_build`: Enable extra debugging (`yes`/`no`)
@@ -102,12 +108,13 @@ scons platform=linux target=template_release
 - **Linux**: ✅ Prebuilt binaries available for **x86 64-bit** architecture.
 - **macOS**: ⚠️ Prebuilt binaries available for **universal** architecture.
   - **Note**: Some macOS configurations (particularly newer versions with stricter Gatekeeper policies) may prevent loading of GDExtensions generally, not just this plugin. If the extension fails to load, try building from source or test with other GDExtensions to determine if this is a system-wide issue.
+- **Android**: ✅ Prebuilt binaries available for **ARM 64-bit** and **x86 64-bit** architectures.
 
 ---
 
-## **Contributing**
+## Contributing
 
-### **Development Guidelines**
+### Development Guidelines
 
 1. **Follow Godot's API design patterns.**
 4. **Thread safety**: No global state; ensure **safe multithreading**.
