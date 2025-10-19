@@ -4,7 +4,8 @@ This is the **C++ GDExtension implementation** of the GDSchema plugin. It provid
 
 ## Version History
 
-- **1.2.1** (Current) - Added support for Android (arm64, x86_64) platforms
+- **1.2.2** (Current) - Added support for Android (arm64, x86_64) platforms
+- **1.2.1** - Updated documentation
 - **1.2.0** - Added `Schema.load_json` and `Schema.load_json_file` methods, and fixed schema meta validation
 - **1.1.0** - Enabled storing custom data in `ValidationContext`, and support for external implementations of the `"default"` keyword
 - **1.0.0** - Initial public release
