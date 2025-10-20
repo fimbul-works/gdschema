@@ -1,5 +1,6 @@
 #include "meta_schema_definitions.hpp"
 #include "schema.hpp"
+#include "schema_registry.hpp"
 
 #include <godot_cpp/classes/json.hpp>
 
@@ -208,6 +209,7 @@ Ref<SchemaValidationResult> MetaSchemaDefinitions::validate_schema_definition(co
 	building_meta_schema = true;
 	Ref<Schema> meta_validator = get_draft7_meta_schema_instance();
 	Ref<SchemaValidationResult> result = meta_validator->validate_uncompiled(schema_def);
+	SchemaRegistry::get_singleton().register_schema("http://json-schema.org/draft-07/schema#", meta_validator);
 	building_meta_schema = false;
 
 	return result;
