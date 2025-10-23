@@ -10,18 +10,19 @@ This extension is designed to integrate seamlessly with other Godot workflows, a
 
 ## Version History
 
-- **1.2.2** (Current) - Added support for Android (arm64, x86_64) platforms
+- **1.3.0** (Current) - Improved meta-schema handling, added `get_id`, `get_title`, `get_description`, and `get_comment` methods to the `Schema class`, and the `Schema.get_schema_from_registry` static method
+- **1.2.2** - Added support for Android (arm64, x86_64) platforms
 - **1.2.1** - Updated documentation
 - **1.2.0** - Added `Schema.load_json` and `Schema.load_json_file` methods, and fixed schema meta validation
 - **1.1.0** - Enabled storing custom data in `ValidationContext`, and support for external implementations of the `"default"` keyword
-- **1.0.0** - First release with full JSON Schema Draft-7 support, schema registry, validation results, and editor-friendly API
+- **1.0.0** - First release with full JSON Schema Draft-7 support, Schema registry, validation results, and editor-friendly API
 
 ## Features
 
 - 📏 **Full JSON Schema Draft-7**: All validation keywords supported, including `type`, `minimum`, `maxLength`, `pattern`, `required`, `enum`, and logical composition (`allOf`, `oneOf`, `anyOf`, `not`)
 - 🗂️ **Schema Registry**: Schemas with `$id` are auto-registered and can be referenced across documents with `$ref`
 - 🔍 **Rich Validation Errors**: Detailed error messages with JSON Pointer paths, violated constraints, and invalid values
-- 🧩 **Editor Integration**: Navigate schema trees, retrieve child nodes, and inspect definitions for editor auto-complete and tooling (coming in future versions)
+- 🧩 **Editor Integration**: Navigate Schema trees, retrieve child nodes, and inspect definitions for editor auto-complete and tooling (coming in future versions)
 - 🛡️ **Thread-Safe and Lazy**: Schemas compile lazily with caching for performance and thread safety
 - ✅ **Comprehensive Results**: Validation returns a `SchemaValidationResult` with all errors collected at once
 
@@ -40,14 +41,14 @@ This extension is designed to integrate seamlessly with other Godot workflows, a
 ### Building a Schema
 
 ```gdscript
-# Simple string schema
+# Simple string Schema
 var schema = Schema.build_schema({
     "type": "string",
     "minLength": 3,
     "maxLength": 50
 })
 
-# Object schema with required fields
+# Object Schema with required fields
 var user_schema = Schema.build_schema({
     "type": "object",
     "properties": {
@@ -72,7 +73,7 @@ var address_schema = Schema.build_schema({
     }
 })
 
-# Reference a registered schema
+# Reference a registered Schema
 var person_schema = Schema.build_schema({
     "type": "object",
     "properties": {

@@ -280,7 +280,7 @@ func test_defs_error_messages() -> void:
 		expect(error_path == "/contact", "Error path should be /contact, got: " + str(error_path))
 
 func test_mixed_defs_and_definitions() -> void:
-	# Test schema with both $defs and definitions (should work)
+	# Test Schema with both $defs and definitions (should work)
 	var schema = Schema.build_schema({
 		"definitions": {
 			"old_style": { "type": "string" }

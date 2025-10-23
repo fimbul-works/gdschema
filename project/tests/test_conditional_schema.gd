@@ -408,18 +408,18 @@ func test_invalid_then_else_schemas() -> void:
 	var schema = Schema.build_schema({
 		"if": {"type": "string"},
 		"then": {
-			"type": "invalid_type"  # This should be caught during schema validation
+			"type": "invalid_type"  # This should be caught during Schema validation
 		}
 	})
 
-	# The schema itself might be invalid, but we test what happens with valid data
+	# The Schema itself might be invalid, but we test what happens with valid data
 	var result = schema.validate("test")
 	# Behavior depends on implementation - could fail compilation or ignore invalid then clause
 
 # ========== EDGE CASES ==========
 
 func test_missing_if_condition() -> void:
-	# Test schema with then/else but no if
+	# Test Schema with then/else but no if
 	var schema = Schema.build_schema({
 		"type": "object",
 		"then": {
@@ -438,7 +438,7 @@ func test_missing_if_condition() -> void:
 func test_empty_if_condition() -> void:
 	var schema = Schema.build_schema({
 		"type": "object",
-		"if": {},  # Empty schema always matches
+		"if": {},  # Empty Schema always matches
 		"then": {
 			"required": ["always_required"]
 		}

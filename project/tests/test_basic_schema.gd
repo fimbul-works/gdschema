@@ -8,10 +8,10 @@ func test_schema_creation() -> void:
 	var schema = Schema.build_schema(schema_dict)
 
 	expect(schema != null, "Schema should be created successfully")
-	expect(schema.is_valid(), "Simple schema should compile without errors")
+	expect(schema.is_valid(), "Simple Schema should compile without errors")
 
 func test_invalid_schema_compilation() -> void:
-	# Test with invalid schema structure
+	# Test with invalid Schema structure
 	var invalid_schema = Schema.build_schema({"type": "invalid_type"})
 
 	expect(invalid_schema != null, "Schema object should be created even with errors")
@@ -48,9 +48,9 @@ func test_load_from_json_string() -> void:
 	var schema = Schema.load_from_json(json_string)
 
 	expect(schema != null, "Schema should load from valid JSON string")
-	expect(schema.is_valid(), "Loaded schema should compile successfully")
+	expect(schema.is_valid(), "Loaded Schema should compile successfully")
 
-	# Test that the loaded schema works correctly
+	# Test that the loaded Schema works correctly
 	var valid_data = {"username": "alice", "age": 25}
 	var result = schema.validate(valid_data)
 	expect(result.is_valid(), "Valid data should pass validation")
@@ -93,12 +93,12 @@ func test_load_from_json_with_meta_validation() -> void:
 	var schema = Schema.load_from_json(valid_schema_json, true)
 
 	expect(schema != null, "Schema object should be created")
-	expect(schema.is_valid(), "Valid schema should pass meta-validation")
+	expect(schema.is_valid(), "Valid Schema should pass meta-validation")
 
-	# Test with schema that fails meta-validation
+	# Test with Schema that fails meta-validation
 	var invalid_schema_json = '{"type": "string", "minLength": "not a number"}'
 	schema = Schema.load_from_json(invalid_schema_json, true)
 
-	expect(schema != null, "Invalid schema should still return Schema object")
+	expect(schema != null, "Invalid Schema should still return Schema object")
 	expect(!schema.is_valid(), "Schema with meta-validation errors should be invalid")
 	expect(schema.get_compile_errors().size() > 0, "Should have compilation errors from meta-validation")

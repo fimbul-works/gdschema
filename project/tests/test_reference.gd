@@ -536,9 +536,9 @@ func test_external_schema_reference() -> void:
 	})
 
 	expect(Schema.is_schema_registered("http://example.com/address.json"),
-		"Address schema should auto-register via $id")
+		"Address Schema should auto-register via $id")
 
-	# Create a person schema that references the address schema
+	# Create a person Schema that references the address schema
 	var person_schema = Schema.build_schema({
 		"type": "object",
 		"properties": {
@@ -589,7 +589,7 @@ func test_external_schema_reference() -> void:
 	expect(!result.is_valid(), "Person with invalid zipcode should not validate")
 
 func test_external_schema_with_fragment() -> void:
-	# Register a schema with definitions
+	# Register a Schema with definitions
 	var definitions_schema = Schema.build_schema({
 		"$id": "http://example.com/definitions.json",
 		"definitions": {
@@ -704,7 +704,7 @@ func test_multiple_external_references() -> void:
 	expect(!result.is_valid(), "Employee with incomplete name should not validate")
 
 func test_recursive_external_reference() -> void:
-	# Tree node schema with recursive reference
+	# Tree node Schema with recursive reference
 	var tree_node_schema = Schema.build_schema({
 		"$id": "http://example.com/tree-node.json",
 		"type": "object",
@@ -753,7 +753,7 @@ func test_recursive_external_reference() -> void:
 	expect(!result.is_valid(), "Tree with invalid child should not validate")
 
 func test_manual_registration_override() -> void:
-	# Create schema without $id
+	# Create Schema without $id
 	var schema = Schema.build_schema({
 		"type": "object",
 		"properties": {

@@ -14,9 +14,9 @@ func test_all_of_validation() -> void:
 
 	expect(schema.validate("hello").is_valid(), "Value satisfying all schemas should validate")
 	expect(schema.validate("testing").is_valid(), "Another valid value should validate")
-	expect(!schema.validate("hi").is_valid(), "Value failing one schema should not validate")
-	expect(!schema.validate("toolongstring").is_valid(), "Value failing another schema should not validate")
-	expect(!schema.validate(123).is_valid(), "Value failing first schema should not validate")
+	expect(!schema.validate("hi").is_valid(), "Value failing one Schema should not validate")
+	expect(!schema.validate("toolongstring").is_valid(), "Value failing another Schema should not validate")
+	expect(!schema.validate(123).is_valid(), "Value failing first Schema should not validate")
 
 func test_any_of_validation() -> void:
 	var schema = Schema.build_schema({
@@ -26,11 +26,11 @@ func test_any_of_validation() -> void:
 		]
 	})
 
-	expect(schema.validate("hello").is_valid(), "Value matching first schema should validate")
-	expect(schema.validate(15).is_valid(), "Value matching second schema should validate")
+	expect(schema.validate("hello").is_valid(), "Value matching first Schema should validate")
+	expect(schema.validate(15).is_valid(), "Value matching second Schema should validate")
 	expect(!schema.validate("test").is_valid(), "Short string should not validate (fails minLength)")
 	expect(!schema.validate(5).is_valid(), "Small number should not validate (fails minimum)")
-	expect(!schema.validate(true).is_valid(), "Value matching neither schema should not validate")
+	expect(!schema.validate(true).is_valid(), "Value matching neither Schema should not validate")
 
 func test_one_of_validation() -> void:
 	var schema = Schema.build_schema({

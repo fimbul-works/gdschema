@@ -28,6 +28,11 @@ func test_complex_schema_validation() -> void:
 		"required": ["id", "items"]
 	})
 
+	expect_equal(schema.get_id(), "", "Schema ID should be an empty string")
+	expect_equal(schema.get_schema_url(), "", "Schema URL shouldbe an empty string")
+	expect_equal(schema.get_title(), "", "Schema title should be an empty string")
+	expect_equal(schema.get_comment(), "", "Schema comment should be an empty string")
+
 	var valid_data = {
 		"id": "ABC-1234",
 		"items": [
@@ -89,5 +94,27 @@ func test_schema_with_all_constraint_types() -> void:
 		"enum_prop": "option1"
 	}
 
-	expect(schema.is_valid(), "Complex schema should compile successfully")
+	expect(schema.is_valid(), "Complex Schema should compile successfully")
 	expect(schema.validate(valid_data).is_valid(), "Valid data should validate against complex schema")
+
+func test_meta_schema_validation() -> void:
+	var schema_url := "http://json-schema.org/draft-07/schema#"
+
+	var is_registered := Schema.is_schema_registered(schema_url)
+	expect(is_registered, "Meta-schema should be registered")
+	if !is_registered:
+		return
+
+	var meta_schema := Schema.get_schema_from_registry(schema_url)
+	var is_valid := meta_schema.is_valid()
+	expect(is_valid, "Meta-schema should be valid")
+	if !is_valid:
+		return
+
+	var definitions := meta_schema.get_schema_definition()
+	var validation_result := meta_schema.validate(definitions)
+	expect(!validation_result.has_errors(), "Meta-schema validation against itself should have no errors")
+
+	expect_equal(meta_schema.get_id(), schema_url, "Meta-schema ID should match")
+	expect_equal(meta_schema.get_schema_url(), schema_url, "Meta-schema ID should match")
+	expect_equal(meta_schema.get_title(), "Core schema meta-schema", "Meta-Schama title should match")

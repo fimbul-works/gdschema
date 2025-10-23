@@ -57,6 +57,9 @@ private:
 	SchemaType schema_type;
 	StringName schema_url;
 	StringName schema_id;
+	StringName title;
+	StringName description;
+	StringName comment;
 
 	// Validation rules
 	mutable std::shared_ptr<RuleGroup> rules;
@@ -65,9 +68,9 @@ private:
 	mutable Ref<Mutex> compilation_mutex;
 
 	/**
-	 * @brief Determines schema type from definition
-	 * @param dict The schema definition dictionary
-	 * @return Detected schema type
+	 * @brief Determines Schema type from definition
+	 * @param dict The Schema definition dictionary
+	 * @return Detected Schema type
 	 */
 	SchemaType detect_schema_type(const Dictionary &dict) const;
 
@@ -78,15 +81,15 @@ private:
 	void construct_children(const Dictionary &dict);
 
 	/**
-	 * @brief Creates a child schema node from a dictionary
-	 * @param child_schema The child schema definition
+	 * @brief Creates a child Schema node from a dictionary
+	 * @param child_schema The child Schema definition
 	 * @param child_key The key or index identifying the child
-	 * @return New child schema instance
+	 * @return New child Schema instance
 	 */
 	Ref<Schema> create_schema_child(const Dictionary &child_schema, const StringName &child_key);
 
 	/**
-	 * @brief Creates a child schema node if the key exists in the dictionary
+	 * @brief Creates a child Schema node if the key exists in the dictionary
 	 * @param dict The parent dictionary
 	 * @param key The key to check and create child for
 	 */
@@ -107,9 +110,9 @@ private:
 	void create_definitions_children(const Dictionary &dict, const StringName &key);
 
 	/**
-	 * @brief Converts a Variant value to a schema-compatible dictionary
+	 * @brief Converts a Variant value to a Schema-compatible dictionary
 	 * @param value The Variant value to convert
-	 * @return Dictionary representation suitable for schema validation
+	 * @return Dictionary representation suitable for Schema validation
 	 */
 	Variant variant_to_schema_dict(const Variant &value) const;
 
@@ -141,13 +144,13 @@ private:
 	static String unescape_json_pointer_segment(const String &segment);
 
 	/**
-	 * @brief Compiles rules from a schema
+	 * @brief Compiles rules from a Schema
 	 */
 	void compile();
 
 	/**
-	 * @brief Validates an uncompiled schema against this schema
-	 * @param data The schema to validate
+	 * @brief Validates an uncompiled Schema against this Schema
+	 * @param data The Schema to validate
 	 * @return Validation context with results
 	 */
 	Ref<SchemaValidationResult> validate_uncompiled(const Dictionary &schema_dict);
@@ -164,9 +167,9 @@ public:
 	/**
 	 * @brief Constructor that builds tree from dictionary
 	 * @param schema_dict The JSON Schema definition
-	 * @param root_schema Reference to root schema (for child nodes)
+	 * @param root_schema Reference to root Schema (for child nodes)
 	 * @param schema_path Path from root (for debugging)
-	 * @param validate_against_meta If true, validate against meta-schema
+	 * @param validate_against_meta If true, validate against meta-Schema
 	 */
 	Schema(const Dictionary &schema_dict, const Ref<Schema> &root_schema = nullptr, const StringName &schema_path = "", const bool validate_against_meta = false);
 
@@ -185,47 +188,54 @@ public:
 	// ========== Factory Methods ==========
 
 	/**
-	 * @brief Creates a schema from a dictionary
+	 * @brief Creates a Schema from a dictionary
 	 * @param schema_dict The JSON Schema definition
-	 * @return New schema instance
+	 * @return New Schema instance
 	 */
 	static Ref<Schema> build_schema(const Dictionary &schema_dict, bool validate_against_meta = false);
 
 	/**
-	 * @brief Registers a schema with a ID for reference resolution
-	 * @param id The schema ID (e.g., "http://example.com/schema.json")
-	 * @param schema The schema instance to register
+	 * @brief Registers a Schema with a ID for reference resolution
+	 * @param id The Schema ID (e.g., "http://example.com/schema.json")
+	 * @param schema The Schema instance to register
 	 * @return True if registration succeeded, false if ID already registered
 	 */
 	static bool register_schema(const Ref<Schema> &schema, const StringName &id = "");
 
 	/**
-	 * @brief Checks if a schema is registered for a given ID
-	 * @param id The schema ID to check
-	 * @return True if a schema is registered for the URL, false otherwise
+	 * @brief Checks if a Schema is registered for a given ID
+	 * @param id The Schema ID to check
+	 * @return True if a Schema is registered with the ID, false otherwise
 	 */
 	static bool is_schema_registered(const StringName &id);
 
 	/**
-	 * @brief Unregisters a schema by its ID
-	 * @param id The schema ID to unregister
+	 * @brief Get a Schema from the registry by a given ID
+	 * @param id The Schema ID to load
+	 * @return The Schema instance to load
+	 */
+	static Ref<Schema> get_schema_from_registry(const StringName &id);
+
+	/**
+	 * @brief Unregisters a Schema by its ID
+	 * @param id The Schema ID to unregister
 	 * @return True if unregistration succeeded, false if ID was not found
 	 */
 	static bool unregister_schema(const StringName &id);
 
 	/**
-	 * @brief Loads a schema from a JSON file
-	 * @param path Path to the JSON schema file
-	 * @param validate_against_meta If true, validate against meta-schema
-	 * @return New schema instance or null on error
+	 * @brief Loads a Schema from a JSON file
+	 * @param path Path to the JSON Schema file
+	 * @param validate_against_meta If true, validate against meta-Schema
+	 * @return New Schema instance or null on error
 	 */
 	static Ref<Schema> load_from_json_file(const String &path, bool validate_against_meta = false);
 
 	/**
-	 * @brief Loads a schema from a JSON string
-	 * @param json_string JSON schema as string
-	 * @param validate_against_meta If true, validate against meta-schema
-	 * @return New schema instance or null on error
+	 * @brief Loads a Schema from a JSON string
+	 * @param json_string JSON Schema as string
+	 * @param validate_against_meta If true, validate against meta-Schema
+	 * @return New Schema instance or null on error
 	 */
 	static Ref<Schema> load_from_json(const String &json_string, bool validate_against_meta = false);
 
@@ -252,23 +262,23 @@ public:
 	/**
 	 * @brief Resolves a JSON Schema reference URI
 	 * @param reference_uri The reference URI (e.g., "#", "#/properties/user", "external#/def")
-	 * @return Referenced schema or null if not found
+	 * @return Referenced Schema or null if not found
 	 */
 	Ref<Schema> resolve_reference(const String &reference_uri) const;
 	/**
-	 * @brief Gets the schema path from root
+	 * @brief Gets the Schema path from root
 	 * @return Schema path string like "/properties/user/items"
 	 */
 	StringName get_schema_path() const { return schema_path; }
 
 	/**
-	 * @brief Gets the schema type
+	 * @brief Gets the Schema type
 	 * @return Schema type enum
 	 */
 	SchemaType get_schema_type() const { return schema_type; }
 
 	/**
-	 * @brief Gets the schema type name as string
+	 * @brief Gets the Schema type name as string
 	 * @return Schema type as string
 	 */
 	String get_schema_type_name() const {
@@ -286,26 +296,58 @@ public:
 		}
 	}
 
+	// ========== Schema Information ==========
+
 	/**
-	 * @brief Checks if this is an object schema
+	 * @brief Gets the Schema ID
+	 * @return Schema ID
+	 */
+	StringName get_id() const { return schema_id; }
+
+	/**
+	 * @brief Gets the Schema URL
+	 * @return Schema URL
+	 */
+	StringName get_schema_url() const { return schema_url; }
+
+	/**
+	 * @brief Gets the Schema title
+	 * @return Schema title
+	 */
+	StringName get_title() const { return title; }
+
+	/**
+	 * @brief Gets the Schema description
+	 * @return Schema description
+	 */
+	StringName get_description() const { return description; }
+
+	/**
+	 * @brief Gets the Schema comment
+	 * @return Schema comment
+	 */
+	StringName get_comment() const { return comment; }
+
+	/**
+	 * @brief Checks if this is an object Schema
 	 * @return True if object type
 	 */
 	bool is_object() const { return schema_type == SCHEMA_OBJECT; }
 
 	/**
-	 * @brief Checks if this is an array schema
+	 * @brief Checks if this is an array Schema
 	 * @return True if array type
 	 */
 	bool is_array() const { return schema_type == SCHEMA_ARRAY; }
 
 	/**
-	 * @brief Checks if this is a scalar schema
+	 * @brief Checks if this is a scalar Schema
 	 * @return True if scalar type
 	 */
 	bool is_scalar() const { return schema_type == SCHEMA_SCALAR; }
 
 	/**
-	 * @brief Checks if this is a logical schema
+	 * @brief Checks if this is a logical Schema
 	 * @return True if logical type
 	 */
 	bool is_logical() const { return schema_type == SCHEMA_LOGICAL; }
@@ -347,9 +389,9 @@ public:
 	// ========== Array Schema Navigation ==========
 
 	/**
-	 * @brief Gets array item schema at index (for array schemas)
+	 * @brief Gets array item Schema at index (for array schemas)
 	 * @param index The item index
-	 * @return Schema if item is object schema, Variant for scalar constraints, or null
+	 * @return Schema if item is object Schema, Variant for scalar constraints, or null
 	 */
 	Ref<Schema> get_item_schema(int index) const {
 		if (schema_type != SCHEMA_ARRAY || index < 0 || index >= item_schemas.size()) {
@@ -379,7 +421,7 @@ public:
 	// ========== General Navigation ==========
 
 	/**
-	 * @brief Traverses to a schema node by path
+	 * @brief Traverses to a Schema node by path
 	 * @param path JSON pointer style path (e.g., "/properties/name" or "/items/0")
 	 * @return Schema node at path or null if not found
 	 */
@@ -388,19 +430,19 @@ public:
 	// ========== Schema Metadata ==========
 
 	/**
-	 * @brief Gets the schema definition for this node
-	 * @return The schema definition dictionary
+	 * @brief Gets the Schema definition for this node
+	 * @return The Schema definition dictionary
 	 */
 	Dictionary get_schema_definition() const { return schema_definition; }
 
 	/**
-	 * @brief Gets the default value for this schema node if defined
+	 * @brief Gets the default value for this Schema node if defined
 	 * @return The default value or null if not defined
 	 */
 	Variant get_default_value() const { return schema_definition.get("default", Variant()); }
 
 	/**
-	 * @brief Checks if this schema has a default value
+	 * @brief Checks if this Schema has a default value
 	 * @return True if default is defined
 	 */
 	bool has_default_value() const { return schema_definition.has("default"); }
@@ -415,15 +457,15 @@ public:
 	// ========== Validation ==========
 
 	/**
-	 * @brief Validates data against this schema
+	 * @brief Validates data against this Schema
 	 * @param data The data to validate
 	 * @return Validation context with results
 	 */
 	Ref<SchemaValidationResult> validate(const Variant &data);
 
 	/**
-	 * @brief Checks if the schema is valid (no compilation errors)
-	 * @return True if schema compiled successfully
+	 * @brief Checks if the Schema is valid (no compilation errors)
+	 * @return True if Schema compiled successfully
 	 */
 	bool is_valid() const;
 
@@ -446,7 +488,6 @@ public:
 	 */
 	String _to_string() const;
 
-	friend class MetaSchemaDefinitions;
 	friend class RuleFactory;
 	friend class RefRule;
 };

@@ -43,7 +43,7 @@ func _on_validate_pressed() -> void:
 	# Clear previous results
 	result_label.clear()
 
-	# Parse schema JSON
+	# Parse Schema JSON
 	var schema_json = JSON.new()
 	var schema_parse_result = schema_json.parse(schema_input.text)
 
@@ -54,7 +54,7 @@ func _on_validate_pressed() -> void:
 	# Build schema
 	current_schema = Schema.build_schema(schema_json.data)
 	if !current_schema.is_valid():
-		_show_error("Schema compilation failed. Check your schema definition.")
+		_show_error("Schema compilation failed. Check your Schema definition.")
 		return
 
 	# Parse data JSON

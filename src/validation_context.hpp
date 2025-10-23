@@ -31,9 +31,9 @@ private:
 public:
 	/**
 	 * @brief Constructor
-	 * @param schema Source schema (can be null)
+	 * @param schema Source Schema (can be null)
 	 * @param inst_path Current instance path
-	 * @param sch_path Current schema path
+	 * @param sch_path Current Schema path
 	 */
 	ValidationContext(const Schema *schema = nullptr,
 			const PackedStringArray &inst_parts = PackedStringArray(),
@@ -55,8 +55,8 @@ public:
 
 	/**
 	 * @brief Creates a child context for a sub-schema
-	 * @param segment Path segment to append to schema path
-	 * @return New validation context with updated schema path
+	 * @param segment Path segment to append to Schema path
+	 * @return New validation context with updated Schema path
 	 */
 	ValidationContext create_child_schema(const String &segment) const {
 		PackedStringArray new_parts = schema_path_parts;
@@ -153,7 +153,7 @@ public:
 		return "/" + String("/").join(instance_path_parts);
 	}
 	/**
-	 * @brief Gets the current schema path
+	 * @brief Gets the current Schema path
 	 * @return Schema path string
 	 */
 	String get_schema_path() const {
@@ -164,8 +164,8 @@ public:
 	}
 
 	/**
-	 * @brief Gets the source schema reference
-	 * @return Source schema (can be null)
+	 * @brief Gets the source Schema reference
+	 * @return Source Schema (can be null)
 	 */
 	const Schema *get_source_schema() const { return source_schema; }
 

@@ -29,6 +29,16 @@ private:
 	 */
 	SchemaRegistry() { registry_mutex = Ref<Mutex>(memnew(Mutex)); }
 
+	/**
+	 * @brief Destructor to clean up registered schemas.
+	 */
+	~SchemaRegistry() {
+		PackedStringArray ids = get_schema_ids();
+		for (int i = 0; i < ids.size(); i++) {
+			unregister_schema(ids[i]);
+		}
+	}
+
 	SchemaRegistry(SchemaRegistry const &); // Don't Implement
 	void operator=(SchemaRegistry const &); // Don't implement
 
@@ -42,36 +52,36 @@ public:
 	}
 
 	/**
-	 * @brief Registers a schema with a unique ID.
-	 * @param id The unique schema ID (from `$id`).
-	 * @param schema The schema instance to register.
+	 * @brief Registers a Schema with a unique ID.
+	 * @param id The unique Schema ID (from `$id`).
+	 * @param schema The Schema instance to register.
 	 * @return True if registration succeeded, false if ID already exists.
 	 */
 	bool register_schema(const StringName &id, Ref<Schema> schema);
 
 	/**
-	 * @brief Checks if a schema with the given ID is registered.
-	 * @param id The schema ID to check.
-	 * @return True if the schema is registered, false otherwise.
+	 * @brief Checks if a Schema with the given ID is registered.
+	 * @param id The Schema ID to check.
+	 * @return True if the Schema is registered, false otherwise.
 	 */
 	bool has_schema(const StringName &id);
 
 	/**
-	 * @brief Retrieves a registered schema by its ID.
-	 * @param id The schema ID to retrieve.
-	 * @return The schema instance if found, null otherwise.
+	 * @brief Retrieves a registered Schema by its ID.
+	 * @param id The Schema ID to retrieve.
+	 * @return The Schema instance if found, null otherwise.
 	 */
 	Ref<Schema> get_schema(const StringName &id);
 
 	/**
-	 * @brief Retrieves all registered schema IDs.
-	 * @return An array of all registered schema IDs.
+	 * @brief Retrieves all registered Schema IDs.
+	 * @return An array of all registered Schema IDs.
 	 */
 	PackedStringArray get_schema_ids();
 
 	/**
-	 * @brief Unregisters a schema by its ID.
-	 * @param id The schema ID to unregister.
+	 * @brief Unregisters a Schema by its ID.
+	 * @param id The Schema ID to unregister.
 	 * @return True if unregistration succeeded, false if ID was not found.
 	 */
 	bool unregister_schema(const StringName &id);

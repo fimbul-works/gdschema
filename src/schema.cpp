@@ -1,5 +1,4 @@
 #include "schema.hpp"
-#include "meta_schema_definitions.hpp"
 #include "rule_factory.hpp"
 #include "schema_registry.hpp"
 
@@ -19,6 +18,11 @@ void Schema::_bind_methods() {
 	// Tree navigation methods
 	ClassDB::bind_method(D_METHOD("is_root"), &Schema::is_root);
 	ClassDB::bind_method(D_METHOD("get_root"), &Schema::get_root);
+
+	ClassDB::bind_method(D_METHOD("get_id"), &Schema::get_id);
+	ClassDB::bind_method(D_METHOD("get_schema_url"), &Schema::get_schema_url);
+	ClassDB::bind_method(D_METHOD("get_title"), &Schema::get_title);
+	ClassDB::bind_method(D_METHOD("get_comment"), &Schema::get_comment);
 
 	ClassDB::bind_method(D_METHOD("get_schema_type"), &Schema::get_schema_type);
 	ClassDB::bind_method(D_METHOD("get_schema_type_name"), &Schema::get_schema_type_name);
@@ -46,6 +50,7 @@ void Schema::_bind_methods() {
 	ClassDB::bind_static_method("Schema", D_METHOD("build_schema", "schema_dict", "validate_against_meta"), &Schema::build_schema, DEFVAL(false));
 	ClassDB::bind_static_method("Schema", D_METHOD("register_schema", "schema", "id"), &Schema::register_schema, DEFVAL(""));
 	ClassDB::bind_static_method("Schema", D_METHOD("is_schema_registered", "id"), &Schema::is_schema_registered);
+	ClassDB::bind_static_method("Schema", D_METHOD("get_schema_from_registry", "id"), &Schema::get_schema_from_registry);
 	ClassDB::bind_static_method("Schema", D_METHOD("unregister_schema", "id"), &Schema::unregister_schema);
 	ClassDB::bind_static_method("Schema", D_METHOD("load_from_json", "json_string", "validate_against_meta"), &Schema::load_from_json, DEFVAL(false));
 	ClassDB::bind_static_method("Schema", D_METHOD("load_from_json_file", "path", "validate_against_meta"), &Schema::load_from_json_file, DEFVAL(false));
@@ -67,7 +72,14 @@ Schema::Schema(const Dictionary &schema_dict, const Ref<Schema> &p_root_schema, 
 	compilation_mutex = Ref<Mutex>(memnew(Mutex));
 
 	if (validate_against_meta) {
-		Ref<SchemaValidationResult> validation_result = MetaSchemaDefinitions::validate_schema_definition(schema_dict);
+		Ref<Schema> meta_schema = SchemaRegistry::get_singleton().get_schema("http://json-schema.org/draft-07/schema#");
+		if (meta_schema.is_null()) {
+			UtilityFunctions::push_error("Meta-schema \"http://json-schema.org/draft-07/schema#\" not registered; cannot validate schema definition");
+			is_compiled = true;
+			return; // Don't construct children or attempt compilation
+		}
+
+		Ref<SchemaValidationResult> validation_result = meta_schema->validate(schema_dict);
 
 		if (validation_result->has_errors()) {
 			// Convert meta-validation errors to compilation errors
@@ -92,6 +104,18 @@ Schema::Schema(const Dictionary &schema_dict, const Ref<Schema> &p_root_schema, 
 
 	if (schema_dict.has("$id") && schema_dict["$id"].get_type() == Variant::STRING) {
 		schema_id = schema_dict["$id"];
+	}
+
+	if (schema_dict.has("title") && schema_dict["title"].get_type() == Variant::STRING) {
+		title = schema_dict["title"];
+	}
+
+	if (schema_dict.has("description") && schema_dict["description"].get_type() == Variant::STRING) {
+		description = schema_dict["description"];
+	}
+
+	if (schema_dict.has("$comment") && schema_dict["$comment"].get_type() == Variant::STRING) {
+		comment = schema_dict["$comment"];
 	}
 
 	if (p_root_schema.is_valid()) {
@@ -123,7 +147,7 @@ Ref<Schema> Schema::build_schema(const Dictionary &schema_dict, bool validate_ag
 
 bool Schema::register_schema(const Ref<Schema> &schema, const StringName &id) {
 	if (!schema.is_valid()) {
-		UtilityFunctions::push_error("Cannot register null schema");
+		UtilityFunctions::push_error("Cannot register null Schema");
 		return false;
 	}
 
@@ -131,7 +155,7 @@ bool Schema::register_schema(const Ref<Schema> &schema, const StringName &id) {
 	StringName registration_id = id;
 
 	if (registration_id.is_empty()) {
-		// Try to extract from schema's $id
+		// Try to extract from Schema's $id
 		registration_id = schema->schema_id;
 
 		if (registration_id.is_empty()) {
@@ -150,6 +174,10 @@ bool Schema::is_schema_registered(const StringName &id) {
 	return SchemaRegistry::get_singleton().has_schema(id);
 }
 
+Ref<Schema> Schema::get_schema_from_registry(const StringName &id) {
+	return SchemaRegistry::get_singleton().get_schema(id);
+}
+
 bool Schema::unregister_schema(const StringName &id) {
 	return SchemaRegistry::get_singleton().unregister_schema(id);
 }
@@ -157,7 +185,7 @@ bool Schema::unregister_schema(const StringName &id) {
 Ref<Schema> Schema::load_from_json_file(const String &path, bool validate_against_meta) {
 	Ref<FileAccess> file = FileAccess::open(path, FileAccess::READ);
 	if (file.is_null()) {
-		UtilityFunctions::push_error(vformat("Failed to open schema file: %s", path));
+		UtilityFunctions::push_error(vformat("Failed to open Schema file: %s", path));
 		return Ref<Schema>();
 	}
 
@@ -173,13 +201,13 @@ Ref<Schema> Schema::load_from_json(const String &json_string, bool validate_agai
 	Error err = json->parse(json_string);
 
 	if (err != OK) {
-		UtilityFunctions::push_error(vformat("Failed to parse JSON schema: %s at line %d", json->get_error_message(), json->get_error_line()));
+		UtilityFunctions::push_error(vformat("Failed to parse JSON Schema: %s at line %d", json->get_error_message(), json->get_error_line()));
 		return Ref<Schema>();
 	}
 
 	Variant result = json->get_data();
 	if (result.get_type() != Variant::DICTIONARY) {
-		UtilityFunctions::push_error("JSON schema root must be an object");
+		UtilityFunctions::push_error("JSON Schema root must be an object");
 		return Ref<Schema>();
 	}
 
@@ -252,7 +280,7 @@ Variant Schema::variant_to_schema_dict(const Variant &value) const {
 
 	switch (value.get_type()) {
 		case Variant::DICTIONARY:
-			// Full schema object - use as-is
+			// Full Schema object - use as-is
 			return value;
 
 		case Variant::STRING: {
@@ -266,10 +294,10 @@ Variant Schema::variant_to_schema_dict(const Variant &value) const {
 			// Handle boolean schemas
 			bool bool_val = value.operator bool();
 			if (bool_val) {
-				// true schema - allow anything (empty schema)
+				// true Schema - allow anything (empty Schema)
 				return Dictionary();
 			} else {
-				// false schema - allow nothing
+				// false Schema - allow nothing
 				child_dict["not"] = Dictionary();
 				return child_dict;
 			}
@@ -316,7 +344,7 @@ void Schema::construct_children(const Dictionary &dict) {
 				StringName key = keys[i];
 				Variant value = properties[key];
 
-				// Convert to schema dict - meta-schema already validated this will work
+				// Convert to Schema dict - meta-schema already validated this will work
 				Dictionary child_dict = variant_to_schema_dict(value);
 				StringName child_key = vformat("properties/%s", key);
 				StringName child_path = vformat("%s/%s", schema_path, child_key);
@@ -341,7 +369,7 @@ void Schema::construct_children(const Dictionary &dict) {
 
 		create_schema_child_if_exists(dict, "additionalProperties");
 
-		// Dependencies - only handle schema dependencies
+		// Dependencies - only handle Schema dependencies
 		if (dict.has("dependencies")) {
 			Dictionary dependencies = dict["dependencies"].operator Dictionary();
 			Array dep_keys = dependencies.keys();
@@ -471,7 +499,7 @@ Ref<Schema> Schema::resolve_reference(const String &reference_uri) const {
 
 	// Handle different reference formats
 	if (uri == "#") {
-		// Root reference - return the root schema
+		// Root reference - return the root Schema
 		return get_root();
 	}
 
@@ -496,23 +524,23 @@ Ref<Schema> Schema::resolve_reference(const String &reference_uri) const {
 		String schema_id = uri.substr(0, fragment_pos);
 		String fragment = uri.substr(fragment_pos + 1);
 
-		// Get external schema from registry
+		// Get external Schema from registry
 		Ref<Schema> external_schema = SchemaRegistry::get_singleton().get_schema(schema_id);
 		if (!external_schema.is_valid()) {
-			UtilityFunctions::push_error(vformat("External schema not found: %s", schema_id));
+			UtilityFunctions::push_error(vformat("External Schema not found: %s", schema_id));
 			return Ref<Schema>();
 		}
 
 		if (fragment.is_empty() || fragment == "") {
-			return external_schema; // Root of external schema
+			return external_schema; // Root of external Schema
 		}
 
 		if (fragment.begins_with("/")) {
-			// JSON Pointer in external schema
+			// JSON Pointer in external Schema
 			String normalized = normalize_json_pointer(fragment);
 			return external_schema->get_at_path(normalized);
 		} else {
-			// Anchor reference in external schema
+			// Anchor reference in external Schema
 			UtilityFunctions::push_warning(vformat("External anchor references not implemented: %s", uri));
 			return Ref<Schema>();
 		}
@@ -633,7 +661,7 @@ Ref<Schema> Schema::get_at_path(const StringName &path) const {
 
 		// Try different child key formats based on the path part
 		if (part == "properties" || part == "definitions" || part == "$defs") {
-			// These are schema keywords - look for direct children
+			// These are Schema keywords - look for direct children
 			StringName child_key = StringName(part);
 			next_schema = current->get_child(child_key);
 

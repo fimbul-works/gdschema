@@ -84,7 +84,7 @@ func test_logical_combination_failures() -> void:
 		]
 	})
 
-	expect(!all_of_schema.validate("hi").is_valid(), "String failing one allOf schema should fail")
+	expect(!all_of_schema.validate("hi").is_valid(), "String failing one allOf Schema should fail")
 	expect(!all_of_schema.validate("hello").is_valid(), "String failing pattern in allOf should fail")
 	expect(!all_of_schema.validate(123).is_valid(), "Non-string should fail allOf")
 

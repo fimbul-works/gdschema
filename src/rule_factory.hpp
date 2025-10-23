@@ -28,7 +28,7 @@ class RuleFactory {
 public:
 	/**
 	 * @struct RuleCompileResult
-	 * @brief Result of compiling a schema into validation rules
+	 * @brief Result of compiling a Schema into validation rules
 	 */
 	struct RuleCompileResult {
 		std::shared_ptr<RuleGroup> rules;
@@ -92,15 +92,15 @@ public:
 	}
 
 	/**
-	 * @brief Creates validation rules from a schema definition
-	 * @param schema The schema to create rules for
+	 * @brief Creates validation rules from a Schema definition
+	 * @param schema The Schema to create rules for
 	 * @return Compile result with rules and any errors
 	 */
 	RuleCompileResult create_rules(const Ref<Schema> &schema);
 
 	/**
-	 * @brief Register a new schema rule factory function to enable custom keywords and rules
-	 * @param keyword The schema keyword to look for
+	 * @brief Register a new Schema rule factory function to enable custom keywords and rules
+	 * @param keyword The Schema keyword to look for
 	 * @param factory The factory function
 	 */
 	void register_rule_factory(const String &keyword, std::function<void(const Dictionary &, const Ref<Schema> &, RuleCompileResult &)> factory) {
@@ -124,53 +124,53 @@ private:
 
 	/**
 	 * @brief Creates string constraint rules
-	 * @param schema_def The schema definition
+	 * @param schema_def The Schema definition
 	 * @param result Result to add rules/errors to
 	 */
 	void create_string_rules(const Dictionary &schema_def, RuleCompileResult &result);
 
 	/**
 	 * @brief Creates numeric constraint rules
-	 * @param schema_def The schema definition
+	 * @param schema_def The Schema definition
 	 * @param result Result to add rules/errors to
 	 */
 	void create_numeric_rules(const Dictionary &schema_def, RuleCompileResult &result);
 
 	/**
 	 * @brief Creates array constraint rules
-	 * @param schema_def The schema definition
-	 * @param schema The source schema for sub-schema creation
+	 * @param schema_def The Schema definition
+	 * @param schema The source Schema for sub-schema creation
 	 * @param result Result to add rules/errors to
 	 */
 	void create_array_rules(const Dictionary &schema_def, const Ref<Schema> &schema, RuleCompileResult &result);
 
 	/**
 	 * @brief Creates object constraint rules
-	 * @param schema_def The schema definition
-	 * @param schema The source schema for sub-schema creation
+	 * @param schema_def The Schema definition
+	 * @param schema The source Schema for sub-schema creation
 	 * @param result Result to add rules/errors to
 	 */
 	void create_object_rules(const Dictionary &schema_def, const Ref<Schema> &schema, RuleCompileResult &result);
 
 	/**
 	 * @brief Creates value constraint rules (const, enum)
-	 * @param schema_def The schema definition
+	 * @param schema_def The Schema definition
 	 * @param result Result to add rules/errors to
 	 */
 	void create_value_rules(const Dictionary &schema_def, RuleCompileResult &result);
 
 	/**
 	 * @brief Creates logical composition rules (allOf, anyOf, oneOf, not)
-	 * @param schema_def The schema definition
-	 * @param schema The source schema for sub-schema creation
+	 * @param schema_def The Schema definition
+	 * @param schema The source Schema for sub-schema creation
 	 * @param result Result to add rules/errors to
 	 */
 	void create_logical_rules(const Dictionary &schema_def, const Ref<Schema> &schema, RuleCompileResult &result);
 
 	/**
 	 * @brief Creates custom rules using factory functions
-	 * @param schema_def The schema definition
-	 * @param schema The source schema
+	 * @param schema_def The Schema definition
+	 * @param schema The source Schema
 	 * @param result Result to add rules/errors to
 	 */
 	void create_custom_rules(const Dictionary &schema_def, const Ref<Schema> &schema, RuleCompileResult &result);

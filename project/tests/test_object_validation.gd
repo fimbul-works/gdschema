@@ -182,7 +182,7 @@ func test_basic_schema_dependency() -> void:
 	})
 
 	expect(schema.validate({}).is_valid(), "Object without trigger property should validate")
-	expect(schema.validate({"credit_card": "1234", "billing_address": "123 Main St"}).is_valid(), "Object with valid dependency schema should validate")
+	expect(schema.validate({"credit_card": "1234", "billing_address": "123 Main St"}).is_valid(), "Object with valid dependency Schema should validate")
 	expect(!schema.validate({"credit_card": "1234"}).is_valid(), "Object missing required property from dependency should not validate")
 	expect(!schema.validate({"credit_card": "1234", "billing_address": ""}).is_valid(), "Object with invalid property from dependency should not validate")
 
@@ -281,7 +281,7 @@ func test_mixed_dependencies() -> void:
 		"has_car": true,
 		"driver_license": "DL123456",
 		"employment_status": "employed"
-	}).is_valid(), "Object missing schema dependency requirements should not validate")
+	}).is_valid(), "Object missing Schema dependency requirements should not validate")
 
 # ========== DEPENDENCY CHAINS ==========
 

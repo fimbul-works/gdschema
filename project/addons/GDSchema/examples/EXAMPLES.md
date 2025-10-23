@@ -199,7 +199,7 @@ func validate_form(form_data: Dictionary) -> Array:
 
 ### 3. Performance
 - Schemas are compiled once and cached
-- Reuse schema objects when validating multiple items
+- Reuse Schema objects when validating multiple items
 - Consider pre-registering schemas at startup
 
 ### 4. Common Patterns
@@ -242,7 +242,7 @@ Perfect for learning and prototyping validation logic!
 
 If you encounter any problems or have questions about these examples:
 1. Check the main [README](../README.md) for API documentation
-2. Review the for comprehensive schema examples in the [GDSchema GitHub repository](https://github.com/fimbul-works/gdschema)
+2. Review the for comprehensive Schema examples in the [GDSchema GitHub repository](https://github.com/fimbul-works/gdschema)
 3. Open an issue on the project repository
 
 ---

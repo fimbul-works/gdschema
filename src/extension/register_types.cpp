@@ -7,10 +7,6 @@
 #include <godot_cpp/core/defs.hpp>
 #include <godot_cpp/godot.hpp>
 
-// #ifdef TESTS_ENABLED
-// #include "../tests/test_runner.hpp" // Inlcude test runner headers
-// #endif
-
 namespace godot {
 
 void initialize_schema_module(ModuleInitializationLevel p_level) {
@@ -26,9 +22,8 @@ void initialize_schema_module(ModuleInitializationLevel p_level) {
 		GDREGISTER_CLASS(SchemaValidationResult);
 	}
 
-	// #ifdef TESTS_ENABLED
-	// 	run_all_tests(); // Run tests after registration
-	// #endif
+	// Preload and register the JSON Schema Draft 7 meta-schema
+	Schema::load_from_json_file("res://addons/GDSchema/schema/json_schema_draft_07.json", false);
 }
 
 void uninitialize_schema_module(ModuleInitializationLevel p_level) {

@@ -35,7 +35,7 @@ func basic_references() -> void:
 		"required": ["user_email", "user_id"]
 	})
 
-	# Valid data reusing schema definitions
+	# Valid data reusing Schema definitions
 	var valid_data = {
 		"user_email": "player@example.com",
 		"backup_email": "backup@example.com",
@@ -70,10 +70,10 @@ func external_schema_references() -> void:
 		"required": ["street", "city", "state", "zip"]
 	})
 
-	print("Address schema registered: ",
+	print("Address Schema registered: ",
 		Schema.is_schema_registered("http://example.com/schemas/address.json"))
 
-	# Register a contact schema that references address
+	# Register a contact Schema that references address
 	var contact_schema = Schema.build_schema({
 		"$id": "http://example.com/schemas/contact.json",
 		"type": "object",

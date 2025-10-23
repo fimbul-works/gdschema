@@ -34,7 +34,7 @@ struct ValidationError {
 	}
 
 	/**
-	 * @brief Get the schema path as a string
+	 * @brief Get the Schema path as a string
 	 * @return Schema path string (e.g. "/properties/user/properties/name/minLength")
 	 */
 	String get_schema_path() const {

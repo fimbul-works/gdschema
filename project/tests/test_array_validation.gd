@@ -381,8 +381,8 @@ func test_contains_with_items_schema() -> void:
 		}
 	})
 
-	expect(schema.validate(["ab", 123, "hello"]).is_valid(), "Array where all items match items schema and one matches contains should validate")
-	expect(!schema.validate([true, 123, "hello"]).is_valid(), "Array with item not matching items schema should not validate")
+	expect(schema.validate(["ab", 123, "hello"]).is_valid(), "Array where all items match items Schema and one matches contains should validate")
+	expect(!schema.validate([true, 123, "hello"]).is_valid(), "Array with item not matching items Schema should not validate")
 	expect(!schema.validate(["ab", 123, "hi"]).is_valid(), "Array with no items matching contains should not validate")
 
 # ========== MULTIPLE CONTAINS REQUIREMENTS ==========
@@ -446,7 +446,7 @@ func test_tuple_validation_with_additional_items() -> void:
 		"additionalItems": false
 	})
 
-	expect(schema.validate(["hello", 42]).is_valid(), "Tuple matching schema should validate")
+	expect(schema.validate(["hello", 42]).is_valid(), "Tuple matching Schema should validate")
 	expect(!schema.validate(["hello", 42, "extra"]).is_valid(), "Extra items should not validate when additionalItems is false")
 
 func test_tuple_with_additional_items_schema() -> void:
@@ -488,7 +488,7 @@ func test_contains_error_messages() -> void:
 func test_contains_empty_schema() -> void:
 	var schema = Schema.build_schema({
 		"type": "array",
-		"contains": {}  # Empty schema matches everything
+		"contains": {}  # Empty Schema matches everything
 	})
 
 	expect(schema.validate(["anything"]).is_valid(), "Array with any item should validate with empty contains")

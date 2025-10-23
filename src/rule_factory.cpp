@@ -1,5 +1,4 @@
 #include "rule_factory.hpp"
-#include "meta_schema_definitions.hpp"
 #include "rule/all_of_rule.hpp"
 #include "rule/any_of_rule.hpp"
 #include "rule/conditional_rule.hpp"
@@ -74,7 +73,7 @@ RuleFactory::RuleCompileResult RuleFactory::create_rules(const Ref<Schema> &sche
 		result.rules = cache_it->second;
 		cache_mutex->unlock();
 
-		// Update schema atomically ONLY if not already compiled
+		// Update Schema atomically ONLY if not already compiled
 		schema->compilation_mutex->lock();
 		if (!schema->is_compiled) {
 			schema->rules = result.rules;
@@ -90,7 +89,7 @@ RuleFactory::RuleCompileResult RuleFactory::create_rules(const Ref<Schema> &sche
 	compiling_schemas.insert(hash);
 	cache_mutex->unlock();
 
-	// Compile the schema
+	// Compile the Schema
 	try {
 		if (schema_def.has("type")) {
 			create_type_rules(schema_def["type"], result);
@@ -113,7 +112,7 @@ RuleFactory::RuleCompileResult RuleFactory::create_rules(const Ref<Schema> &sche
 			cache_mutex->unlock();
 		}
 
-		// Update schema atomically (whether valid or not)
+		// Update Schema atomically (whether valid or not)
 		schema->set_compilation_result(result.rules, result.errors);
 	} catch (...) {
 		// Ensure cleanup on exception
@@ -334,7 +333,7 @@ void RuleFactory::create_value_rules(const Dictionary &schema_def, RuleCompileRe
 	// default
 	if (schema_def.has("default")) {
 		// This is documentation/metadata, not a validation constraint
-		// Default value is stored in schema definition, not as validation rule
+		// Default value is stored in Schema definition, not as validation rule
 	}
 }
 
@@ -394,13 +393,13 @@ void RuleFactory::create_object_rules(const Dictionary &schema_def, const Ref<Sc
 				StringName child_name = vformat("properties/%s", prop_name);
 				Ref<Schema> child_schema = schema->get_child(child_name);
 				if (child_schema.is_valid()) {
-					// Recursively create rules for the child schema
+					// Recursively create rules for the child Schema
 					auto child_result = create_rules(child_schema);
 
 					// Merge any compilation errors
 					result.errors.insert(result.errors.end(), child_result.errors.begin(), child_result.errors.end());
 
-					// If child schema is valid, create a selector rule for this property
+					// If child Schema is valid, create a selector rule for this property
 					if (child_result.is_valid() && !child_result.rules->is_empty()) {
 						auto selector = std::make_unique<PropertySelector>(prop_name);
 						result.rules->add_rule(std::make_unique<SelectorRule>(std::move(selector), std::move(child_result.rules)));
@@ -483,7 +482,7 @@ void RuleFactory::create_object_rules(const Dictionary &schema_def, const Ref<Sc
 			auto rule = std::make_unique<ConstRule>(Variant()); // This will always fail since no value equals null in this context
 			result.rules->add_rule(std::make_unique<SelectorRule>(std::move(selector), std::move(rule)));
 		} else if (additional_props_var.get_type() == Variant::DICTIONARY) {
-			// additionalProperties: {...} - additional properties must match this schema
+			// additionalProperties: {...} - additional properties must match this Schema
 			Dictionary additional_schema = additional_props_var.operator Dictionary();
 			Ref<Schema> child_schema = schema->get_child("additionalProperties");
 			if (child_schema.is_valid()) {
@@ -518,7 +517,7 @@ void RuleFactory::create_object_rules(const Dictionary &schema_def, const Ref<Sc
 		}
 	}
 
-	// Dependencies - property and schema dependencies
+	// Dependencies - property and Schema dependencies
 	if (schema_def.has("dependencies")) {
 		Dictionary dependencies = schema_def["dependencies"].operator Dictionary();
 		Array dep_keys = dependencies.keys();
@@ -600,12 +599,12 @@ void RuleFactory::create_array_rules(const Dictionary &schema_def, const Ref<Sch
 	// Track tuple length for additionalItems
 	int tuple_length = -1;
 
-	// items - validate array items (single schema or tuple validation)
+	// items - validate array items (single Schema or tuple validation)
 	if (schema_def.has("items")) {
 		Variant items_var = schema_def["items"];
 
 		if (items_var.get_type() == Variant::DICTIONARY) {
-			// Single schema applies to all items
+			// Single Schema applies to all items
 			Ref<Schema> child_schema = schema->get_child("items");
 
 			if (child_schema.is_valid()) {
@@ -618,7 +617,7 @@ void RuleFactory::create_array_rules(const Dictionary &schema_def, const Ref<Sch
 				}
 			}
 		} else if (items_var.get_type() == Variant::ARRAY) {
-			// Tuple validation - each position has its own schema
+			// Tuple validation - each position has its own Schema
 			Array items_array = items_var.operator Array();
 			tuple_length = items_array.size(); // Store tuple length
 
@@ -651,7 +650,7 @@ void RuleFactory::create_array_rules(const Dictionary &schema_def, const Ref<Sch
 			auto rule = std::make_shared<FalseRule>();
 			result.rules->add_rule(std::make_unique<SelectorRule>(std::move(selector), std::move(rule)));
 		} else if (additional_items_var.get_type() == Variant::DICTIONARY) {
-			// additionalItems: {...} - additional items must match this schema
+			// additionalItems: {...} - additional items must match this Schema
 			Ref<Schema> child_schema = schema->get_child("additionalItems");
 			if (child_schema.is_valid()) {
 				auto additional_result = create_rules(child_schema);
@@ -666,14 +665,14 @@ void RuleFactory::create_array_rules(const Dictionary &schema_def, const Ref<Sch
 		// Note: additionalItems: true (default) means additional items are allowed with no constraints
 	}
 
-	// contains - at least one array item must validate against the schema
+	// contains - at least one array item must validate against the Schema
 	if (schema_def.has("contains")) {
 		Ref<Schema> child_schema = schema->get_child("contains");
 		if (child_schema.is_valid()) {
 			Dictionary child_def = child_schema->get_schema_definition();
-			// Check if this is boolean schema detection
+			// Check if this is boolean Schema detection
 			if (child_def.is_empty()) {
-				// contains: true (empty schema) - always matches any item
+				// contains: true (empty Schema) - always matches any item
 				auto selector = std::make_unique<ValueSelector>();
 				auto rule = std::make_shared<TrueRule>();
 				auto contains_rule = std::make_unique<ContainsRule>(rule);
@@ -687,7 +686,7 @@ void RuleFactory::create_array_rules(const Dictionary &schema_def, const Ref<Sch
 				auto contains_rule = std::make_unique<ContainsRule>(rule);
 				result.rules->add_rule(std::make_unique<SelectorRule>(std::move(selector), std::move(contains_rule)));
 			} else {
-				// Normal schema - compile recursively
+				// Normal Schema - compile recursively
 				auto contains_result = create_rules(child_schema);
 				result.errors.insert(result.errors.end(), contains_result.errors.begin(), contains_result.errors.end());
 
@@ -800,12 +799,12 @@ void RuleFactory::create_logical_rules(const Dictionary &schema_def, const Ref<S
 
 	// ========== CONDITIONAL SCHEMAS ==========
 	if (schema_def.has("if")) {
-		// We have a conditional schema
+		// We have a conditional Schema
 		std::shared_ptr<ValidationRule> if_rule = nullptr;
 		std::shared_ptr<ValidationRule> then_rule = nullptr;
 		std::shared_ptr<ValidationRule> else_rule = nullptr;
 
-		// Compile 'if' schema (required)
+		// Compile 'if' Schema (required)
 		Ref<Schema> if_schema = schema->get_child("if");
 		if (if_schema.is_valid()) {
 			auto if_result = create_rules(if_schema);
@@ -816,7 +815,7 @@ void RuleFactory::create_logical_rules(const Dictionary &schema_def, const Ref<S
 			}
 		}
 
-		// Compile 'then' schema (optional)
+		// Compile 'then' Schema (optional)
 		if (schema_def.has("then")) {
 			Ref<Schema> then_schema = schema->get_child("then");
 			if (then_schema.is_valid()) {
@@ -829,7 +828,7 @@ void RuleFactory::create_logical_rules(const Dictionary &schema_def, const Ref<S
 			}
 		}
 
-		// Compile 'else' schema (optional)
+		// Compile 'else' Schema (optional)
 		if (schema_def.has("else")) {
 			Ref<Schema> else_schema = schema->get_child("else");
 			if (else_schema.is_valid()) {
