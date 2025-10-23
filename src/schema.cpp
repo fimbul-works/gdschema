@@ -389,6 +389,27 @@ void Schema::construct_children(const Dictionary &dict) {
 
 	// ========== ARRAY SCHEMAS ==========
 	else if (schema_type == SchemaType::SCHEMA_ARRAY) {
+		if (dict.has("prefixItems")) {
+			Variant prefix_items_var = dict["prefixItems"];
+
+			if (prefix_items_var.get_type() == Variant::ARRAY) {
+				// Array of schemas (tuple validation)
+				Array schemas_array = prefix_items_var.operator Array();
+				for (int64_t i = 0; i < schemas_array.size(); i++) {
+					Variant schema_item = schemas_array[i];
+					Variant schema_dict_var = variant_to_schema_dict(schema_item);
+					if (schema_dict_var.get_type() == Variant::DICTIONARY) {
+						Dictionary schema_dict = schema_dict_var.operator Dictionary();
+						StringName child_key = vformat("prefixItems/%d", i);
+						StringName child_path = vformat("%s/%s", schema_path, child_key);
+						Ref<Schema> schema_node = memnew(Schema(schema_dict, get_root(), child_path));
+						item_schemas.push_back(schema_node);
+						children[child_key] = schema_node;
+					}
+				}
+			}
+		}
+
 		if (dict.has("items")) {
 			Variant items_var = dict["items"];
 

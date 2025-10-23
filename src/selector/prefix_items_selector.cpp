@@ -1,9 +1,9 @@
-#include "array_item_selector.hpp"
+#include "prefix_items_selector.hpp"
 #include "../util.hpp"
 
 using namespace godot;
 
-std::vector<SelectionTarget> ArrayItemSelector::select_targets(const Variant &instance, const ValidationContext &context) const {
+std::vector<SelectionTarget> PrefixItemsSelector::select_targets(const Variant &instance, const ValidationContext &context) const {
 	std::vector<SelectionTarget> targets;
 
 	int64_t size = SchemaUtil::get_array_size(instance);

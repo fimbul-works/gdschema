@@ -1,3 +1,5 @@
+#include "selector/selector.hpp"
+
 #include <godot_cpp/variant/variant.hpp>
 
 namespace godot {
