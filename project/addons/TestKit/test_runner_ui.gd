@@ -269,7 +269,7 @@ func _update_suite_status(suite_name: String, status: String) -> void:
 	button.text = "%s %s (%d tests)" % [icon, suite_name, method_count]
 	button.add_theme_color_override("font_color", color)
 
-func _display_method_errors(error_container: VBoxContainer, errors: PackedStringArray) -> void:
+func _display_method_errors(error_container: VBoxContainer, errors: Array) -> void:
 	# Clear existing errors
 	for child in error_container.get_children():
 		child.queue_free()
@@ -283,10 +283,6 @@ func _display_method_errors(error_container: VBoxContainer, errors: PackedString
 		error_label.bbcode_enabled = true
 		error_label.fit_content = true
 		error_label.custom_minimum_size.y = 20
-
-		# Trim unnecessary default message
-		if error.begins_with("Expectation failed: "):
-			error = error.substr("Expectation failed: ".length())
 
 		# Format error message
 		if error.contains("Expected:") and error.contains("Actual:"):
