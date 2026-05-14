@@ -167,52 +167,20 @@ private:
 	void create_logical_rules(const Dictionary &schema_def, const Ref<Schema> &schema, RuleCompileResult &result);
 
 	/**
+	 * @brief Creates unevaluatedProperties and unevaluatedItems rules
+	 * @param schema_def The Schema definition
+	 * @param schema The source Schema
+	 * @param result Result to add rules/errors to
+	 */
+	void create_unevaluated_rules(const Dictionary &schema_def, const Ref<Schema> &schema, RuleCompileResult &result);
+
+	/**
 	 * @brief Creates custom rules using factory functions
 	 * @param schema_def The Schema definition
 	 * @param schema The source Schema
 	 * @param result Result to add rules/errors to
 	 */
 	void create_custom_rules(const Dictionary &schema_def, const Ref<Schema> &schema, RuleCompileResult &result);
-
-	/**
-	 * @brief Helper to convert numeric variant to double safely
-	 * @param value The variant to convert
-	 * @param out_value Output double value
-	 * @return True if conversion successful
-	 */
-	static bool try_get_numeric_value(const Variant &value, double &out_value) {
-		if (value.get_type() == Variant::INT) {
-			out_value = static_cast<double>(value.operator int64_t());
-			return true;
-		} else if (value.get_type() == Variant::FLOAT) {
-			out_value = value.operator double();
-			return true;
-		}
-		return false;
-	}
-
-	/**
-	 * @brief Helper to convert variant to non-negative integer safely
-	 * @param value The variant to convert
-	 * @param out_value Output integer value
-	 * @return True if conversion successful and value is non-negative
-	 */
-	static bool try_get_non_negative_int(const Variant &value, int64_t &out_value) {
-		if (value.get_type() == Variant::INT) {
-			int64_t int_val = value.operator int64_t();
-			if (int_val >= 0) {
-				out_value = int_val;
-				return true;
-			}
-		} else if (value.get_type() == Variant::FLOAT) {
-			double float_val = value.operator double();
-			if (float_val >= 0 && float_val == static_cast<double>(static_cast<int64_t>(float_val))) {
-				out_value = static_cast<int64_t>(float_val);
-				return true;
-			}
-		}
-		return false;
-	}
 };
 
 } // namespace godot

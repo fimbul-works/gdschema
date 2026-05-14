@@ -21,8 +21,9 @@ bool AllOfRule::validate(const Variant &target, ValidationContext &context) cons
 			// Continue to validate other sub-rules and collect all errors
 		}
 
-		// Merge sub-context errors into main context
+		// Merge sub-context errors and evaluation data into main context
 		context.merge_errors(sub_context);
+		context.merge_evaluation_data(sub_context);
 	}
 
 	if (!all_valid) {

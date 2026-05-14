@@ -48,7 +48,7 @@ public:
 
 private:
 	// Tree structure
-	Ref<Schema> root_schema; // null for root node
+	Schema *root_schema; // Raw pointer to avoid cycles and crashes in constructor
 	StringName schema_path; // Path from root like "/properties/user"
 	std::unordered_map<StringName, Ref<Schema>, StringNameHasher, StringNameEqual> children; // For object properties
 	std::vector<Ref<Schema>> item_schemas; // For array items
@@ -61,9 +61,15 @@ private:
 	StringName title;
 	StringName description;
 	StringName comment;
+	StringName anchor;
+	StringName dynamic_anchor;
+
+	// Anchors in this schema's root scope (only used by root schema)
+	std::unordered_map<StringName, const Schema *> anchor_map;
+	std::unordered_map<StringName, const Schema *> dynamic_anchor_map;
 
 	// Validation rules
-	mutable std::shared_ptr<RuleGroup> rules;
+	mutable std::shared_ptr<ValidationRule> rules;
 	mutable std::vector<SchemaCompileError> compile_errors;
 	mutable bool is_compiled;
 	mutable Ref<Mutex> compilation_mutex;
@@ -156,6 +162,20 @@ private:
 	 */
 	Ref<SchemaValidationResult> validate_uncompiled(const Dictionary &schema_dict);
 
+	/**
+	 * @brief Registers an anchor in this schema (must be root)
+	 * @param name Anchor name
+	 * @param schema Schema node the anchor points to
+	 */
+	void register_anchor(const StringName &name, const Schema *schema);
+
+	/**
+	 * @brief Registers a dynamic anchor in this schema (must be root)
+	 * @param name Anchor name
+	 * @param schema Schema node the anchor points to
+	 */
+	void register_dynamic_anchor(const StringName &name, const Schema *schema);
+
 protected:
 	static void _bind_methods();
 
@@ -172,7 +192,14 @@ public:
 	 * @param schema_path Path from root (for debugging)
 	 * @param validate_against_meta If true, validate against meta-Schema
 	 */
-	Schema(const Dictionary &schema_dict, const Ref<Schema> &root_schema = nullptr, const StringName &schema_path = "", const bool validate_against_meta = false);
+	/**
+	 * @brief Initializes the schema node
+	 * @param schema_dict The JSON Schema definition
+	 * @param root_schema Reference to root Schema
+	 * @param schema_path Path from root
+	 * @param validate_against_meta If true, validate against meta-Schema
+	 */
+	void init(const Dictionary &schema_dict, Schema *root_schema = nullptr, const StringName &schema_path = "", const bool validate_against_meta = false);
 
 	/**
 	 * @brief Destructor
@@ -184,7 +211,7 @@ public:
 	 * @param compiled_rules The compiled rule group
 	 * @param errors List of compilation errors
 	 */
-	void set_compilation_result(std::shared_ptr<RuleGroup> compiled_rules, std::vector<SchemaCompileError> errors);
+	void set_compilation_result(std::shared_ptr<ValidationRule> compiled_rules, std::vector<SchemaCompileError> errors);
 
 	// ========== Factory Methods ==========
 
@@ -246,15 +273,15 @@ public:
 	 * @brief Checks if this is a root node
 	 * @return True if no parent exists
 	 */
-	bool is_root() const { return root_schema.is_null(); }
+	bool is_root() const { return root_schema == nullptr; }
 
 	/**
 	 * @brief Gets the root node of this tree
 	 * @return Root node
 	 */
-	Ref<Schema> get_root() const {
+	Schema *get_root() const {
 		if (is_root()) {
-			return Ref<Schema>(const_cast<Schema *>(this));
+			return const_cast<Schema *>(this);
 		}
 
 		return root_schema;
@@ -266,6 +293,28 @@ public:
 	 * @return Referenced Schema or null if not found
 	 */
 	Ref<Schema> resolve_reference(const String &reference_uri) const;
+
+	/**
+	 * @brief Resolves a dynamic reference
+	 * @param uri The dynamic reference URI
+	 * @param context Current validation context (for dynamic scope)
+	 * @return Resolved schema
+	 */
+	Ref<Schema> resolve_dynamic_reference(const String &uri, const ValidationContext &context) const;
+
+	/**
+	 * @brief Gets a schema by anchor name
+	 * @param name Anchor name
+	 * @return Schema or null
+	 */
+	Ref<Schema> get_by_anchor(const StringName &name) const;
+
+	/**
+	 * @brief Checks if this schema has a dynamic anchor
+	 * @param name Anchor name
+	 * @return True if it has the dynamic anchor
+	 */
+	bool has_dynamic_anchor(const StringName &name) const { return dynamic_anchor == name; }
 	/**
 	 * @brief Gets the Schema path from root
 	 * @return Schema path string like "/properties/user/items"
@@ -491,6 +540,8 @@ public:
 
 	friend class RuleFactory;
 	friend class RefRule;
+	friend class DynamicRefRule;
+	friend class DependentSchemasRule;
 };
 
 } // namespace godot

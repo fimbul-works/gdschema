@@ -58,23 +58,28 @@ void Schema::_bind_methods() {
 	BIND_VIRTUAL_METHOD(Schema, _to_string);
 }
 
+namespace godot {
+extern const int MAX_VALIDATION_DEPTH = 50; // Reasonable limit
+} // namespace godot
+
 Schema::Schema() {
-	schema_type = SchemaType::SCHEMA_OBJECT; // Default for empty root
-	schema_path = ""; // Root has empty path
+	schema_type = SchemaType::SCHEMA_SCALAR;
 	is_compiled = false;
 	compilation_mutex = Ref<Mutex>(memnew(Mutex));
+	root_schema = nullptr;
 }
 
-Schema::Schema(const Dictionary &schema_dict, const Ref<Schema> &p_root_schema, const StringName &p_schema_path, const bool validate_against_meta) {
+void Schema::init(const Dictionary &schema_dict, Schema *p_root_schema, const StringName &p_schema_path, const bool validate_against_meta) {
 	schema_type = SchemaType::SCHEMA_OBJECT;
 	schema_path = "";
 	is_compiled = false;
 	compilation_mutex = Ref<Mutex>(memnew(Mutex));
+	root_schema = p_root_schema;
 
 	if (validate_against_meta) {
-		Ref<Schema> meta_schema = SchemaRegistry::get_singleton().get_schema("http://json-schema.org/draft-07/schema#");
+		Ref<Schema> meta_schema = SchemaRegistry::get_singleton().get_schema("https://json-schema.org/draft/2020-12/schema");
 		if (meta_schema.is_null()) {
-			UtilityFunctions::push_error("Meta-schema \"http://json-schema.org/draft-07/schema#\" not registered; cannot validate schema definition");
+			UtilityFunctions::push_error("Meta-schema \"https://json-schema.org/draft/2020-12/schema\" not registered; cannot validate schema definition");
 			is_compiled = true;
 			return; // Don't construct children or attempt compilation
 		}
@@ -118,7 +123,17 @@ Schema::Schema(const Dictionary &schema_dict, const Ref<Schema> &p_root_schema, 
 		comment = schema_dict["$comment"];
 	}
 
-	if (p_root_schema.is_valid()) {
+	if (schema_dict.has("$anchor") && schema_dict["$anchor"].get_type() == Variant::STRING) {
+		anchor = schema_dict["$anchor"];
+		register_anchor(anchor, this);
+	}
+
+	if (schema_dict.has("$dynamicAnchor") && schema_dict["$dynamicAnchor"].get_type() == Variant::STRING) {
+		dynamic_anchor = schema_dict["$dynamicAnchor"];
+		register_dynamic_anchor(dynamic_anchor, this);
+	}
+
+	if (p_root_schema != nullptr) {
 		root_schema = p_root_schema;
 	}
 
@@ -127,11 +142,12 @@ Schema::Schema(const Dictionary &schema_dict, const Ref<Schema> &p_root_schema, 
 
 Schema::~Schema() {
 	// Children and items will be automatically freed by Ref<> destructors
-	root_schema.unref();
 }
 
 Ref<Schema> Schema::build_schema(const Dictionary &schema_dict, bool validate_against_meta) {
-	Ref<Schema> schema = memnew(Schema(schema_dict, nullptr, "", validate_against_meta));
+	Ref<Schema> schema;
+	schema.instantiate();
+	schema->init(schema_dict, nullptr, "", validate_against_meta);
 	schema->compile();
 	if (schema->compile_errors.size() > 0) {
 		UtilityFunctions::push_error("Building schema failed failed:\n", schema->get_compile_error_summary());
@@ -254,14 +270,16 @@ Schema::SchemaType Schema::detect_schema_type(const Dictionary &dict) const {
 
 	// Check for array-specific keywords
 	if (dict.has("items") || dict.has("minItems") || dict.has("maxItems") || dict.has("uniqueItems") ||
-			dict.has("additionalItems") || dict.has("contains")) {
+			dict.has("additionalItems") || dict.has("contains") || dict.has("prefixItems") ||
+			dict.has("unevaluatedItems")) {
 		return SchemaType::SCHEMA_ARRAY;
 	}
 
 	// Check for object-specific keywords
 	if (dict.has("properties") || dict.has("required") || dict.has("additionalProperties") ||
 			dict.has("patternProperties") || dict.has("minProperties") || dict.has("maxProperties") ||
-			dict.has("dependencies") || dict.has("propertyNames")) {
+			dict.has("dependencies") || dict.has("propertyNames") || dict.has("dependentRequired") ||
+			dict.has("dependentSchemas") || dict.has("unevaluatedProperties")) {
 		return SchemaType::SCHEMA_OBJECT;
 	}
 
@@ -348,7 +366,9 @@ void Schema::construct_children(const Dictionary &dict) {
 				Dictionary child_dict = variant_to_schema_dict(value);
 				StringName child_key = vformat("properties/%s", key);
 				StringName child_path = vformat("%s/%s", schema_path, child_key);
-				Ref<Schema> child_node = memnew(Schema(child_dict, get_root(), child_path));
+				Ref<Schema> child_node;
+				child_node.instantiate();
+				child_node->init(child_dict, get_root(), child_path);
 				children[child_key] = child_node;
 			}
 		}
@@ -385,6 +405,25 @@ void Schema::construct_children(const Dictionary &dict) {
 				}
 			}
 		}
+
+		// dependentSchemas - Draft 2020-12
+		if (dict.has("dependentSchemas")) {
+			Dictionary dependent_schemas = dict["dependentSchemas"].operator Dictionary();
+			Array keys = dependent_schemas.keys();
+
+			for (int i = 0; i < keys.size(); i++) {
+				String dep_name = keys[i].operator String();
+				Variant dep_value = dependent_schemas[keys[i]];
+
+				if (dep_value.get_type() == Variant::DICTIONARY) {
+					Dictionary dep_schema = dep_value.operator Dictionary();
+					StringName child_key = vformat("dependentSchemas/%s", dep_name);
+					create_schema_child(dep_schema, child_key);
+				}
+			}
+		}
+
+		create_schema_child_if_exists(dict, "unevaluatedProperties");
 	}
 
 	// ========== ARRAY SCHEMAS ==========
@@ -402,7 +441,9 @@ void Schema::construct_children(const Dictionary &dict) {
 						Dictionary schema_dict = schema_dict_var.operator Dictionary();
 						StringName child_key = vformat("prefixItems/%d", i);
 						StringName child_path = vformat("%s/%s", schema_path, child_key);
-						Ref<Schema> schema_node = memnew(Schema(schema_dict, get_root(), child_path));
+						Ref<Schema> schema_node;
+						schema_node.instantiate();
+						schema_node->init(schema_dict, get_root(), child_path);
 						item_schemas.push_back(schema_node);
 						children[child_key] = schema_node;
 					}
@@ -423,7 +464,9 @@ void Schema::construct_children(const Dictionary &dict) {
 						Dictionary schema_dict = schema_dict_var.operator Dictionary();
 						StringName child_key = vformat("items/%d", i);
 						StringName child_path = vformat("%s/%s", schema_path, child_key);
-						Ref<Schema> schema_node = memnew(Schema(schema_dict, get_root(), child_path));
+						Ref<Schema> schema_node;
+						schema_node.instantiate();
+						schema_node->init(schema_dict, get_root(), child_path);
 						item_schemas.push_back(schema_node);
 						children[child_key] = schema_node;
 					}
@@ -434,7 +477,9 @@ void Schema::construct_children(const Dictionary &dict) {
 					Dictionary item_schema = item_schema_dict.operator Dictionary();
 					StringName child_key = "items";
 					StringName child_path = vformat("%s/%s", schema_path, child_key);
-					Ref<Schema> item_node = memnew(Schema(item_schema, get_root(), child_path));
+					Ref<Schema> item_node;
+					item_node.instantiate();
+					item_node->init(item_schema, get_root(), child_path);
 					item_schemas.push_back(item_node);
 					children[child_key] = item_node;
 				}
@@ -443,6 +488,7 @@ void Schema::construct_children(const Dictionary &dict) {
 
 		create_schema_child_if_exists(dict, "additionalItems");
 		create_schema_child_if_exists(dict, "contains");
+		create_schema_child_if_exists(dict, "unevaluatedItems");
 	}
 
 	// ========== LOGICAL COMPOSITION ==========
@@ -463,7 +509,9 @@ void Schema::construct_children(const Dictionary &dict) {
 
 Ref<Schema> Schema::create_schema_child(const Dictionary &child_schema, const StringName &child_key) {
 	StringName child_path = vformat("%s/%s", schema_path, child_key);
-	Ref<Schema> child_node = memnew(Schema(child_schema, get_root(), child_path));
+	Ref<Schema> child_node;
+	child_node.instantiate();
+	child_node->init(child_schema, get_root(), child_path);
 	children[child_key] = child_node;
 	return child_node;
 }
@@ -532,10 +580,20 @@ Ref<Schema> Schema::resolve_reference(const String &reference_uri) const {
 	}
 
 	if (uri.begins_with("#")) {
-		// Fragment identifier (legacy anchor, not JSON Pointer)
+		// Fragment identifier
 		String fragment = uri.substr(1);
-		UtilityFunctions::push_warning(vformat("Anchor references not implemented: %s", uri));
-		return Ref<Schema>();
+
+		if (fragment.is_empty()) {
+			return get_root();
+		}
+
+		if (!fragment.begins_with("/")) {
+			// Anchor reference
+			return get_root()->get_by_anchor(fragment);
+		}
+		// Fallback for malformed JSON Pointer
+		String normalized = normalize_json_pointer(fragment);
+		return get_root()->get_at_path(normalized);
 	}
 
 	// External reference - check if it contains fragment
@@ -562,13 +620,57 @@ Ref<Schema> Schema::resolve_reference(const String &reference_uri) const {
 			return external_schema->get_at_path(normalized);
 		} else {
 			// Anchor reference in external Schema
-			UtilityFunctions::push_warning(vformat("External anchor references not implemented: %s", uri));
-			return Ref<Schema>();
+			return external_schema->get_root()->get_by_anchor(fragment);
 		}
 	} else {
 		// Pure external reference (whole document)
 		return SchemaRegistry::get_singleton().get_schema(uri);
 	}
+}
+
+Ref<Schema> Schema::resolve_dynamic_reference(const String &uri, const ValidationContext &context) const {
+	// Resolve as normal ref first to find the "initial" target
+	Ref<Schema> initial_target = resolve_reference(uri);
+	if (!initial_target.is_valid()) {
+		return initial_target;
+	}
+
+	// If it has a dynamic anchor, search dynamic scope
+	if (!initial_target->dynamic_anchor.is_empty()) {
+		StringName anchor_name = initial_target->dynamic_anchor;
+		const std::vector<Ref<Schema>> &scope = context.get_dynamic_scope();
+
+		// Search from outermost to innermost
+		for (size_t i = 0; i < scope.size(); i++) {
+			Ref<Schema> s = scope[i];
+			if (s.is_valid() && s->has_dynamic_anchor(anchor_name)) {
+				return s;
+			}
+		}
+	}
+
+	return initial_target;
+}
+
+void Schema::register_anchor(const StringName &name, const Schema *schema) {
+	get_root()->anchor_map[name] = schema;
+}
+
+void Schema::register_dynamic_anchor(const StringName &name, const Schema *schema) {
+	get_root()->dynamic_anchor_map[name] = schema;
+}
+
+Ref<Schema> Schema::get_by_anchor(const StringName &name) const {
+	auto root = get_root();
+	auto it = root->anchor_map.find(name);
+	if (it != root->anchor_map.end()) {
+		return Ref<Schema>(const_cast<Schema *>(it->second));
+	}
+	auto it_dyn = root->dynamic_anchor_map.find(name);
+	if (it_dyn != root->dynamic_anchor_map.end()) {
+		return Ref<Schema>(const_cast<Schema *>(it_dyn->second));
+	}
+	return Ref<Schema>();
 }
 
 String Schema::normalize_json_pointer(const String &pointer) {
@@ -745,6 +847,7 @@ Ref<SchemaValidationResult> Schema::validate(const Variant &data) {
 	compilation_mutex->lock();
 
 	ValidationContext context(this);
+	context.push_dynamic_scope(Ref<Schema>(this));
 
 	if (!is_valid()) {
 		for (auto error : compile_errors) {
@@ -780,7 +883,7 @@ bool Schema::is_valid() const {
 	return valid;
 }
 
-void Schema::set_compilation_result(std::shared_ptr<RuleGroup> compiled_rules, std::vector<SchemaCompileError> errors) {
+void Schema::set_compilation_result(std::shared_ptr<ValidationRule> compiled_rules, std::vector<SchemaCompileError> errors) {
 	compilation_mutex->lock();
 	rules = compiled_rules;
 	compile_errors = std::move(errors);

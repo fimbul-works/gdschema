@@ -24,7 +24,8 @@ bool AnyOfRule::validate(const Variant &target, ValidationContext &context) cons
 
 		if (sub_rules[i]->validate(target, sub_context)) {
 			any_passed = true;
-			break; // Success - we can stop here
+			// For Draft 2020-12, we must continue to collect annotations from all successful branches
+			context.merge_evaluation_data(sub_context);
 		} else {
 			failed_contexts.push_back(sub_context);
 		}
@@ -34,7 +35,6 @@ bool AnyOfRule::validate(const Variant &target, ValidationContext &context) cons
 		context.add_error(vformat("Value failed all %d anyOf schemas", static_cast<int64_t>(sub_rules.size())), "anyOf");
 
 		// Optionally merge some failed context errors for debugging
-		// (but don't overwhelm with all of them)
 		if (!failed_contexts.empty()) {
 			context.merge_errors(failed_contexts[0]); // Show errors from first failed schema
 		}

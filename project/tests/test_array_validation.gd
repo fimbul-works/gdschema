@@ -123,6 +123,43 @@ func test_contains_object() -> void:
 	expect(!schema.validate([{"status": "inactive"}, {"status": "pending"}]).is_valid(), "Array with no active objects should not validate")
 	expect(!schema.validate([{"name": "test"}]).is_valid(), "Array with objects missing status should not validate")
 
+func test_min_contains() -> void:
+	var schema = Schema.build_schema({
+		"type": "array",
+		"contains": { "type": "number" },
+		"minContains": 2
+	})
+
+	expect(schema.validate([1, 2]).is_valid(), "Array with exactly minContains matches should validate")
+	expect(schema.validate([1, 2, "a", 3]).is_valid(), "Array with more matches should validate")
+	expect(!schema.validate([1, "a", "b"]).is_valid(), "Array with fewer matches should not validate")
+	expect(!schema.validate(["a", "b", "c"]).is_valid(), "Array with zero matches should not validate")
+
+func test_max_contains() -> void:
+	var schema = Schema.build_schema({
+		"type": "array",
+		"contains": { "type": "string" },
+		"maxContains": 2
+	})
+
+	expect(!schema.validate([]).is_valid(), "Array with zero items should not validate")
+	expect(schema.validate(["a"]).is_valid(), "Array with one match should validate")
+	expect(schema.validate(["a", "b"]).is_valid(), "Array with exactly maxContains matches should validate")
+	expect(!schema.validate(["a", "b", "c"]).is_valid(), "Array with more than maxContains matches should not validate")
+
+func test_min_max_contains_combined() -> void:
+	var schema = Schema.build_schema({
+		"type": "array",
+		"contains": { "type": "boolean" },
+		"minContains": 2,
+		"maxContains": 3
+	})
+
+	expect(!schema.validate([true]).is_valid(), "Below minContains should fail")
+	expect(schema.validate([true, false]).is_valid(), "Exact minContains should pass")
+	expect(schema.validate([true, false, true, "string"]).is_valid(), "Within range should pass")
+	expect(!schema.validate([true, false, true, false]).is_valid(), "Above maxContains should fail")
+
 # ========== CONTAINS WITH DIFFERENT TYPES ==========
 
 func test_contains_multiple_types() -> void:

@@ -1099,3 +1099,36 @@ func test_property_names_complex_regex() -> void:
 	expect(!schema.validate({"_invalid": 1}).is_valid(), "Property starting with underscore should not validate")
 	expect(!schema.validate({"invalid__double": 1}).is_valid(), "Property with double underscore should not validate")
 	expect(!schema.validate({"123invalid": 1}).is_valid(), "Property starting with number should not validate")
+
+# ========== DRAFT 2020-12 DEPENDENCIES ==========
+
+func test_dependent_required_basic() -> void:
+	var schema = Schema.build_schema({
+		"type": "object",
+		"dependentRequired": {
+			"credit_card": ["billing_address"]
+		}
+	})
+
+	expect(schema.validate({}).is_valid(), "Object without dependent property should validate")
+	expect(schema.validate({"credit_card": "1234-5678", "billing_address": "123 Main St"}).is_valid(), "Object with both properties should validate")
+	expect(schema.validate({"billing_address": "123 Main St"}).is_valid(), "Object with only dependent property should validate")
+	expect(!schema.validate({"credit_card": "1234-5678"}).is_valid(), "Object with trigger property but missing dependency should not validate")
+
+func test_dependent_schemas_basic() -> void:
+	var schema = Schema.build_schema({
+		"type": "object",
+		"dependentSchemas": {
+			"credit_card": {
+				"properties": {
+					"billing_address": {"type": "string", "minLength": 1}
+				},
+				"required": ["billing_address"]
+			}
+		}
+	})
+
+	expect(schema.validate({}).is_valid(), "Object without trigger property should validate")
+	expect(schema.validate({"credit_card": "1234", "billing_address": "123 Main St"}).is_valid(), "Object with valid dependency Schema should validate")
+	expect(!schema.validate({"credit_card": "1234"}).is_valid(), "Object missing required property from dependency should not validate")
+	expect(!schema.validate({"credit_card": "1234", "billing_address": ""}).is_valid(), "Object with invalid property from dependency should not validate")

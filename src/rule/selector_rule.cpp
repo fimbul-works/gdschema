@@ -17,11 +17,22 @@ bool SelectorRule::validate(const Variant &target, ValidationContext &context) c
 
 	for (const auto &selection : targets) {
 		ValidationContext child_context = context.create_child_instance(selection.path_segment);
-		if (!rule->validate(selection.value, child_context)) {
+		if (rule->validate(selection.value, child_context)) {
+			// If validation succeeded and we have a path segment, mark it as evaluated in the parent context
+			if (!selection.path_segment.is_empty()) {
+				if (selection.path_segment.is_valid_int()) {
+					context.mark_item_evaluated(selection.path_segment.to_int());
+				} else {
+					context.mark_property_evaluated(selection.path_segment);
+				}
+			}
+		} else {
 			all_valid = false;
 			// Continue to validate other targets and collect all errors
 		}
 		context.merge_errors(child_context);
+		// Also merge any evaluation data from child (in case of nested evaluators)
+		context.merge_evaluation_data(child_context);
 	}
 
 	return all_valid;

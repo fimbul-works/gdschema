@@ -1,4 +1,4 @@
-[gd_scene load_steps=16 format=3 uid="uid://b8sttu5ugrluj"]
+[gd_scene load_steps=19 format=3 uid="uid://b8sttu5ugrluj"]
 
 [ext_resource type="PackedScene" uid="uid://bkdh3qj8xqsnh" path="res://addons/TestKit/test_runner.tscn" id="1_ybys2"]
 [ext_resource type="Script" path="res://tests/test_basic_schema.gd" id="2_it4mf"]
@@ -15,6 +15,9 @@
 [ext_resource type="Script" path="res://tests/test_error_handling.gd" id="13_88un0"]
 [ext_resource type="Script" path="res://tests/test_integration.gd" id="15_6syin"]
 [ext_resource type="Script" path="res://tests/test_edge_case.gd" id="15_hralm"]
+[ext_resource type="Script" path="res://tests/test_unevaluated_properties.gd" id="16_5agse"]
+[ext_resource type="Script" path="res://tests/test_unevaluated_items.gd" id="17_csu3k"]
+[ext_resource type="Script" path="res://tests/test_dynamic_ref.gd" id="18_3lvwe"]
 
 [node name="Tests" type="Control"]
 layout_mode = 3
@@ -42,6 +45,12 @@ script = ExtResource("5_v8xr6")
 [node name="Object Validation" type="Node2D" parent="TestRunnerUI"]
 script = ExtResource("6_q555x")
 
+[node name="Unevaluated Items" type="Node2D" parent="TestRunnerUI"]
+script = ExtResource("17_csu3k")
+
+[node name="Unevaluated Properties" type="Node2D" parent="TestRunnerUI"]
+script = ExtResource("16_5agse")
+
 [node name="Type Validation" type="Node2D" parent="TestRunnerUI"]
 script = ExtResource("7_yfo6w")
 
@@ -53,6 +62,9 @@ script = ExtResource("9_ieaqh")
 
 [node name="Reference" type="Node2D" parent="TestRunnerUI"]
 script = ExtResource("10_1uo70")
+
+[node name="Dynamic Reference" type="Node2D" parent="TestRunnerUI"]
+script = ExtResource("18_3lvwe")
 
 [node name="Definitions" type="Node2D" parent="TestRunnerUI"]
 script = ExtResource("11_obrdq")

@@ -1,5 +1,8 @@
 #include "../rule/const_rule.hpp"
 #include "../rule/dependency_rule.hpp"
+#include "../rule/dependent_required_rule.hpp"
+#include "../rule/dependent_schemas_rule.hpp"
+#include "../rule/false_rule.hpp"
 #include "../rule/max_properties_rule.hpp"
 #include "../rule/min_properties_rule.hpp"
 #include "../rule/required_properties_rule.hpp"
@@ -9,6 +12,7 @@
 #include "../selector/object_keys_selector.hpp"
 #include "../selector/pattern_properties_selector.hpp"
 #include "../selector/property_selector.hpp"
+#include "../selector/unevaluated_properties_selector.hpp"
 #include "../selector/value_selector.hpp"
 #include "../util.hpp"
 #include "rule_factory.hpp"
@@ -20,7 +24,7 @@ void RuleFactory::create_object_rules(const Dictionary &schema_def, const Ref<Sc
 	if (schema_def.has("minProperties")) {
 		Variant min_props_var = schema_def["minProperties"];
 		int64_t min_props;
-		if (try_get_non_negative_int(min_props_var, min_props)) {
+		if (SchemaUtil::try_get_non_negative_int(min_props_var, min_props)) {
 			auto selector = std::make_unique<ValueSelector>();
 			auto rule = std::make_unique<MinPropertiesRule>(min_props);
 			result.rules->add_rule(std::make_unique<SelectorRule>(std::move(selector), std::move(rule)));
@@ -31,7 +35,7 @@ void RuleFactory::create_object_rules(const Dictionary &schema_def, const Ref<Sc
 	if (schema_def.has("maxProperties")) {
 		Variant max_props_var = schema_def["maxProperties"];
 		int64_t max_props;
-		if (try_get_non_negative_int(max_props_var, max_props)) {
+		if (SchemaUtil::try_get_non_negative_int(max_props_var, max_props)) {
 			auto selector = std::make_unique<ValueSelector>();
 			auto rule = std::make_unique<MaxPropertiesRule>(max_props);
 			result.rules->add_rule(std::make_unique<SelectorRule>(std::move(selector), std::move(rule)));
@@ -78,7 +82,7 @@ void RuleFactory::create_object_rules(const Dictionary &schema_def, const Ref<Sc
 					result.errors.insert(result.errors.end(), child_result.errors.begin(), child_result.errors.end());
 
 					// If child Schema is valid, create a selector rule for this property
-					if (child_result.is_valid() && !child_result.rules->is_empty()) {
+					if (child_result.is_valid()) {
 						auto selector = std::make_unique<PropertySelector>(prop_name);
 						result.rules->add_rule(std::make_unique<SelectorRule>(std::move(selector), std::move(child_result.rules)));
 					}
@@ -119,7 +123,7 @@ void RuleFactory::create_object_rules(const Dictionary &schema_def, const Ref<Sc
 						auto pattern_result = create_rules(child_schema);
 						result.errors.insert(result.errors.end(), pattern_result.errors.begin(), pattern_result.errors.end());
 
-						if (pattern_result.is_valid() && !pattern_result.rules->is_empty()) {
+						if (pattern_result.is_valid()) {
 							auto selector = std::make_unique<PatternPropertiesSelector>(pattern);
 							result.rules->add_rule(std::make_unique<SelectorRule>(std::move(selector), std::move(pattern_result.rules)));
 						}
@@ -195,7 +199,7 @@ void RuleFactory::create_object_rules(const Dictionary &schema_def, const Ref<Sc
 		}
 	}
 
-	// Dependencies - property and Schema dependencies
+	// Dependencies - Draft-07 property and Schema dependencies
 	if (schema_def.has("dependencies")) {
 		Dictionary dependencies = schema_def["dependencies"].operator Dictionary();
 		Array dep_keys = dependencies.keys();
@@ -237,6 +241,64 @@ void RuleFactory::create_object_rules(const Dictionary &schema_def, const Ref<Sc
 					}
 				}
 			}
+		}
+	}
+
+	// dependentRequired - JSON Schema 2020-12
+	if (schema_def.has("dependentRequired")) {
+		Variant dep_req_var = schema_def["dependentRequired"];
+		if (dep_req_var.get_type() == Variant::DICTIONARY) {
+			Dictionary dep_req_dict = dep_req_var.operator Dictionary();
+			Array keys = dep_req_dict.keys();
+			auto rule = std::make_unique<DependentRequiredRule>();
+
+			for (int i = 0; i < keys.size(); i++) {
+				StringName trigger = keys[i];
+				Variant req_props_var = dep_req_dict[trigger];
+				if (req_props_var.get_type() == Variant::ARRAY) {
+					Array req_props_array = req_props_var.operator Array();
+					std::vector<StringName> req_props;
+					for (int j = 0; j < req_props_array.size(); j++) {
+						if (req_props_array[j].get_type() == Variant::STRING) {
+							req_props.push_back(StringName(req_props_array[j].operator String()));
+						}
+					}
+					if (!req_props.empty()) {
+						rule->add_dependency(trigger, req_props);
+					}
+				}
+			}
+
+			auto selector = std::make_unique<ValueSelector>();
+			result.rules->add_rule(std::make_unique<SelectorRule>(std::move(selector), std::move(rule)));
+		}
+	}
+
+	// dependentSchemas - JSON Schema 2020-12
+	if (schema_def.has("dependentSchemas")) {
+		Variant dep_sch_var = schema_def["dependentSchemas"];
+		if (dep_sch_var.get_type() == Variant::DICTIONARY) {
+			Dictionary dep_sch_dict = dep_sch_var.operator Dictionary();
+			Array keys = dep_sch_dict.keys();
+			auto rule = std::make_unique<DependentSchemasRule>();
+
+			for (int i = 0; i < keys.size(); i++) {
+				StringName trigger = keys[i];
+				StringName child_key = vformat("dependentSchemas/%s", trigger);
+				Ref<Schema> child_schema = schema->get_child(child_key);
+
+				if (child_schema.is_valid()) {
+					auto dep_result = create_rules(child_schema);
+					result.errors.insert(result.errors.end(), dep_result.errors.begin(), dep_result.errors.end());
+
+					if (dep_result.is_valid() && !dep_result.rules->is_empty()) {
+						rule->add_schema(trigger, dep_result.rules);
+					}
+				}
+			}
+
+			auto selector = std::make_unique<ValueSelector>();
+			result.rules->add_rule(std::make_unique<SelectorRule>(std::move(selector), std::move(rule)));
 		}
 	}
 }

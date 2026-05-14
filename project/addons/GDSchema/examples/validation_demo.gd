@@ -78,6 +78,8 @@ func _on_example_selected(index: int) -> void:
 	_load_example(index)
 
 func _load_example(index: int) -> void:
+	example_selector.select(index)
+
 	match index:
 		0:  # Custom - clear fields
 			schema_input.text = "{\n  \"type\": \"string\"\n}"

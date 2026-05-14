@@ -1,7 +1,9 @@
 #pragma once
 
+#include "hashers.hpp"
 #include "validation_error.hpp"
 
+#include <godot_cpp/classes/ref_counted.hpp>
 #include <godot_cpp/variant/array.hpp>
 #include <godot_cpp/variant/dictionary.hpp>
 #include <godot_cpp/variant/packed_string_array.hpp>
@@ -9,6 +11,7 @@
 #include <godot_cpp/variant/variant.hpp>
 
 #include <godot_cpp/variant/utility_functions.hpp>
+#include <unordered_set>
 #include <vector>
 
 namespace godot {
@@ -28,43 +31,53 @@ private:
 	std::vector<ValidationError> errors;
 	Dictionary custom_data;
 
+	std::unordered_set<StringName, StringNameHasher, StringNameEqual> evaluated_properties;
+	std::unordered_set<int64_t> evaluated_items;
+
+	std::vector<Ref<Schema>> dynamic_scope;
+	int validation_depth;
+
 public:
 	/**
 	 * @brief Constructor
 	 * @param schema Source Schema (can be null)
-	 * @param inst_path Current instance path
-	 * @param sch_path Current Schema path
+	 * @param inst_parts Current instance path parts
+	 * @param sch_parts Current Schema path parts
+	 * @param depth Current recursion depth
 	 */
 	ValidationContext(const Schema *schema = nullptr,
 			const PackedStringArray &inst_parts = PackedStringArray(),
-			const PackedStringArray &sch_parts = PackedStringArray()) :
-			source_schema(schema), instance_path_parts(inst_parts), schema_path_parts(sch_parts) {}
+			const PackedStringArray &sch_parts = PackedStringArray(),
+			int depth = 0);
+
+	/**
+	 * @brief Copy Constructor
+	 */
+	ValidationContext(const ValidationContext &other);
+
+	/**
+	 * @brief Assignment Operator
+	 */
+	ValidationContext &operator=(const ValidationContext &other);
+
+	/**
+	 * @brief Destructor
+	 */
+	~ValidationContext();
 
 	/**
 	 * @brief Creates a child context for validating a sub-instance
 	 * @param segment Path segment to append to instance path
 	 * @return New validation context with updated instance path
 	 */
-	ValidationContext create_child_instance(const String &segment) const {
-		PackedStringArray new_parts = instance_path_parts;
-		if (!segment.is_empty()) {
-			new_parts.push_back(segment);
-		}
-		return ValidationContext(source_schema, new_parts, schema_path_parts);
-	}
+	ValidationContext create_child_instance(const String &segment) const;
 
 	/**
 	 * @brief Creates a child context for a sub-schema
 	 * @param segment Path segment to append to Schema path
 	 * @return New validation context with updated Schema path
 	 */
-	ValidationContext create_child_schema(const String &segment) const {
-		PackedStringArray new_parts = schema_path_parts;
-		if (!segment.is_empty()) {
-			new_parts.push_back(segment);
-		}
-		return ValidationContext(source_schema, instance_path_parts, new_parts);
-	}
+	ValidationContext create_child_schema(const String &segment) const;
 
 	/**
 	 * @brief Creates a child context with both paths updated
@@ -72,18 +85,7 @@ public:
 	 * @param schema_segment Schema path segment
 	 * @return New validation context
 	 */
-	ValidationContext create_child_context(const String &instance_segment, const String &schema_segment = "") const {
-		PackedStringArray new_instance_parts = instance_path_parts;
-		if (!instance_segment.is_empty()) {
-			new_instance_parts.push_back(instance_segment);
-		}
-
-		PackedStringArray new_schema_parts = schema_path_parts;
-		if (!schema_segment.is_empty()) {
-			new_schema_parts.push_back(schema_segment);
-		}
-		return ValidationContext(source_schema, new_instance_parts, new_schema_parts);
-	}
+	ValidationContext create_child_context(const String &instance_segment, const String &schema_segment = "") const;
 
 	/**
 	 * @brief Adds a validation error
@@ -104,6 +106,61 @@ public:
 	void merge_errors(const ValidationContext &other) {
 		errors.insert(errors.end(), other.errors.begin(), other.errors.end());
 	}
+
+	/**
+	 * @brief Marks a property as evaluated at the current instance path
+	 * @param property The property name
+	 */
+	void mark_property_evaluated(const StringName &property) {
+		evaluated_properties.insert(property);
+	}
+
+	/**
+	 * @brief Marks an array item as evaluated at the current instance path
+	 * @param index The item index
+	 */
+	void mark_item_evaluated(int64_t index) {
+		evaluated_items.insert(index);
+	}
+
+	/**
+	 * @brief Checks if a property has been evaluated
+	 * @param property The property name
+	 * @return True if evaluated
+	 */
+	bool is_property_evaluated(const StringName &property) const {
+		return evaluated_properties.find(property) != evaluated_properties.end();
+	}
+
+	/**
+	 * @brief Checks if an array item has been evaluated
+	 * @param index The item index
+	 * @return True if evaluated
+	 */
+	bool is_item_evaluated(int64_t index) const {
+		return evaluated_items.find(index) != evaluated_items.end();
+	}
+
+	/**
+	 * @brief Merges evaluation data from another context (for applicators)
+	 * @param other The other context
+	 */
+	void merge_evaluation_data(const ValidationContext &other) {
+		evaluated_properties.insert(other.evaluated_properties.begin(), other.evaluated_properties.end());
+		evaluated_items.insert(other.evaluated_items.begin(), other.evaluated_items.end());
+	}
+
+	/**
+	 * @brief Adds a schema to the dynamic scope
+	 * @param schema The schema being entered
+	 */
+	void push_dynamic_scope(const Ref<Schema> &schema);
+
+	/**
+	 * @brief Gets the current dynamic scope
+	 * @return List of schemas in the dynamic scope
+	 */
+	const std::vector<Ref<Schema>> &get_dynamic_scope() const;
 
 	/**
 	 * @brief Checks if validation was successful
@@ -168,6 +225,16 @@ public:
 	 * @return Source Schema (can be null)
 	 */
 	const Schema *get_source_schema() const { return source_schema; }
+
+	/**
+	 * @brief Gets the current validation depth
+	 */
+	int get_validation_depth() const { return validation_depth; }
+
+	/**
+	 * @brief Creates a context with incremented depth for reference resolution
+	 */
+	ValidationContext with_incremented_depth() const;
 
 	/**
 	 * @brief Sets custom data associated with this context

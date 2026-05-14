@@ -18,6 +18,7 @@ bool OneOfRule::validate(const Variant &target, ValidationContext &context) cons
 	// Exactly one sub-rule must pass
 	int64_t passed_count = 0;
 	std::vector<size_t> passed_indices;
+	std::vector<ValidationContext> passed_contexts;
 	std::vector<ValidationContext> failed_contexts;
 
 	for (int64_t i = 0; i < sub_rules.size(); i++) {
@@ -26,7 +27,7 @@ bool OneOfRule::validate(const Variant &target, ValidationContext &context) cons
 		if (sub_rules[i]->validate(target, sub_context)) {
 			passed_count++;
 			passed_indices.push_back(i);
-
+			passed_contexts.push_back(sub_context);
 			// Continue checking all schemas to count total passes
 		} else {
 			failed_contexts.push_back(sub_context);
@@ -57,6 +58,8 @@ bool OneOfRule::validate(const Variant &target, ValidationContext &context) cons
 	}
 
 	// Exactly one passed - success!
+	// Merge evaluation data from the successful branch
+	context.merge_evaluation_data(passed_contexts[0]);
 	return true;
 }
 

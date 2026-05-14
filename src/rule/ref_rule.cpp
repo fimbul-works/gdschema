@@ -3,20 +3,17 @@
 #include "../schema_registry.hpp"
 #include "../validation_context.hpp"
 
+#include "../util.hpp"
 #include <godot_cpp/variant/utility_functions.hpp>
 
 using namespace godot;
-
-// Simple thread-local depth counter to prevent infinite recursion
-thread_local int validation_depth = 0;
-const int MAX_VALIDATION_DEPTH = 50; // Reasonable limit
 
 RefRule::RefRule(const String &ref_uri, const Schema *schema) :
 		reference_uri(ref_uri), source_schema(schema), resolution_attempted(false) {}
 
 bool RefRule::validate(const Variant &target, ValidationContext &context) const {
 	// Simple depth-based recursion protection
-	if (validation_depth >= MAX_VALIDATION_DEPTH) {
+	if (context.get_validation_depth() >= MAX_VALIDATION_DEPTH) {
 		return true; // Assume valid to break potential infinite recursion
 	}
 
@@ -24,19 +21,12 @@ bool RefRule::validate(const Variant &target, ValidationContext &context) const 
 	if (!resolution_attempted) {
 		cached_schema = source_schema->resolve_reference(reference_uri);
 		resolution_attempted = true;
-
-		if (!cached_schema.is_valid()) {
-			context.add_error(vformat("Could not resolve reference: %s", reference_uri), "ref", reference_uri);
-			return false;
-		}
 	}
 
 	if (!cached_schema.is_valid()) {
+		context.add_error(vformat("Could not resolve reference: %s", reference_uri), "ref", reference_uri);
 		return false;
 	}
-
-	// Increment depth counter
-	validation_depth++;
 
 	bool validation_result = false;
 
@@ -62,23 +52,20 @@ bool RefRule::validate(const Variant &target, ValidationContext &context) const 
 			auto rules_to_validate = cached_schema->rules;
 			cached_schema->compilation_mutex->unlock();
 
-			// Create child context for the reference validation
-			ValidationContext ref_context = context.create_child_schema(vformat("$ref:%s", reference_uri));
+			// Create child context for the reference validation, incrementing depth
+			ValidationContext ref_context = context.create_child_schema(vformat("$ref:%s", reference_uri)).with_incremented_depth();
+			ref_context.push_dynamic_scope(cached_schema);
 
 			// Validate using the resolved schema's rules
 			validation_result = rules_to_validate->validate(target, ref_context);
 
-			// Merge any errors from the reference validation
+			// Merge results from the reference validation
 			context.merge_errors(ref_context);
+			context.merge_evaluation_data(ref_context);
 		}
 	} catch (...) {
-		// Ensure we clean up the depth counter even if an exception occurs
-		validation_depth--;
 		throw;
 	}
-
-	// Decrement depth counter
-	validation_depth--;
 
 	return validation_result;
 }

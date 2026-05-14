@@ -17,7 +17,7 @@ void RuleFactory::create_string_rules(const Dictionary &schema_def, RuleCompileR
 	if (schema_def.has("minLength")) {
 		Variant min_length_var = schema_def["minLength"];
 		int64_t min_length;
-		if (try_get_non_negative_int(min_length_var, min_length)) {
+		if (SchemaUtil::try_get_non_negative_int(min_length_var, min_length)) {
 			auto selector = std::make_unique<ValueSelector>();
 			auto rule = std::make_unique<MinLengthRule>(min_length);
 			result.rules->add_rule(std::make_unique<SelectorRule>(std::move(selector), std::move(rule)));
@@ -28,7 +28,7 @@ void RuleFactory::create_string_rules(const Dictionary &schema_def, RuleCompileR
 	if (schema_def.has("maxLength")) {
 		Variant max_length_var = schema_def["maxLength"];
 		int64_t max_length;
-		if (try_get_non_negative_int(max_length_var, max_length)) {
+		if (SchemaUtil::try_get_non_negative_int(max_length_var, max_length)) {
 			auto selector = std::make_unique<ValueSelector>();
 			auto rule = std::make_unique<MaxLengthRule>(max_length);
 			result.rules->add_rule(std::make_unique<SelectorRule>(std::move(selector), std::move(rule)));

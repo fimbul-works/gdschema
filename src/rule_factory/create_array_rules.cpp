@@ -10,6 +10,7 @@
 #include "../selector/array_item_selector.hpp"
 #include "../selector/array_items_selector.hpp"
 #include "../selector/prefix_items_selector.hpp"
+#include "../selector/unevaluated_items_selector.hpp"
 #include "../selector/value_selector.hpp"
 #include "../util.hpp"
 #include "rule_factory.hpp"
@@ -21,7 +22,7 @@ void RuleFactory::create_array_rules(const Dictionary &schema_def, const Ref<Sch
 	if (schema_def.has("minItems")) {
 		Variant min_items_var = schema_def["minItems"];
 		int64_t min_items;
-		if (try_get_non_negative_int(min_items_var, min_items)) {
+		if (SchemaUtil::try_get_non_negative_int(min_items_var, min_items)) {
 			auto selector = std::make_unique<ValueSelector>();
 			auto rule = std::make_unique<MinItemsRule>(min_items);
 			result.rules->add_rule(std::make_unique<SelectorRule>(std::move(selector), std::move(rule)));
@@ -32,7 +33,7 @@ void RuleFactory::create_array_rules(const Dictionary &schema_def, const Ref<Sch
 	if (schema_def.has("maxItems")) {
 		Variant max_items_var = schema_def["maxItems"];
 		int64_t max_items;
-		if (try_get_non_negative_int(max_items_var, max_items)) {
+		if (SchemaUtil::try_get_non_negative_int(max_items_var, max_items)) {
 			auto selector = std::make_unique<ValueSelector>();
 			auto rule = std::make_unique<MaxItemsRule>(max_items);
 			result.rules->add_rule(std::make_unique<SelectorRule>(std::move(selector), std::move(rule)));
@@ -68,7 +69,7 @@ void RuleFactory::create_array_rules(const Dictionary &schema_def, const Ref<Sch
 					auto item_result = create_rules(child_schema);
 					result.errors.insert(result.errors.end(), item_result.errors.begin(), item_result.errors.end());
 
-					if (item_result.is_valid() && !item_result.rules->is_empty()) {
+					if (item_result.is_valid()) {
 						auto selector = std::make_unique<PrefixItemsSelector>(i);
 						result.rules->add_rule(std::make_unique<SelectorRule>(std::move(selector), std::move(item_result.rules)));
 					}
@@ -99,7 +100,7 @@ void RuleFactory::create_array_rules(const Dictionary &schema_def, const Ref<Sch
 					auto items_result = create_rules(child_schema);
 					result.errors.insert(result.errors.end(), items_result.errors.begin(), items_result.errors.end());
 
-					if (items_result.is_valid() && !items_result.rules->is_empty()) {
+					if (items_result.is_valid()) {
 						auto selector = std::make_unique<AdditionalItemsSelector>(prefix_length);
 						result.rules->add_rule(std::make_unique<SelectorRule>(std::move(selector), std::move(items_result.rules)));
 					}
@@ -115,7 +116,7 @@ void RuleFactory::create_array_rules(const Dictionary &schema_def, const Ref<Sch
 					auto items_result = create_rules(child_schema);
 					result.errors.insert(result.errors.end(), items_result.errors.begin(), items_result.errors.end());
 
-					if (items_result.is_valid() && !items_result.rules->is_empty()) {
+					if (items_result.is_valid()) {
 						auto selector = std::make_unique<ArrayItemsSelector>();
 						result.rules->add_rule(std::make_unique<SelectorRule>(std::move(selector), std::move(items_result.rules)));
 					}
@@ -133,7 +134,7 @@ void RuleFactory::create_array_rules(const Dictionary &schema_def, const Ref<Sch
 						auto item_result = create_rules(child_schema);
 						result.errors.insert(result.errors.end(), item_result.errors.begin(), item_result.errors.end());
 
-						if (item_result.is_valid() && !item_result.rules->is_empty()) {
+						if (item_result.is_valid()) {
 							// Create selector for this specific array position
 							auto selector = std::make_unique<ArrayItemSelector>(i);
 							result.rules->add_rule(std::make_unique<SelectorRule>(std::move(selector), std::move(item_result.rules)));
@@ -161,7 +162,7 @@ void RuleFactory::create_array_rules(const Dictionary &schema_def, const Ref<Sch
 				auto additional_result = create_rules(child_schema);
 				result.errors.insert(result.errors.end(), additional_result.errors.begin(), additional_result.errors.end());
 
-				if (additional_result.is_valid() && !additional_result.rules->is_empty()) {
+				if (additional_result.is_valid()) {
 					auto selector = std::make_unique<AdditionalItemsSelector>(prefix_length);
 					result.rules->add_rule(std::make_unique<SelectorRule>(std::move(selector), std::move(additional_result.rules)));
 				}
@@ -175,12 +176,23 @@ void RuleFactory::create_array_rules(const Dictionary &schema_def, const Ref<Sch
 		Ref<Schema> child_schema = schema->get_child("contains");
 		if (child_schema.is_valid()) {
 			Dictionary child_def = child_schema->get_schema_definition();
+
+			// Parse minContains/maxContains (Draft 2020-12)
+			int64_t min_contains = 1;
+			if (schema_def.has("minContains")) {
+				SchemaUtil::try_get_non_negative_int(schema_def["minContains"], min_contains);
+			}
+			int64_t max_contains = -1; // -1 means no limit
+			if (schema_def.has("maxContains")) {
+				SchemaUtil::try_get_non_negative_int(schema_def["maxContains"], max_contains);
+			}
+
 			// Check if this is boolean Schema detection
 			if (child_def.is_empty()) {
 				// contains: true (empty Schema) - always matches any item
 				auto selector = std::make_unique<ValueSelector>();
 				auto rule = std::make_shared<TrueRule>();
-				auto contains_rule = std::make_unique<ContainsRule>(rule);
+				auto contains_rule = std::make_unique<ContainsRule>(rule, min_contains, max_contains);
 				result.rules->add_rule(std::make_unique<SelectorRule>(std::move(selector), std::move(contains_rule)));
 			} else if (child_def.size() == 1 && child_def.has("not") &&
 					child_def["not"].get_type() == Variant::DICTIONARY &&
@@ -188,7 +200,7 @@ void RuleFactory::create_array_rules(const Dictionary &schema_def, const Ref<Sch
 				// contains: false pattern {"not": {}} - never matches any item
 				auto selector = std::make_unique<ValueSelector>();
 				auto rule = std::make_shared<FalseRule>();
-				auto contains_rule = std::make_unique<ContainsRule>(rule);
+				auto contains_rule = std::make_unique<ContainsRule>(rule, min_contains, max_contains);
 				result.rules->add_rule(std::make_unique<SelectorRule>(std::move(selector), std::move(contains_rule)));
 			} else {
 				// Normal Schema - compile recursively
@@ -197,7 +209,7 @@ void RuleFactory::create_array_rules(const Dictionary &schema_def, const Ref<Sch
 
 				if (contains_result.is_valid()) {
 					auto selector = std::make_unique<ValueSelector>();
-					auto rule = std::make_unique<ContainsRule>(contains_result.rules);
+					auto rule = std::make_unique<ContainsRule>(contains_result.rules, min_contains, max_contains);
 					result.rules->add_rule(std::make_unique<SelectorRule>(std::move(selector), std::move(rule)));
 				}
 			}

@@ -15,7 +15,10 @@ bool ConditionalRule::validate(const Variant &target, ValidationContext &context
 	bool if_result = if_rule->validate(target, if_context);
 
 	if (if_result) {
-		// 'if' condition passed, validate against 'then' schema
+		// 'if' condition passed, merge its evaluation data
+		context.merge_evaluation_data(if_context);
+
+		// validate against 'then' schema
 		if (then_rule) {
 			ValidationContext then_context = context.create_child_schema("then");
 			bool then_result = then_rule->validate(target, then_context);
@@ -23,6 +26,7 @@ bool ConditionalRule::validate(const Variant &target, ValidationContext &context
 				context.merge_errors(then_context);
 				return false;
 			}
+			context.merge_evaluation_data(then_context);
 		}
 		// If no 'then' schema, validation passes
 		return true;
@@ -35,6 +39,7 @@ bool ConditionalRule::validate(const Variant &target, ValidationContext &context
 				context.merge_errors(else_context);
 				return false;
 			}
+			context.merge_evaluation_data(else_context);
 		}
 		// If no 'else' schema, validation passes
 		return true;

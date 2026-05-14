@@ -24,7 +24,8 @@ struct SchemaCompileError {
 	 * @param msg Error message
 	 * @param single_path_part Single path part (e.g., "minimum")
 	 */
-	SchemaCompileError(const String &msg, const String &single_path_part) : message(msg) {
+	SchemaCompileError(const String &msg, const String &single_path_part) :
+			message(msg) {
 		if (!single_path_part.is_empty()) {
 			schema_path_parts.push_back(single_path_part);
 		}
