@@ -50,7 +50,7 @@ void RuleFactory::create_object_rules(const Dictionary &schema_def, const Ref<Sc
 			std::vector<String> required_props;
 
 			for (int i = 0; i < required_array.size(); i++) {
-				if (required_array[i].get_type() == Variant::STRING) {
+				if (SchemaUtil::is_string(required_array[i])) {
 					required_props.push_back(required_array[i].operator String());
 				}
 			}
@@ -214,7 +214,7 @@ void RuleFactory::create_object_rules(const Dictionary &schema_def, const Ref<Sc
 				std::vector<String> props;
 
 				for (int j = 0; j < required_props.size(); j++) {
-					if (required_props[j].get_type() == Variant::STRING) {
+					if (SchemaUtil::is_string(required_props[j])) {
 						props.push_back(required_props[j].operator String());
 					}
 				}
@@ -259,7 +259,7 @@ void RuleFactory::create_object_rules(const Dictionary &schema_def, const Ref<Sc
 					Array req_props_array = req_props_var.operator Array();
 					std::vector<StringName> req_props;
 					for (int j = 0; j < req_props_array.size(); j++) {
-						if (req_props_array[j].get_type() == Variant::STRING) {
+						if (SchemaUtil::is_string(req_props_array[j])) {
 							req_props.push_back(StringName(req_props_array[j].operator String()));
 						}
 					}

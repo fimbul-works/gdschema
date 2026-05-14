@@ -1,6 +1,6 @@
 # GDSchema
 
-A full [JSON Schema Draft-7](https://json-schema.org/) validation plugin for Godot 4.3. This extension brings industry-standard JSON validation directly into Godot, enabling configuration validation, and API contract enforcement.
+A full [JSON Schema Draft 2020-12](https://json-schema.org/) validation plugin for Godot 4.3. This extension brings industry-standard JSON validation directly into Godot, enabling configuration validation, and API contract enforcement.
 
 Schemas are compiled into navigable tree structures, supporting `$ref` references, schema registration, and detailed error reporting.
 
@@ -10,7 +10,8 @@ This extension is designed to integrate seamlessly with other Godot workflows, a
 
 ## Version History
 
-- **1.3.0** (Current) - Improved meta-schema handling, added `get_id`, `get_title`, `get_description`, and `get_comment` methods to the `Schema class`, and the `Schema.get_schema_from_registry` static method
+- **2.0.0** (Current) - Upgraded to JSON Schema Draft 2020-12, and fixed various bugs
+- **1.3.0** - Improved meta-schema handling, added `get_id`, `get_title`, `get_description`, and `get_comment` methods to the `Schema class`, and the `Schema.get_schema_from_registry` static method
 - **1.2.2** - Added support for Android (arm64, x86_64) platforms
 - **1.2.1** - Updated documentation
 - **1.2.0** - Added `Schema.load_json` and `Schema.load_json_file` methods, and fixed schema meta validation
@@ -19,7 +20,7 @@ This extension is designed to integrate seamlessly with other Godot workflows, a
 
 ## Features
 
-- 📏 **Full JSON Schema Draft-7**: All validation keywords supported, including `type`, `minimum`, `maxLength`, `pattern`, `required`, `enum`, and logical composition (`allOf`, `oneOf`, `anyOf`, `not`)
+- 📏 **Full JSON Schema Draft 2020-12**: All validation keywords supported, including `type`, `minimum`, `maxLength`, `pattern`, `required`, `enum`, and logical composition (`allOf`, `oneOf`, `anyOf`, `not`), along with Draft 2020-12 keywords like `unevaluatedItems` and `unevaluatedProperties`, and dynamic references
 - 🗂️ **Schema Registry**: Schemas with `$id` are auto-registered and can be referenced across documents with `$ref`
 - 🔍 **Rich Validation Errors**: Detailed error messages with JSON Pointer paths, violated constraints, and invalid values
 - 🧩 **Editor Integration**: Navigate Schema trees, retrieve child nodes, and inspect definitions for editor auto-complete and tooling (coming in future versions)

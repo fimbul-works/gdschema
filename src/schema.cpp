@@ -1,6 +1,7 @@
 #include "schema.hpp"
 #include "rule_factory/rule_factory.hpp"
 #include "schema_registry.hpp"
+#include "util.hpp"
 
 #include <godot_cpp/classes/file_access.hpp>
 #include <godot_cpp/classes/json.hpp>
@@ -103,32 +104,32 @@ void Schema::init(const Dictionary &schema_dict, Schema *p_root_schema, const St
 	schema_type = detect_schema_type(schema_dict);
 	schema_path = p_schema_path;
 
-	if (schema_dict.has("$schema") && schema_dict["$schema"].get_type() == Variant::STRING) {
+	if (schema_dict.has("$schema") && SchemaUtil::is_string(schema_dict["$schema"])) {
 		schema_url = schema_dict["$schema"];
 	}
 
-	if (schema_dict.has("$id") && schema_dict["$id"].get_type() == Variant::STRING) {
+	if (schema_dict.has("$id") && SchemaUtil::is_string(schema_dict["$id"])) {
 		schema_id = schema_dict["$id"];
 	}
 
-	if (schema_dict.has("title") && schema_dict["title"].get_type() == Variant::STRING) {
+	if (schema_dict.has("title") && SchemaUtil::is_string(schema_dict["title"])) {
 		title = schema_dict["title"];
 	}
 
-	if (schema_dict.has("description") && schema_dict["description"].get_type() == Variant::STRING) {
+	if (schema_dict.has("description") && SchemaUtil::is_string(schema_dict["description"])) {
 		description = schema_dict["description"];
 	}
 
-	if (schema_dict.has("$comment") && schema_dict["$comment"].get_type() == Variant::STRING) {
+	if (schema_dict.has("$comment") && SchemaUtil::is_string(schema_dict["$comment"])) {
 		comment = schema_dict["$comment"];
 	}
 
-	if (schema_dict.has("$anchor") && schema_dict["$anchor"].get_type() == Variant::STRING) {
+	if (schema_dict.has("$anchor") && SchemaUtil::is_string(schema_dict["$anchor"])) {
 		anchor = schema_dict["$anchor"];
 		register_anchor(anchor, this);
 	}
 
-	if (schema_dict.has("$dynamicAnchor") && schema_dict["$dynamicAnchor"].get_type() == Variant::STRING) {
+	if (schema_dict.has("$dynamicAnchor") && SchemaUtil::is_string(schema_dict["$dynamicAnchor"])) {
 		dynamic_anchor = schema_dict["$dynamicAnchor"];
 		register_dynamic_anchor(dynamic_anchor, this);
 	}
@@ -247,7 +248,7 @@ void Schema::compile() {
 Schema::SchemaType Schema::detect_schema_type(const Dictionary &dict) const {
 	// Check explicit type declaration
 	Variant type_var = dict.get("type", Variant());
-	if (type_var.get_type() == Variant::STRING) {
+	if (SchemaUtil::is_string(type_var)) {
 		String type_str = type_var.operator String();
 		if (type_str == "array") {
 			return SchemaType::SCHEMA_ARRAY;
@@ -257,7 +258,7 @@ Schema::SchemaType Schema::detect_schema_type(const Dictionary &dict) const {
 	} else if (type_var.get_type() == Variant::ARRAY) {
 		Array type_array = type_var.operator Array();
 		for (int i = 0; i < type_array.size(); i++) {
-			if (type_array[i].get_type() == Variant::STRING) {
+			if (SchemaUtil::is_string(type_array[i])) {
 				String type_str = type_array[i].operator String();
 				if (type_str == "array") {
 					return SchemaType::SCHEMA_ARRAY;

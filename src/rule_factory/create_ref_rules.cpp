@@ -12,7 +12,7 @@ void RuleFactory::create_ref_rules(const Ref<Schema> schema, const Dictionary &r
 	// Handle $ref
 	if (ref_def.has("$ref")) {
 		Variant ref_var = ref_def["$ref"];
-		if (ref_var.get_type() == Variant::STRING) {
+		if (SchemaUtil::is_string(ref_var)) {
 			String ref_uri = ref_var.operator String();
 			if (ref_uri.is_empty()) {
 				result.add_error("$ref cannot be empty", "ref");
@@ -27,7 +27,7 @@ void RuleFactory::create_ref_rules(const Ref<Schema> schema, const Dictionary &r
 	// Handle $dynamicRef (JSON Schema Draft 2020-12)
 	if (ref_def.has("$dynamicRef")) {
 		Variant dref_var = ref_def["$dynamicRef"];
-		if (dref_var.get_type() == Variant::STRING) {
+		if (SchemaUtil::is_string(dref_var)) {
 			String dref_uri = dref_var.operator String();
 			if (!dref_uri.is_empty()) {
 				auto selector = std::make_unique<ValueSelector>();

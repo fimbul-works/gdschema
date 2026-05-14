@@ -1,10 +1,11 @@
 # GDSchema
 
-This is the **C++ GDExtension implementation** of the GDSchema plugin. It provides a full [JSON Schema Draft-7](https://json-schema.org/) validation plugin for Godot 4.3 and later.
+This is the **C++ GDExtension implementation** of the GDSchema plugin. It provides a full [JSON Schema Draft 2020-12](https://json-schema.org/) validation plugin for Godot 4.3 and later.
 
 ## Version History
 
-- **1.3.0** (Current) - Improved meta-schema handling, added `get_id`, `get_title`, `get_description`, and `get_comment` methods to the `Schema class`, and the `Schema.get_schema_from_registry` static method
+- **2.0.0** (Current) - Upgraded to JSON Schema Draft 2020-12, and fixed various bugs
+- **1.3.0** - Improved meta-schema handling, added `get_id`, `get_title`, `get_description`, and `get_comment` methods to the `Schema class`, and the `Schema.get_schema_from_registry` static method
 - **1.2.2** - Added support for Android (arm64, x86_64) platforms
 - **1.2.1** - Updated documentation
 - **1.2.0** - Added `Schema.load_json` and `Schema.load_json_file` methods, and fixed schema meta validation
@@ -48,7 +49,7 @@ if result.has_errors():
 
 ## Features
 
-- 📏 **Full JSON Schema Draft-7**: All validation keywords supported, including `type`, `minimum`, `maxLength`, `pattern`, `required`, `enum`, and logical composition (`allOf`, `oneOf`, `anyOf`, `not`)
+- 📏 **Full JSON Schema Draft 2020-12**: All validation keywords supported, including `type`, `minimum`, `maxLength`, `pattern`, `required`, `enum`, and logical composition (`allOf`, `oneOf`, `anyOf`, `not`), along with Draft 2020-12 keywords like `unevaluatedItems` and `unevaluatedProperties`, and dynamic references
 - 🗂️ **Schema Registry**: Schemas with `$id` are auto-registered and can be referenced across documents with `$ref`
 - 🔍 **Rich Validation Errors**: Detailed error messages with JSON Pointer paths, violated constraints, and invalid values
 - 🧩 **Editor Integration**: Navigate schema trees, retrieve child nodes, and inspect definitions for editor auto-complete and tooling

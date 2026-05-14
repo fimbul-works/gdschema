@@ -8,7 +8,7 @@
 using namespace godot;
 
 void RuleFactory::create_type_rules(const Variant &type_def, RuleCompileResult &result) {
-	if (type_def.get_type() == Variant::STRING) {
+	if (SchemaUtil::is_string(type_def)) {
 		// Single type
 		String type_str = type_def.operator String();
 		auto selector = std::make_unique<ValueSelector>();
@@ -21,7 +21,7 @@ void RuleFactory::create_type_rules(const Variant &type_def, RuleCompileResult &
 		std::vector<String> types;
 
 		for (int64_t i = 0; i < type_array.size(); i++) {
-			if (type_array[i].get_type() == Variant::STRING) {
+			if (SchemaUtil::is_string(type_array[i])) {
 				types.push_back(type_array[i].operator String());
 			} else {
 				result.add_error(vformat("Type array element must be string, got %s", SchemaUtil::get_variant_json_type(type_array[i])), vformat("type/%d", i));

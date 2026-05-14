@@ -56,7 +56,7 @@ func test_dynamic_ref_with_override() -> void:
 			}
 		}
 	})
-	
+
 	# Register the base schema so we can $ref it
 	Schema.register_schema(schema_base, "https://example.com/base")
 
@@ -90,7 +90,7 @@ func test_dynamic_ref_with_override() -> void:
 		"data": "string is invalid",
 		"children": []
 	}).is_valid(), "Data failing extended schema should not validate")
-	
+
 	expect(!schema_extended.validate({
 		"data": 123,
 		"children": [

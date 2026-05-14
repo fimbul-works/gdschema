@@ -144,6 +144,15 @@ public:
 		}
 		return false;
 	}
+
+	/**
+	 * @brief Check if a value is a String or StringName.
+	 * @param value The variant to check
+	 * @return True if value is a String or StringName
+	 */
+	static inline bool is_string(const Variant &value) {
+		return value.get_type() == Variant::STRING || value.get_type() == Variant::STRING_NAME;
+	}
 };
 
 extern const int MAX_VALIDATION_DEPTH;

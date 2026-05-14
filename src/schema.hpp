@@ -486,16 +486,10 @@ public:
 	Dictionary get_schema_definition() const { return schema_definition; }
 
 	/**
-	 * @brief Gets the default value for this Schema node if defined
-	 * @return The default value or null if not defined
+	 * @brief Checks if this Schema has custom metadata present
+	 * @return True if custom metadata is defined
 	 */
-	Variant get_default_value() const { return schema_definition.get("default", Variant()); }
-
-	/**
-	 * @brief Checks if this Schema has a default value
-	 * @return True if default is defined
-	 */
-	bool has_default_value() const { return schema_definition.has("default"); }
+	bool has_custom_metadata(const String &key) const { return schema_definition.has(key); }
 
 	/**
 	 * @brief Gets custom metadata if present

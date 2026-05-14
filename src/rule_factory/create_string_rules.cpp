@@ -38,7 +38,7 @@ void RuleFactory::create_string_rules(const Dictionary &schema_def, RuleCompileR
 	// pattern
 	if (schema_def.has("pattern")) {
 		Variant pattern_var = schema_def["pattern"];
-		if (pattern_var.get_type() == Variant::STRING) {
+		if (SchemaUtil::is_string(pattern_var)) {
 			String pattern_str = pattern_var.operator String();
 			auto selector = std::make_unique<ValueSelector>();
 			auto rule = std::make_unique<PatternRule>(pattern_str);
@@ -49,7 +49,7 @@ void RuleFactory::create_string_rules(const Dictionary &schema_def, RuleCompileR
 	// format
 	if (schema_def.has("format")) {
 		Variant format_var = schema_def["format"];
-		if (format_var.get_type() == Variant::STRING) {
+		if (SchemaUtil::is_string(format_var)) {
 			String format = format_var.operator String();
 			auto selector = std::make_unique<ValueSelector>();
 			auto rule = std::make_unique<FormatRule>(format);
@@ -60,7 +60,7 @@ void RuleFactory::create_string_rules(const Dictionary &schema_def, RuleCompileR
 	// contentEncoding
 	if (schema_def.has("contentEncoding")) {
 		Variant format_var = schema_def["contentEncoding"];
-		if (format_var.get_type() == Variant::STRING) {
+		if (SchemaUtil::is_string(format_var)) {
 			String format = format_var.operator String();
 			auto selector = std::make_unique<ValueSelector>();
 			auto rule = std::make_unique<ContentEncodingRule>(format);
@@ -71,7 +71,7 @@ void RuleFactory::create_string_rules(const Dictionary &schema_def, RuleCompileR
 	// contentMediaType
 	if (schema_def.has("contentMediaType")) {
 		Variant format_var = schema_def["contentMediaType"];
-		if (format_var.get_type() == Variant::STRING) {
+		if (SchemaUtil::is_string(format_var)) {
 			String format = format_var.operator String();
 			auto selector = std::make_unique<ValueSelector>();
 			auto rule = std::make_unique<ContentMediaTypeRule>(format);
