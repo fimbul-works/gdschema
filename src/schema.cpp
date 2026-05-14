@@ -1,5 +1,5 @@
 #include "schema.hpp"
-#include "rule_factory.hpp"
+#include "rule_factory/rule_factory.hpp"
 #include "schema_registry.hpp"
 
 #include <godot_cpp/classes/file_access.hpp>

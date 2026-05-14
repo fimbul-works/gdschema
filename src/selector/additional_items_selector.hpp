@@ -2,6 +2,7 @@
 
 #include "selector.hpp"
 
+#include <cstdint>
 #include <godot_cpp/variant/variant.hpp>
 
 #include <vector>
@@ -17,7 +18,7 @@ private:
 	int64_t tuple_length; // Number of items in the tuple schema
 
 public:
-	explicit AdditionalItemsSelector(int tuple_len) :
+	explicit AdditionalItemsSelector(int64_t tuple_len) :
 			tuple_length(tuple_len) {}
 
 	std::vector<SelectionTarget> select_targets(const Variant &instance, const ValidationContext &context) const override;

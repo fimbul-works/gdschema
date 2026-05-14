@@ -1,5 +1,5 @@
 #include "ref_rule.hpp"
-#include "../rule_factory.hpp"
+#include "../rule_factory/rule_factory.hpp"
 #include "../schema_registry.hpp"
 #include "../validation_context.hpp"
 

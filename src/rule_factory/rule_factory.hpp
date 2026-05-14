@@ -1,9 +1,8 @@
 #pragma once
 
-#include "rule/rule_group.hpp"
-#include "schema.hpp"
-#include "schema_compile_error.hpp"
-#include "selector/selector.hpp"
+#include "../rule/rule_group.hpp"
+#include "../schema.hpp"
+#include "../schema_compile_error.hpp"
 
 #include <godot_cpp/classes/mutex.hpp>
 #include <godot_cpp/variant/dictionary.hpp>

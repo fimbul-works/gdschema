@@ -2,8 +2,9 @@
 
 #include "hashers.hpp"
 #include "rule/rule_group.hpp"
-#include "rule_factory.hpp"
+#include "rule_factory/rule_factory.hpp"
 #include "schema_compile_error.hpp"
+#include "validation_context.hpp"
 #include "validation_result.hpp"
 
 #include <godot_cpp/classes/mutex.hpp>
