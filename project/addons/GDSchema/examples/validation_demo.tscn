@@ -1,6 +1,6 @@
 [gd_scene load_steps=7 format=3 uid="uid://catckgonj3xv7"]
 
-[ext_resource type="Script" path="res://addons/GDSchema/examples/validation_demo.gd" id="1_j64ba"]
+[ext_resource type="Script" uid="uid://ivol74d0ce2j" path="res://addons/GDSchema/examples/validation_demo.gd" id="1_j64ba"]
 [ext_resource type="FontFile" uid="uid://heiy6687h4b7" path="res://addons/GDSchema/examples/JetBrainMono-Regular.tres" id="2_e7uw0"]
 
 [sub_resource type="FontVariation" id="FontVariation_2xr81"]
