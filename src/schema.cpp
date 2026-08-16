@@ -146,7 +146,13 @@ void Schema::init(const Dictionary &schema_dict, Schema *p_root_schema, const St
 	construct_children(schema_dict);
 }
 
-Schema::~Schema() {}
+Schema::~Schema() {
+#ifdef GODOT_SCHEMA_DEBUG
+	if (!schema_id.is_empty()) {
+		UtilityFunctions::print(vformat("Freeing Schema %s", schema_id));
+	}
+#endif
+}
 
 Ref<Schema> Schema::build_schema(const Dictionary &schema_dict, bool validate_against_meta) {
 	Ref<Schema> schema;
