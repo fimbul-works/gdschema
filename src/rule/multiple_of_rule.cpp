@@ -1,5 +1,7 @@
 #include "multiple_of_rule.hpp"
 
+#include <cmath>
+
 using namespace godot;
 
 bool MultipleOfRule::validate(const Variant &target, ValidationContext &context) const {
@@ -20,10 +22,10 @@ bool MultipleOfRule::validate(const Variant &target, ValidationContext &context)
 	}
 
 	double division = actual_value / multiple_of;
-	double remainder = fmod(actual_value, multiple_of);
+	double rounded = std::round(division);
 
-	// Check if the remainder is close to zero (accounting for floating point precision)
-	if (abs(remainder) > 1e-10 && abs(remainder - multiple_of) > 1e-10) {
+	// Check if division is close to an integer (accounting for 32-bit / 64-bit floating point precision)
+	if (std::abs(division - rounded) > 1e-5) {
 		context.add_error(vformat("Value %f is not a multiple of %f", actual_value, multiple_of), "multipleOf", target);
 		return false;
 	}

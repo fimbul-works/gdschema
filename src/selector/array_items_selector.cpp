@@ -12,7 +12,7 @@ std::vector<SelectionTarget> ArrayItemsSelector::select_targets(const Variant &i
 	}
 
 	for (int64_t i = 0; i < size; i++) {
-		targets.emplace_back(SchemaUtil::get_array_item(instance, i), String::num(i));
+		targets.emplace_back(SchemaUtil::get_array_item(instance, i), String::num_int64(i));
 	}
 
 	return targets;

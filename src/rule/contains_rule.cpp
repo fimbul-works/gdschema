@@ -22,7 +22,7 @@ bool ContainsRule::validate(const Variant &target, ValidationContext &context) c
 		Variant item = SchemaUtil::get_array_item(target, i);
 
 		// Create a temporary context for this item
-		ValidationContext item_context = context.create_child_instance(String::num(i));
+		ValidationContext item_context = context.create_child_instance(String::num_int64(i));
 
 		if (item_rule->validate(item, item_context)) {
 			match_count++;

@@ -12,7 +12,7 @@ std::vector<SelectionTarget> AdditionalItemsSelector::select_targets(const Varia
 	}
 
 	for (int64_t i = tuple_length; i < size; i++) {
-		targets.emplace_back(SchemaUtil::get_array_item(instance, i), String::num(i));
+		targets.emplace_back(SchemaUtil::get_array_item(instance, i), String::num_int64(i));
 	}
 
 	return targets;

@@ -11,7 +11,7 @@ std::vector<SelectionTarget> ArrayItemSelector::select_targets(const Variant &in
 		return targets;
 	}
 
-	targets.emplace_back(SchemaUtil::get_array_item(instance, index), String::num(index));
+	targets.emplace_back(SchemaUtil::get_array_item(instance, index), String::num_int64(index));
 
 	return targets;
 }

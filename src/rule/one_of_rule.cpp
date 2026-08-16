@@ -50,7 +50,7 @@ bool OneOfRule::validate(const Variant &target, ValidationContext &context) cons
 			if (i > 0) {
 				passed_list += ", ";
 			}
-			passed_list += String::num(passed_indices[i]);
+			passed_list += String::num_int64(passed_indices[i]);
 		}
 
 		context.add_error(vformat("Value matched %d oneOf schemas (indices: %s) but exactly 1 is required", passed_count, passed_list), "oneOf");
