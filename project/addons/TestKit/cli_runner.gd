@@ -42,8 +42,19 @@ func _init() -> void:
 		quit(1)
 		return
 
-	# Run tests
-	await _run_tests(test_suites)
+	var runner := TestRunner.new()
+
+	# Connect signals for progress tracking
+	runner.test_suite_started.connect(_on_suite_started)
+	runner.test_method_started.connect(_on_method_started)
+	runner.test_method_completed.connect(_on_method_completed)
+	runner.test_suite_completed.connect(_on_suite_completed)
+	runner.all_tests_completed.connect(_on_all_completed)
+
+	# Run the tests
+	await runner.run_tests(test_suites)
+
+	# Exit with appropriate code
 	quit(exit_code)
 
 func _parse_arguments() -> Dictionary:
@@ -112,23 +123,6 @@ func _load_tests_from_directory(dir_path: String) -> Array[TestSuite]:
 
 	dir.list_dir_end()
 	return suites
-
-func _run_tests(test_suites: Array[TestSuite]) -> void:
-	var runner := TestRunner.new()
-
-	# Connect signals for progress tracking
-	runner.test_suite_started.connect(_on_suite_started)
-	runner.test_method_started.connect(_on_method_started)
-	runner.test_method_completed.connect(_on_method_completed)
-	runner.test_suite_completed.connect(_on_suite_completed)
-	runner.all_tests_completed.connect(_on_all_completed)
-
-	# Run the tests
-	await runner.run_tests(test_suites)
-
-	# Exit with appropriate code
-	print("Exiting...")
-	quit(exit_code)
 
 func _on_suite_started(test_class: TestSuite) -> void:
 	print("\n%s %s" % [test_class.icon if test_class.icon else "📋", test_class.name])
