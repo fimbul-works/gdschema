@@ -36,12 +36,15 @@ void Schema::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_child_keys"), &Schema::get_child_keys);
 	ClassDB::bind_method(D_METHOD("has_child", "key"), &Schema::has_child);
 	ClassDB::bind_method(D_METHOD("get_child", "key"), &Schema::get_child);
+	ClassDB::bind_method(D_METHOD("get_at_path", "path"), &Schema::get_at_path);
 
 	ClassDB::bind_method(D_METHOD("get_item_schema", "index"), &Schema::get_item_schema);
 	ClassDB::bind_method(D_METHOD("get_item_schemas"), &Schema::get_item_schemas);
 	ClassDB::bind_method(D_METHOD("get_item_count"), &Schema::get_item_count);
 	ClassDB::bind_method(D_METHOD("get_schema_definition"), &Schema::get_schema_definition);
-	ClassDB::bind_method(D_METHOD("get_at_path", "path"), &Schema::get_at_path);
+	ClassDB::bind_method(D_METHOD("has_custom_metadata", "key"), &Schema::has_custom_metadata);
+	ClassDB::bind_method(D_METHOD("get_custom_metadata", "key"), &Schema::get_custom_metadata);
+	ClassDB::bind_method(D_METHOD("set_custom_metadata", "key", "value"), &Schema::set_custom_metadata);
 
 	ClassDB::bind_method(D_METHOD("is_valid"), &Schema::is_valid);
 	ClassDB::bind_method(D_METHOD("validate", "data"), &Schema::validate);
@@ -143,6 +146,9 @@ void Schema::init(const Dictionary &schema_dict, Schema *p_root_schema, const St
 
 Schema::~Schema() {
 	// Children and items will be automatically freed by Ref<> destructors
+	if (compilation_mutex.is_valid()) {
+		compilation_mutex.unref();
+	}
 }
 
 Ref<Schema> Schema::build_schema(const Dictionary &schema_dict, bool validate_against_meta) {
@@ -369,7 +375,7 @@ void Schema::construct_children(const Dictionary &dict) {
 				StringName child_path = vformat("%s/%s", schema_path, child_key);
 				Ref<Schema> child_node;
 				child_node.instantiate();
-				child_node->init(child_dict, get_root(), child_path);
+				child_node->init(child_dict, get_root_ptr(), child_path);
 				children[child_key] = child_node;
 			}
 		}
@@ -444,7 +450,7 @@ void Schema::construct_children(const Dictionary &dict) {
 						StringName child_path = vformat("%s/%s", schema_path, child_key);
 						Ref<Schema> schema_node;
 						schema_node.instantiate();
-						schema_node->init(schema_dict, get_root(), child_path);
+						schema_node->init(schema_dict, get_root_ptr(), child_path);
 						item_schemas.push_back(schema_node);
 						children[child_key] = schema_node;
 					}
@@ -467,7 +473,7 @@ void Schema::construct_children(const Dictionary &dict) {
 						StringName child_path = vformat("%s/%s", schema_path, child_key);
 						Ref<Schema> schema_node;
 						schema_node.instantiate();
-						schema_node->init(schema_dict, get_root(), child_path);
+						schema_node->init(schema_dict, get_root_ptr(), child_path);
 						item_schemas.push_back(schema_node);
 						children[child_key] = schema_node;
 					}
@@ -480,7 +486,7 @@ void Schema::construct_children(const Dictionary &dict) {
 					StringName child_path = vformat("%s/%s", schema_path, child_key);
 					Ref<Schema> item_node;
 					item_node.instantiate();
-					item_node->init(item_schema, get_root(), child_path);
+					item_node->init(item_schema, get_root_ptr(), child_path);
 					item_schemas.push_back(item_node);
 					children[child_key] = item_node;
 				}
@@ -512,7 +518,7 @@ Ref<Schema> Schema::create_schema_child(const Dictionary &child_schema, const St
 	StringName child_path = vformat("%s/%s", schema_path, child_key);
 	Ref<Schema> child_node;
 	child_node.instantiate();
-	child_node->init(child_schema, get_root(), child_path);
+	child_node->init(child_schema, get_root_ptr(), child_path);
 	children[child_key] = child_node;
 	return child_node;
 }

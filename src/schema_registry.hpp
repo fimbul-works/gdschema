@@ -14,6 +14,8 @@ namespace godot {
 
 class SchemaRegistry {
 private:
+	static SchemaRegistry *singleton;
+
 	/**
 	 * @brief Map of registered schemas by their unique ID.
 	 */
@@ -33,10 +35,7 @@ private:
 	 * @brief Destructor to clean up registered schemas.
 	 */
 	~SchemaRegistry() {
-		PackedStringArray ids = get_schema_ids();
-		for (int i = 0; i < ids.size(); i++) {
-			unregister_schema(ids[i]);
-		}
+		clear();
 	}
 
 	SchemaRegistry(SchemaRegistry const &); // Don't Implement
@@ -47,8 +46,21 @@ public:
 	 * @brief Singleton instance
 	 */
 	static SchemaRegistry &get_singleton() {
-		static SchemaRegistry instance;
-		return instance;
+		if (!singleton) {
+			singleton = new SchemaRegistry();
+		}
+		return *singleton;
+	}
+
+	/**
+	 * @brief Destroys the singleton instance and clears resources
+	 */
+	static void destroy_singleton() {
+		if (singleton) {
+			singleton->clear();
+			delete singleton;
+			singleton = nullptr;
+		}
 	}
 
 	/**
@@ -85,6 +97,11 @@ public:
 	 * @return True if unregistration succeeded, false if ID was not found.
 	 */
 	bool unregister_schema(const StringName &id);
+
+	/**
+	 * @brief Clears all registered schemas and releases resources.
+	 */
+	void clear();
 };
 
 } //namespace godot

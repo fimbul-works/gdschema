@@ -48,7 +48,7 @@ public:
 
 private:
 	// Tree structure
-	Schema *root_schema; // Raw pointer to avoid cycles and crashes in constructor
+	Schema *root_schema = nullptr; // null for root node
 	StringName schema_path; // Path from root like "/properties/user"
 	std::unordered_map<StringName, Ref<Schema>, StringNameHasher, StringNameEqual> children; // For object properties
 	std::vector<Ref<Schema>> item_schemas; // For array items
@@ -73,6 +73,10 @@ private:
 	mutable std::vector<SchemaCompileError> compile_errors;
 	mutable bool is_compiled;
 	mutable Ref<Mutex> compilation_mutex;
+
+	Schema *get_root_ptr() const {
+		return is_root() ? const_cast<Schema *>(this) : root_schema;
+	}
 
 	/**
 	 * @brief Determines Schema type from definition
@@ -204,7 +208,7 @@ public:
 	/**
 	 * @brief Destructor
 	 */
-	virtual ~Schema();
+	~Schema();
 
 	/**
 	 * @brief Sets the compilation result (rules and errors)
@@ -279,12 +283,8 @@ public:
 	 * @brief Gets the root node of this tree
 	 * @return Root node
 	 */
-	Schema *get_root() const {
-		if (is_root()) {
-			return const_cast<Schema *>(this);
-		}
-
-		return root_schema;
+	Ref<Schema> get_root() const {
+		return Ref<Schema>(get_root_ptr());
 	}
 
 	/**
@@ -315,6 +315,7 @@ public:
 	 * @return True if it has the dynamic anchor
 	 */
 	bool has_dynamic_anchor(const StringName &name) const { return dynamic_anchor == name; }
+
 	/**
 	 * @brief Gets the Schema path from root
 	 * @return Schema path string like "/properties/user/items"
@@ -497,6 +498,13 @@ public:
 	 * @return The value or null if not found
 	 */
 	Variant get_custom_metadata(const String &key) const { return schema_definition.get(key, Variant()); }
+
+	/**
+	 * @brief Sets custom metadata key and value
+	 * @param key The custom key
+	 * @param value The value to set
+	 */
+	void set_custom_metadata(const String &key, const Variant &value) { schema_definition[key] = value; }
 
 	// ========== Validation ==========
 

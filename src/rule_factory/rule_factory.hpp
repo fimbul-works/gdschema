@@ -53,6 +53,8 @@ public:
 	};
 
 private:
+	static RuleFactory *singleton;
+
 	/**
 	 * @brief Cache of compiled rules for reuse indexed by Dictionary.hash()
 	 */
@@ -78,6 +80,11 @@ private:
 	 */
 	RuleFactory() { cache_mutex = Ref<Mutex>(memnew(Mutex)); }
 
+	/**
+	 * @brief Private destructor for singleton pattern.
+	 */
+	~RuleFactory() { clear(); }
+
 	RuleFactory(RuleFactory const &); // Don't Implement
 	void operator=(RuleFactory const &); // Don't implement
 
@@ -86,8 +93,21 @@ public:
 	 * @brief Singleton instance
 	 */
 	static RuleFactory &get_singleton() {
-		static RuleFactory instance;
-		return instance;
+		if (!singleton) {
+			singleton = new RuleFactory();
+		}
+		return *singleton;
+	}
+
+	/**
+	 * @brief Destroys the singleton instance and clears resources
+	 */
+	static void destroy_singleton() {
+		if (singleton) {
+			singleton->clear();
+			delete singleton;
+			singleton = nullptr;
+		}
 	}
 
 	/**
@@ -105,6 +125,11 @@ public:
 	void register_rule_factory(const String &keyword, std::function<void(const Dictionary &, const Ref<Schema> &, RuleCompileResult &)> factory) {
 		custom_rule_factories[keyword] = factory;
 	}
+
+	/**
+	 * @brief Clears cached rules and releases resources.
+	 */
+	void clear();
 
 private:
 	/**

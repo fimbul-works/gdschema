@@ -2,6 +2,8 @@
 
 using namespace godot;
 
+SchemaRegistry *SchemaRegistry::singleton = nullptr;
+
 bool SchemaRegistry::register_schema(const StringName &id, Ref<Schema> schema) {
 	if (has_schema(id)) {
 		UtilityFunctions::push_warning(vformat("Schema %s already registered", id));
@@ -64,4 +66,20 @@ bool SchemaRegistry::unregister_schema(const StringName &id) {
 #endif
 
 	return true;
+}
+
+void SchemaRegistry::clear() {
+	if (registry_mutex.is_valid()) {
+		registry_mutex->lock();
+	}
+
+	// for (const auto &[id, schema] : schemas) {
+	// 	schemas.erase(id);
+	// }
+	schemas.clear();
+
+	if (registry_mutex.is_valid()) {
+		registry_mutex->unlock();
+		registry_mutex.unref();
+	}
 }
