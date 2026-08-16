@@ -510,12 +510,14 @@ func test_register_schema_with_id_field() -> void:
 	})
 
 	expect(Schema.is_schema_registered("http://example.com/test.json"), "Should be findable by $id")
+	Schema.unregister_schema("http://example.com/test.json")
 
 func test_register_schema_explicit_id() -> void:
 	var schema = Schema.build_schema({"type": "number"})
 
 	expect(Schema.register_schema(schema, "my-number-schema"), "Should register with explicit ID")
 	expect(Schema.is_schema_registered("my-number-schema"), "Should be findable by explicit ID")
+	Schema.unregister_schema("my-number-schema")
 
 func test_register_schema_no_id_fails() -> void:
 	var schema = Schema.build_schema({"type": "boolean"})
@@ -775,6 +777,7 @@ func test_manual_registration_override() -> void:
 
 	var result = using_schema.validate({"item": {"code": "ABC123"}})
 	expect(result.is_valid(), "Should resolve manually registered schema")
+	Schema.unregister_schema("custom-id")
 
 func test_reference_error_cases() -> void:
 	# Test various error conditions
