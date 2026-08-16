@@ -1,8 +1,8 @@
 #include "register_types.hpp"
 
+#include "../rule_factory/rule_factory.hpp"
 #include "../schema.hpp"
 #include "../schema_registry.hpp"
-#include "../rule_factory/rule_factory.hpp"
 #include "../validation_result.hpp"
 
 #include <gdextension_interface.h>
