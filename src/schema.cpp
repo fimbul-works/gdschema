@@ -77,7 +77,9 @@ void Schema::init(const Dictionary &schema_dict, Schema *p_root_schema, const St
 	schema_type = SchemaType::SCHEMA_OBJECT;
 	schema_path = "";
 	is_compiled = false;
-	compilation_mutex = Ref<Mutex>(memnew(Mutex));
+	if (compilation_mutex.is_null()) {
+		compilation_mutex = Ref<Mutex>(memnew(Mutex));
+	}
 	root_schema = p_root_schema;
 
 	if (validate_against_meta) {

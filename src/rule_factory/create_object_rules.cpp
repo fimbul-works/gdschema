@@ -161,7 +161,7 @@ void RuleFactory::create_object_rules(const Dictionary &schema_def, const Ref<Sc
 
 			// Create a rule that fails validation for any additional properties
 			auto selector = std::make_unique<AdditionalPropertiesSelector>(defined_properties, pattern_properties_list);
-			auto rule = std::make_unique<ConstRule>(Variant()); // This will always fail since no value equals null in this context
+			auto rule = std::make_shared<FalseRule>();
 			result.rules->add_rule(std::make_unique<SelectorRule>(std::move(selector), std::move(rule)));
 		} else if (additional_props_var.get_type() == Variant::DICTIONARY) {
 			// additionalProperties: {...} - additional properties must match this Schema

@@ -8,7 +8,9 @@ using namespace godot;
 bool DynamicScopeRule::validate(const Variant &target, ValidationContext &context) const {
 	// Create a child context to ensure we get a new context with an empty error list
 	ValidationContext child_context = context.create_child_schema("");
-	child_context.push_dynamic_scope(schema);
+	if (schema) {
+		child_context.push_dynamic_scope(Ref<Schema>(const_cast<Schema *>(schema)));
+	}
 
 	bool result = wrapped_rule->validate(target, child_context);
 
@@ -20,5 +22,5 @@ bool DynamicScopeRule::validate(const Variant &target, ValidationContext &contex
 }
 
 String DynamicScopeRule::get_description() const {
-	return vformat("dynamicScope(%s)", schema->get_schema_path());
+	return schema ? vformat("dynamicScope(%s)", schema->get_schema_path()) : "dynamicScope(null)";
 }

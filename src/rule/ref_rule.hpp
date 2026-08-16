@@ -24,8 +24,6 @@ class RefRule : public ValidationRule {
 private:
 	String reference_uri; // The $ref URI
 	const Schema *source_schema; // Schema containing this $ref
-	mutable Ref<Schema> cached_schema; // Cache the resolved schema
-	mutable bool resolution_attempted;
 
 public:
 	/**

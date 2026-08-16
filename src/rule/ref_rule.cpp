@@ -9,7 +9,7 @@
 using namespace godot;
 
 RefRule::RefRule(const String &ref_uri, const Schema *schema) :
-		reference_uri(ref_uri), source_schema(schema), resolution_attempted(false) {}
+		reference_uri(ref_uri), source_schema(schema) {}
 
 bool RefRule::validate(const Variant &target, ValidationContext &context) const {
 	// Simple depth-based recursion protection
@@ -17,13 +17,13 @@ bool RefRule::validate(const Variant &target, ValidationContext &context) const 
 		return true; // Assume valid to break potential infinite recursion
 	}
 
-	// Lazy resolution
-	if (!resolution_attempted) {
-		cached_schema = source_schema->resolve_reference(reference_uri);
-		resolution_attempted = true;
+	if (!source_schema) {
+		context.add_error(vformat("Source schema is null for reference: %s", reference_uri), "ref", reference_uri);
+		return false;
 	}
 
-	if (!cached_schema.is_valid()) {
+	Ref<Schema> resolved = source_schema->resolve_reference(reference_uri);
+	if (!resolved.is_valid()) {
 		context.add_error(vformat("Could not resolve reference: %s", reference_uri), "ref", reference_uri);
 		return false;
 	}
@@ -32,29 +32,29 @@ bool RefRule::validate(const Variant &target, ValidationContext &context) const 
 
 	try {
 		// Ensure the schema is compiled
-		cached_schema->compilation_mutex->lock();
-		bool needs_compilation = !cached_schema->is_compiled;
-		cached_schema->compilation_mutex->unlock();
+		resolved->compilation_mutex->lock();
+		bool needs_compilation = !resolved->is_compiled;
+		resolved->compilation_mutex->unlock();
 
 		if (needs_compilation) {
-			cached_schema->compile();
+			resolved->compile();
 		}
 
 		// Get the compiled rules safely
-		cached_schema->compilation_mutex->lock();
+		resolved->compilation_mutex->lock();
 
-		if (!cached_schema->is_compiled || !cached_schema->rules) {
-			cached_schema->compilation_mutex->unlock();
+		if (!resolved->is_compiled || !resolved->rules) {
+			resolved->compilation_mutex->unlock();
 			context.add_error(vformat("Referenced schema '%s' is not compiled", reference_uri), "ref", reference_uri);
 			validation_result = false;
 		} else {
 			// Copy rules reference so we can unlock
-			auto rules_to_validate = cached_schema->rules;
-			cached_schema->compilation_mutex->unlock();
+			auto rules_to_validate = resolved->rules;
+			resolved->compilation_mutex->unlock();
 
 			// Create child context for the reference validation, incrementing depth
 			ValidationContext ref_context = context.create_child_schema(vformat("$ref:%s", reference_uri)).with_incremented_depth();
-			ref_context.push_dynamic_scope(cached_schema);
+			ref_context.push_dynamic_scope(resolved);
 
 			// Validate using the resolved schema's rules
 			validation_result = rules_to_validate->validate(target, ref_context);
