@@ -17,6 +17,3 @@ src/gen/doc_data.gen.cpp
 
 # Release files
 *.zip
-
-# DevToolss
-.flatten
