@@ -4,8 +4,12 @@ class_name TestKitCLI extends SceneTree
 
 var exit_code := 0
 var verbose := false
+var _instantiated_scenes: Array[Node] = []
 
 func _init() -> void:
+	call_deferred("_run")
+
+func _run() -> void:
 	var args = _parse_arguments()
 
 	if not args.has("path"):
@@ -28,6 +32,7 @@ func _init() -> void:
 			return
 		var instance = scene.instantiate()
 		root.add_child(instance)
+		_instantiated_scenes.append(instance)
 		test_suites = _find_test_suites(instance)
 	elif DirAccess.dir_exists_absolute(test_path):
 		# Load all test scenes from directory
@@ -53,6 +58,13 @@ func _init() -> void:
 
 	# Run the tests
 	await runner.run_tests(test_suites)
+
+	# Clean up instantiated scenes to prevent leaks at exit
+	for instance in _instantiated_scenes:
+		if is_instance_valid(instance):
+			root.remove_child(instance)
+			instance.free()
+	_instantiated_scenes.clear()
 
 	# Exit with appropriate code
 	quit(exit_code)
@@ -117,6 +129,7 @@ func _load_tests_from_directory(dir_path: String) -> Array[TestSuite]:
 			if scene:
 				var instance = scene.instantiate()
 				root.add_child(instance)
+				_instantiated_scenes.append(instance)
 				suites.append_array(_find_test_suites(instance))
 
 		file_name = dir.get_next()
