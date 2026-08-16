@@ -10,7 +10,8 @@ This extension is designed to integrate seamlessly with other Godot workflows, a
 
 ## Version History
 
-- **2.0.0** (Current) - Upgraded to JSON Schema Draft 2020-12, and fixed various bugs
+- **2.0.1** (Current) - Fixed `multipleOf`-rule on platforms with 32-bit floating point precision, and various memory leaks
+- **2.0.0** - Upgraded to JSON Schema Draft 2020-12, and fixed various bugs
 - **1.3.0** - Improved meta-schema handling, added `get_id`, `get_title`, `get_description`, and `get_comment` methods to the `Schema class`, and the `Schema.get_schema_from_registry` static method
 - **1.2.2** - Added support for Android (arm64, x86_64) platforms
 - **1.2.1** - Updated documentation
