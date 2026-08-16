@@ -144,12 +144,7 @@ void Schema::init(const Dictionary &schema_dict, Schema *p_root_schema, const St
 	construct_children(schema_dict);
 }
 
-Schema::~Schema() {
-	// Children and items will be automatically freed by Ref<> destructors
-	if (compilation_mutex.is_valid()) {
-		compilation_mutex.unref();
-	}
-}
+Schema::~Schema() {}
 
 Ref<Schema> Schema::build_schema(const Dictionary &schema_dict, bool validate_against_meta) {
 	Ref<Schema> schema;

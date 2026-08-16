@@ -73,9 +73,6 @@ void SchemaRegistry::clear() {
 		registry_mutex->lock();
 	}
 
-	// for (const auto &[id, schema] : schemas) {
-	// 	schemas.erase(id);
-	// }
 	schemas.clear();
 
 	if (registry_mutex.is_valid()) {
