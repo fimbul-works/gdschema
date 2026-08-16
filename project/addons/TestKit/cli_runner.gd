@@ -8,9 +8,6 @@ var verbose := false
 func _init() -> void:
 	var args = _parse_arguments()
 
-	print("Args:")
-	print(args)
-
 	if not args.has("path"):
 		printerr("Usage: godot --headless --script res://addons/TestKit/cli_runner.gd -- --path <path> [--verbose]")
 		quit(1)
@@ -51,9 +48,7 @@ func _init() -> void:
 
 func _parse_arguments() -> Dictionary:
 	var result := {}
-	var cmd_args := OS.get_cmdline_args()
-
-	printerr("ARGS:", cmd_args)
+	var cmd_args := OS.get_cmdline_args() + OS.get_cmdline_user_args()
 
 	# Find the -- separator
 	var start_idx := 0
