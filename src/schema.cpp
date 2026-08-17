@@ -149,7 +149,7 @@ void Schema::init(const Dictionary &schema_dict, Schema *p_root_schema, const St
 Schema::~Schema() {
 #ifdef GODOT_SCHEMA_DEBUG
 	if (!schema_id.is_empty()) {
-		UtilityFunctions::print(vformat("Freeing Schema %s", schema_id));
+		UtilityFunctions::print_verbose(vformat("Schema: Freeing %s", schema_id));
 	}
 #endif
 }
@@ -160,7 +160,7 @@ Ref<Schema> Schema::build_schema(const Dictionary &schema_dict, bool validate_ag
 	schema->init(schema_dict, nullptr, "", validate_against_meta);
 	schema->compile();
 	if (schema->compile_errors.size() > 0) {
-		UtilityFunctions::push_error("Building schema failed failed:\n", schema->get_compile_error_summary());
+		UtilityFunctions::push_error("Building schema failed:\n", schema->get_compile_error_summary());
 	}
 
 	// Auto-register if $id is present

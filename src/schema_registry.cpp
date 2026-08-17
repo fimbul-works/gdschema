@@ -15,7 +15,7 @@ bool SchemaRegistry::register_schema(const StringName &id, Ref<Schema> schema) {
 	registry_mutex->unlock();
 
 #ifdef GODOT_SCHEMA_DEBUG
-	UtilityFunctions::print(vformat("Registered Schema %s", id));
+	UtilityFunctions::print_verbose(vformat("Schema: Registered %s", id));
 #endif
 	return true;
 }
@@ -62,7 +62,7 @@ bool SchemaRegistry::unregister_schema(const StringName &id) {
 	registry_mutex->unlock();
 
 #ifdef GODOT_SCHEMA_DEBUG
-	UtilityFunctions::print(vformat("Unregistered Schema %s", id));
+	UtilityFunctions::print_verbose(vformat("Schema: Unregistered %s", id));
 #endif
 
 	return true;
