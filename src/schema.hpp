@@ -49,6 +49,7 @@ public:
 private:
 	// Tree structure
 	Schema *root_schema = nullptr; // null for root node
+	Schema *resource_root = nullptr; // Enclosing schema resource root (node with $id or document root)
 	StringName schema_path; // Path from root like "/properties/user"
 	std::unordered_map<StringName, Ref<Schema>, StringNameHasher, StringNameEqual> children; // For object properties
 	std::vector<Ref<Schema>> item_schemas; // For array items
@@ -58,6 +59,7 @@ private:
 	SchemaType schema_type;
 	StringName schema_url;
 	StringName schema_id;
+	String base_uri;
 	StringName title;
 	StringName description;
 	StringName comment;
@@ -76,6 +78,10 @@ private:
 
 	Schema *get_root_ptr() const {
 		return is_root() ? const_cast<Schema *>(this) : root_schema;
+	}
+
+	Schema *get_resource_root_ptr() const {
+		return resource_root != nullptr ? resource_root : get_root_ptr();
 	}
 
 	/**
@@ -201,9 +207,10 @@ public:
 	 * @param schema_dict The JSON Schema definition
 	 * @param root_schema Reference to root Schema
 	 * @param schema_path Path from root
+	 * @param parent_base_uri Base URI of the parent schema (for resolving relative URIs)
 	 * @param validate_against_meta If true, validate against meta-Schema
 	 */
-	void init(const Dictionary &schema_dict, Schema *root_schema = nullptr, const StringName &schema_path = "", const bool validate_against_meta = false);
+	void init(const Dictionary &schema_dict, Schema *root_schema = nullptr, const StringName &schema_path = "", const String &parent_base_uri = "", const bool validate_against_meta = false);
 
 	/**
 	 * @brief Destructor
@@ -291,6 +298,14 @@ public:
 	 */
 	Ref<Schema> get_root() const {
 		return Ref<Schema>(get_root_ptr());
+	}
+
+	/**
+	 * @brief Gets the resource root node of this tree (nearest ancestor with $id or document root)
+	 * @return Resource root node
+	 */
+	Ref<Schema> get_resource_root() const {
+		return Ref<Schema>(get_resource_root_ptr());
 	}
 
 	/**

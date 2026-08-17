@@ -5,11 +5,6 @@ using namespace godot;
 SchemaRegistry *SchemaRegistry::singleton = nullptr;
 
 bool SchemaRegistry::register_schema(const StringName &id, Ref<Schema> schema) {
-	if (has_schema(id)) {
-		UtilityFunctions::push_warning(vformat("Schema %s already registered", id));
-		return false;
-	}
-
 	registry_mutex->lock();
 	schemas[id] = schema;
 	registry_mutex->unlock();

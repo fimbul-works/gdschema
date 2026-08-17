@@ -73,7 +73,7 @@ Schema::Schema() {
 	root_schema = nullptr;
 }
 
-void Schema::init(const Dictionary &schema_dict, Schema *p_root_schema, const StringName &p_schema_path, const bool validate_against_meta) {
+void Schema::init(const Dictionary &schema_dict, Schema *p_root_schema, const StringName &p_schema_path, const String &parent_base_uri, const bool validate_against_meta) {
 	schema_type = SchemaType::SCHEMA_OBJECT;
 	schema_path = "";
 	is_compiled = false;
@@ -114,7 +114,13 @@ void Schema::init(const Dictionary &schema_dict, Schema *p_root_schema, const St
 	}
 
 	if (schema_dict.has("$id") && SchemaUtil::is_string(schema_dict["$id"])) {
-		schema_id = schema_dict["$id"];
+		String raw_id = schema_dict["$id"];
+		schema_id = SchemaUtil::resolve_uri(parent_base_uri, raw_id);
+		base_uri = schema_id;
+		resource_root = this;
+	} else {
+		base_uri = parent_base_uri;
+		resource_root = p_root_schema != nullptr ? (p_root_schema->resource_root != nullptr ? p_root_schema->resource_root : p_root_schema) : this;
 	}
 
 	if (schema_dict.has("title") && SchemaUtil::is_string(schema_dict["title"])) {
@@ -157,11 +163,7 @@ Schema::~Schema() {
 Ref<Schema> Schema::build_schema(const Dictionary &schema_dict, bool validate_against_meta) {
 	Ref<Schema> schema;
 	schema.instantiate();
-	schema->init(schema_dict, nullptr, "", validate_against_meta);
-	schema->compile();
-	if (schema->compile_errors.size() > 0) {
-		UtilityFunctions::push_error("Building schema failed:\n", schema->get_compile_error_summary());
-	}
+	schema->init(schema_dict, nullptr, "", "", validate_against_meta);
 
 	// Auto-register if $id is present
 	if (schema.is_valid() && !schema->schema_id.is_empty()) {
@@ -171,6 +173,11 @@ Ref<Schema> Schema::build_schema(const Dictionary &schema_dict, bool validate_ag
 	// Auto-register any subschemas with $id
 	if (schema.is_valid()) {
 		register_subschemas(schema);
+	}
+
+	schema->compile();
+	if (schema->compile_errors.size() > 0) {
+		UtilityFunctions::push_error("Building schema failed:\n", schema->get_compile_error_summary());
 	}
 
 	return schema;
@@ -403,11 +410,7 @@ void Schema::construct_children(const Dictionary &dict) {
 				// Convert to Schema dict - meta-schema already validated this will work
 				Dictionary child_dict = variant_to_schema_dict(value);
 				StringName child_key = vformat("properties/%s", key);
-				StringName child_path = vformat("%s/%s", schema_path, child_key);
-				Ref<Schema> child_node;
-				child_node.instantiate();
-				child_node->init(child_dict, get_root_ptr(), child_path);
-				children[child_key] = child_node;
+				create_schema_child(child_dict, child_key);
 			}
 		}
 
@@ -485,12 +488,8 @@ void Schema::construct_children(const Dictionary &dict) {
 					if (schema_dict_var.get_type() == Variant::DICTIONARY) {
 						Dictionary schema_dict = schema_dict_var.operator Dictionary();
 						StringName child_key = vformat("prefixItems/%d", i);
-						StringName child_path = vformat("%s/%s", schema_path, child_key);
-						Ref<Schema> schema_node;
-						schema_node.instantiate();
-						schema_node->init(schema_dict, get_root_ptr(), child_path);
+						Ref<Schema> schema_node = create_schema_child(schema_dict, child_key);
 						item_schemas.push_back(schema_node);
-						children[child_key] = schema_node;
 					}
 				}
 			}
@@ -508,12 +507,8 @@ void Schema::construct_children(const Dictionary &dict) {
 					if (schema_dict_var.get_type() == Variant::DICTIONARY) {
 						Dictionary schema_dict = schema_dict_var.operator Dictionary();
 						StringName child_key = vformat("items/%d", i);
-						StringName child_path = vformat("%s/%s", schema_path, child_key);
-						Ref<Schema> schema_node;
-						schema_node.instantiate();
-						schema_node->init(schema_dict, get_root_ptr(), child_path);
+						Ref<Schema> schema_node = create_schema_child(schema_dict, child_key);
 						item_schemas.push_back(schema_node);
-						children[child_key] = schema_node;
 					}
 				}
 			} else {
@@ -521,12 +516,8 @@ void Schema::construct_children(const Dictionary &dict) {
 				if (item_schema_dict.get_type() == Variant::DICTIONARY) {
 					Dictionary item_schema = item_schema_dict.operator Dictionary();
 					StringName child_key = "items";
-					StringName child_path = vformat("%s/%s", schema_path, child_key);
-					Ref<Schema> item_node;
-					item_node.instantiate();
-					item_node->init(item_schema, get_root_ptr(), child_path);
+					Ref<Schema> item_node = create_schema_child(item_schema, child_key);
 					item_schemas.push_back(item_node);
-					children[child_key] = item_node;
 				}
 			}
 		}
@@ -556,7 +547,10 @@ Ref<Schema> Schema::create_schema_child(const Dictionary &child_schema, const St
 	StringName child_path = vformat("%s/%s", schema_path, child_key);
 	Ref<Schema> child_node;
 	child_node.instantiate();
-	child_node->init(child_schema, get_root_ptr(), child_path);
+	child_node->init(child_schema, get_root_ptr(), child_path, this->base_uri, false);
+	if (child_node->schema_id.is_empty()) {
+		child_node->resource_root = this->get_resource_root_ptr();
+	}
 	children[child_key] = child_node;
 	return child_node;
 }
@@ -614,15 +608,19 @@ Ref<Schema> Schema::resolve_reference(const String &reference_uri) const {
 
 	// Handle different reference formats
 	if (uri == "#") {
-		// Root reference - return the root Schema
-		return get_root();
+		// Root of current resource
+		return get_resource_root();
 	}
 
 	if (uri.begins_with("#/")) {
-		// JSON Pointer within current document
+		// JSON Pointer within current resource
 		String pointer = uri.substr(1); // Remove the '#'
 		String normalized = normalize_json_pointer(pointer);
-		return get_root()->get_at_path(normalized);
+		Ref<Schema> res = get_resource_root()->get_at_path(normalized);
+		if (!res.is_valid() && get_resource_root() != get_root()) {
+			res = get_root()->get_at_path(normalized);
+		}
+		return res;
 	}
 
 	if (uri.begins_with("#")) {
@@ -630,33 +628,64 @@ Ref<Schema> Schema::resolve_reference(const String &reference_uri) const {
 		String fragment = uri.substr(1);
 
 		if (fragment.is_empty()) {
-			return get_root();
+			return get_resource_root();
 		}
 
 		if (!fragment.begins_with("/")) {
 			// Anchor reference
-			return get_root()->get_by_anchor(fragment);
+			Ref<Schema> anchor_res = get_resource_root()->get_by_anchor(fragment);
+			if (!anchor_res.is_valid() && get_resource_root() != get_root()) {
+				anchor_res = get_root()->get_by_anchor(fragment);
+			}
+			if (anchor_res.is_valid()) {
+				return anchor_res;
+			}
 		}
 		// Fallback for malformed JSON Pointer
 		String normalized = normalize_json_pointer(fragment);
-		return get_root()->get_at_path(normalized);
+		Ref<Schema> res = get_resource_root()->get_at_path(normalized);
+		if (!res.is_valid() && get_resource_root() != get_root()) {
+			res = get_root()->get_at_path(normalized);
+		}
+		return res;
 	}
 
-	// External reference - check if it contains fragment
-	int fragment_pos = uri.find("#");
+	// Resolve the reference URI against this schema's base_uri if relative
+	String target_uri = SchemaUtil::resolve_uri(this->base_uri, uri);
+
+	// External / Canonical reference - check if it contains fragment
+	int fragment_pos = target_uri.find("#");
 	if (fragment_pos != -1) {
 		// External reference with fragment: "schema-id#/path"
-		String schema_id = uri.substr(0, fragment_pos);
-		String fragment = uri.substr(fragment_pos + 1);
+		String schema_id_str = target_uri.substr(0, fragment_pos);
+		String fragment = target_uri.substr(fragment_pos + 1);
 
-		// Get external Schema from registry
-		Ref<Schema> external_schema = SchemaRegistry::get_singleton().get_schema(schema_id);
+		// Get external Schema from registry or current document
+		Ref<Schema> external_schema;
+		if (get_root()->schema_id == schema_id_str) {
+			external_schema = get_root();
+		} else if (get_resource_root()->schema_id == schema_id_str) {
+			external_schema = get_resource_root();
+		} else {
+			external_schema = SchemaRegistry::get_singleton().get_schema(schema_id_str);
+			if (!external_schema.is_valid()) {
+				external_schema = SchemaRegistry::get_singleton().get_schema(target_uri);
+			}
+			if (!external_schema.is_valid() && target_uri != uri) {
+				int orig_frag_pos = uri.find("#");
+				if (orig_frag_pos != -1) {
+					String orig_schema_id = uri.substr(0, orig_frag_pos);
+					external_schema = SchemaRegistry::get_singleton().get_schema(orig_schema_id);
+				}
+			}
+		}
+
 		if (!external_schema.is_valid()) {
-			UtilityFunctions::push_error(vformat("External Schema not found: %s", schema_id));
+			UtilityFunctions::push_error(vformat("External Schema not found: %s", schema_id_str));
 			return Ref<Schema>();
 		}
 
-		if (fragment.is_empty() || fragment == "") {
+		if (fragment.is_empty()) {
 			return external_schema; // Root of external Schema
 		}
 
@@ -666,11 +695,28 @@ Ref<Schema> Schema::resolve_reference(const String &reference_uri) const {
 			return external_schema->get_at_path(normalized);
 		} else {
 			// Anchor reference in external Schema
-			return external_schema->get_root()->get_by_anchor(fragment);
+			Ref<Schema> anchor_res = external_schema->get_resource_root()->get_by_anchor(fragment);
+			if (!anchor_res.is_valid() && external_schema->get_resource_root() != external_schema->get_root()) {
+				anchor_res = external_schema->get_root()->get_by_anchor(fragment);
+			}
+			if (anchor_res.is_valid()) {
+				return anchor_res;
+			}
+			return external_schema->get_at_path(normalize_json_pointer(fragment));
 		}
 	} else {
-		// Pure external reference (whole document)
-		return SchemaRegistry::get_singleton().get_schema(uri);
+		// Pure reference (whole document)
+		if (get_root()->schema_id == target_uri) {
+			return get_root();
+		}
+		if (get_resource_root()->schema_id == target_uri) {
+			return get_resource_root();
+		}
+		Ref<Schema> res = SchemaRegistry::get_singleton().get_schema(target_uri);
+		if (!res.is_valid() && target_uri != uri) {
+			res = SchemaRegistry::get_singleton().get_schema(uri);
+		}
+		return res;
 	}
 }
 
@@ -699,7 +745,7 @@ Ref<Schema> Schema::resolve_dynamic_reference(const String &uri, const Validatio
 }
 
 void Schema::register_anchor(const StringName &name, const Schema *schema) {
-	get_root()->anchor_map[name] = schema;
+	get_resource_root()->anchor_map[name] = schema;
 }
 
 void Schema::register_dynamic_anchor(const StringName &name, const Schema *schema) {
@@ -722,19 +768,9 @@ Ref<Schema> Schema::get_by_anchor(const StringName &name) const {
 String Schema::normalize_json_pointer(const String &pointer) {
 	String clean = pointer.strip_edges();
 
-	// Ensure it starts with "/"
-	if (!clean.begins_with("/")) {
+	// Ensure it starts with "/" if not empty
+	if (!clean.is_empty() && !clean.begins_with("/")) {
 		clean = "/" + clean;
-	}
-
-	// Remove duplicate slashes
-	while (clean.contains("//")) {
-		clean = clean.replace("//", "/");
-	}
-
-	// Remove trailing slash unless it's the root
-	if (clean.length() > 1 && clean.ends_with("/")) {
-		clean = clean.substr(0, clean.length() - 1);
 	}
 
 	return clean;
@@ -768,10 +804,8 @@ PackedStringArray Schema::parse_json_pointer(const String &pointer) {
 }
 
 String Schema::unescape_json_pointer_segment(const String &segment) {
-	// JSON Pointer escaping rules:
-	// "~0" represents "~"
-	// "~1" represents "/"
-	String result = segment;
+	// JSON Pointer in URI fragments has percent-encoding decoded first, then ~0 and ~1
+	String result = segment.uri_decode();
 	result = result.replace("~1", "/");
 	result = result.replace("~0", "~");
 	return result;
@@ -804,7 +838,7 @@ Ref<Schema> Schema::get_child(const StringName &key) const {
 
 Ref<Schema> Schema::get_at_path(const StringName &path) const {
 	if (path.is_empty() || path == StringName("/")) {
-		return get_root();
+		return Ref<Schema>(const_cast<Schema *>(this));
 	}
 
 	// Remove leading slash and split path
@@ -814,57 +848,39 @@ Ref<Schema> Schema::get_at_path(const StringName &path) const {
 	}
 
 	PackedStringArray path_parts = clean_path.split("/");
-	Ref<Schema> current = get_root(); // Always start from root for absolute paths
+	Ref<Schema> current = Ref<Schema>(const_cast<Schema *>(this));
 
 	// Navigate through each path segment
 	for (int i = 0; i < path_parts.size(); i++) {
-		String part = path_parts[i];
-		if (part.is_empty()) {
-			continue;
-		}
-
-		// Unescape JSON pointer segment
-		part = unescape_json_pointer_segment(part);
+		String part = unescape_json_pointer_segment(path_parts[i]);
 
 		Ref<Schema> next_schema;
 
-		// Try different child key formats based on the path part
-		if (part == "properties" || part == "definitions" || part == "$defs") {
-			// These are Schema keywords - look for direct children
-			StringName child_key = StringName(part);
-			next_schema = current->get_child(child_key);
+		StringName direct_key = StringName(part);
+		next_schema = current->get_child(direct_key);
 
-			if (!next_schema.is_valid()) {
-				// Try with the next part combined (for flattened structure)
-				if (i + 1 < path_parts.size()) {
-					String next_part = unescape_json_pointer_segment(path_parts[i + 1]);
-					StringName combined_key = StringName(vformat("%s/%s", part, next_part));
-					next_schema = current->get_child(combined_key);
-					if (next_schema.is_valid()) {
-						i++; // Skip the next part since we consumed it
-					}
-				}
+		if (!next_schema.is_valid() && i + 1 < path_parts.size()) {
+			String next_part = unescape_json_pointer_segment(path_parts[i + 1]);
+			StringName combined_key = StringName(vformat("%s/%s", part, next_part));
+			next_schema = current->get_child(combined_key);
+			if (next_schema.is_valid()) {
+				i++; // Skip the next part since we consumed it
 			}
-		} else {
-			// This is a property name or definition name
-			// Look for it under the appropriate parent (properties/, definitions/, etc.)
-			StringName direct_key = StringName(part);
-			next_schema = current->get_child(direct_key);
+		}
+
+		if (!next_schema.is_valid()) {
+			// Try prefixed versions
+			StringName properties_key = StringName(vformat("properties/%s", part));
+			next_schema = current->get_child(properties_key);
 
 			if (!next_schema.is_valid()) {
-				// Try prefixed versions
-				StringName properties_key = StringName(vformat("properties/%s", part));
-				next_schema = current->get_child(properties_key);
+				StringName defs_key = StringName(vformat("$defs/%s", part));
+				next_schema = current->get_child(defs_key);
+			}
 
-				if (!next_schema.is_valid()) {
-					StringName definitions_key = StringName(vformat("definitions/%s", part));
-					next_schema = current->get_child(definitions_key);
-				}
-
-				if (!next_schema.is_valid()) {
-					StringName defs_key = StringName(vformat("$defs/%s", part));
-					next_schema = current->get_child(defs_key);
-				}
+			if (!next_schema.is_valid()) {
+				StringName definitions_key = StringName(vformat("definitions/%s", part));
+				next_schema = current->get_child(definitions_key);
 			}
 		}
 

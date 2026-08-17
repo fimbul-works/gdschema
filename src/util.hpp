@@ -153,6 +153,114 @@ public:
 	static inline bool is_string(const Variant &value) {
 		return value.get_type() == Variant::STRING || value.get_type() == Variant::STRING_NAME;
 	}
+
+	/**
+	 * @brief Resolves a relative URI against a base URI according to RFC 3986.
+	 */
+	static String resolve_uri(const String &base_uri, const String &relative_uri) {
+		String rel = relative_uri.strip_edges();
+		if (rel.is_empty()) {
+			return base_uri;
+		}
+
+		// 1. If rel is an absolute URI with a scheme (e.g. "http:", "https:", "urn:", "file:"), return rel
+		int colon_pos = rel.find(":");
+		if (colon_pos > 0) {
+			bool is_scheme = true;
+			for (int i = 0; i < colon_pos; i++) {
+				char32_t c = rel[i];
+				if (!((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (i > 0 && ((c >= '0' && c <= '9') || c == '+' || c == '-' || c == '.')))) {
+					is_scheme = false;
+					break;
+				}
+			}
+			if (is_scheme) {
+				return rel;
+			}
+		}
+
+		String base = base_uri.strip_edges();
+		if (base.is_empty()) {
+			return rel;
+		}
+
+		// Remove fragment from base URI
+		int base_frag = base.find("#");
+		if (base_frag != -1) {
+			base = base.substr(0, base_frag);
+		}
+
+		// 2. If rel is a fragment only ("#...")
+		if (rel.begins_with("#")) {
+			return base + rel;
+		}
+
+		// Extract scheme and authority from base
+		String scheme_authority;
+		String base_path;
+
+		int scheme_pos = base.find("://");
+		if (scheme_pos != -1) {
+			int authority_end = base.find("/", scheme_pos + 3);
+			if (authority_end != -1) {
+				scheme_authority = base.substr(0, authority_end);
+				base_path = base.substr(authority_end);
+			} else {
+				scheme_authority = base;
+				base_path = "/";
+			}
+		} else {
+			// URN or other scheme without authority (e.g., urn:uuid:...)
+			int u_colon = base.find(":");
+			if (u_colon != -1) {
+				scheme_authority = base.substr(0, u_colon + 1);
+				base_path = base.substr(u_colon + 1);
+			} else {
+				base_path = base;
+			}
+		}
+
+		// 3. If rel starts with "/" (absolute path reference)
+		if (rel.begins_with("/")) {
+			return scheme_authority + rel;
+		}
+
+		// 4. Relative path: combine with base_path directory
+		int last_slash = base_path.rfind("/");
+		String dir = (last_slash != -1) ? base_path.substr(0, last_slash + 1) : "/";
+		String combined_path = dir + rel;
+
+		// Normalize dot segments in combined_path
+		PackedStringArray segments = combined_path.split("/");
+		std::vector<String> normalized_segments;
+
+		for (int i = 0; i < segments.size(); i++) {
+			String seg = segments[i];
+			if (seg == "." || (seg.is_empty() && i > 0 && i < segments.size() - 1)) {
+				continue;
+			} else if (seg == "..") {
+				if (!normalized_segments.empty() && normalized_segments.back() != "..") {
+					normalized_segments.pop_back();
+				}
+			} else {
+				normalized_segments.push_back(seg);
+			}
+		}
+
+		String result_path = "";
+		for (size_t i = 0; i < normalized_segments.size(); i++) {
+			if (i > 0) {
+				result_path += "/";
+			}
+			result_path += normalized_segments[i];
+		}
+
+		if (result_path.is_empty() || !result_path.begins_with("/")) {
+			result_path = "/" + result_path;
+		}
+
+		return scheme_authority + result_path;
+	}
 };
 
 extern const int MAX_VALIDATION_DEPTH;
