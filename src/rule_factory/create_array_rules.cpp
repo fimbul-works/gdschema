@@ -90,8 +90,12 @@ void RuleFactory::create_array_rules(const Dictionary &schema_def, const Ref<Sch
 					auto selector = std::make_unique<AdditionalItemsSelector>(prefix_length);
 					auto rule = std::make_shared<FalseRule>();
 					result.rules->add_rule(std::make_unique<SelectorRule>(std::move(selector), std::move(rule)));
+				} else {
+					// items: true - additional items allowed beyond prefixItems and marked as evaluated
+					auto selector = std::make_unique<AdditionalItemsSelector>(prefix_length);
+					auto rule = std::make_shared<RuleGroup>();
+					result.rules->add_rule(std::make_unique<SelectorRule>(std::move(selector), std::move(rule)));
 				}
-				// items: true - additional items allowed (default, no rule needed)
 			} else if (items_var.get_type() == Variant::DICTIONARY) {
 				// items: {...} - schema for items after prefixItems
 				Ref<Schema> child_schema = schema->get_child("items");
@@ -108,7 +112,19 @@ void RuleFactory::create_array_rules(const Dictionary &schema_def, const Ref<Sch
 			}
 		} else {
 			// JSON Schema Draft-07: items can be schema (all items) or array (tuple)
-			if (items_var.get_type() == Variant::DICTIONARY) {
+			if (items_var.get_type() == Variant::BOOL) {
+				if (!items_var.operator bool()) {
+					// items: false - no items allowed
+					auto selector = std::make_unique<ArrayItemsSelector>();
+					auto rule = std::make_shared<FalseRule>();
+					result.rules->add_rule(std::make_unique<SelectorRule>(std::move(selector), std::move(rule)));
+				} else {
+					// items: true - all items allowed and marked as evaluated
+					auto selector = std::make_unique<ArrayItemsSelector>();
+					auto rule = std::make_shared<RuleGroup>();
+					result.rules->add_rule(std::make_unique<SelectorRule>(std::move(selector), std::move(rule)));
+				}
+			} else if (items_var.get_type() == Variant::DICTIONARY) {
 				// Single Schema applies to all items
 				Ref<Schema> child_schema = schema->get_child("items");
 
@@ -155,6 +171,11 @@ void RuleFactory::create_array_rules(const Dictionary &schema_def, const Ref<Sch
 			auto selector = std::make_unique<AdditionalItemsSelector>(prefix_length);
 			auto rule = std::make_shared<FalseRule>();
 			result.rules->add_rule(std::make_unique<SelectorRule>(std::move(selector), std::move(rule)));
+		} else if (additional_items_var.get_type() == Variant::BOOL && additional_items_var.operator bool()) {
+			// additionalItems: true - additional items allowed and marked evaluated
+			auto selector = std::make_unique<AdditionalItemsSelector>(prefix_length);
+			auto rule = std::make_shared<RuleGroup>();
+			result.rules->add_rule(std::make_unique<SelectorRule>(std::move(selector), std::move(rule)));
 		} else if (additional_items_var.get_type() == Variant::DICTIONARY) {
 			// additionalItems: {...} - additional items must match this Schema
 			Ref<Schema> child_schema = schema->get_child("additionalItems");
@@ -168,7 +189,6 @@ void RuleFactory::create_array_rules(const Dictionary &schema_def, const Ref<Sch
 				}
 			}
 		}
-		// Note: additionalItems: true (default) means additional items are allowed with no constraints
 	}
 
 	// contains - at least one array item must validate against the Schema

@@ -12,6 +12,7 @@ bool DependentSchemasRule::validate(const Variant &target, ValidationContext &co
 
 	Dictionary dict = target.operator Dictionary();
 	bool all_valid = true;
+	std::vector<ValidationContext> sub_contexts;
 
 	for (const auto &pair : dependent_schemas) {
 		if (dict.has(pair.first)) {
@@ -21,9 +22,15 @@ bool DependentSchemasRule::validate(const Variant &target, ValidationContext &co
 				all_valid = false;
 			}
 
-			// Merge errors and evaluation data
+			// Merge errors
 			context.merge_errors(sub_context);
-			context.merge_evaluation_data(sub_context);
+			sub_contexts.push_back(std::move(sub_context));
+		}
+	}
+
+	if (all_valid) {
+		for (const auto &sub_ctx : sub_contexts) {
+			context.merge_evaluation_data(sub_ctx);
 		}
 	}
 

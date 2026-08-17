@@ -17,6 +17,7 @@ bool AnyOfRule::validate(const Variant &target, ValidationContext &context) cons
 
 	// At least one sub-rule must pass
 	bool any_passed = false;
+	std::vector<ValidationContext> passed_contexts;
 	std::vector<ValidationContext> failed_contexts;
 
 	for (int64_t i = 0; i < sub_rules.size(); i++) {
@@ -24,10 +25,9 @@ bool AnyOfRule::validate(const Variant &target, ValidationContext &context) cons
 
 		if (sub_rules[i]->validate(target, sub_context)) {
 			any_passed = true;
-			// For Draft 2020-12, we must continue to collect annotations from all successful branches
-			context.merge_evaluation_data(sub_context);
+			passed_contexts.push_back(std::move(sub_context));
 		} else {
-			failed_contexts.push_back(sub_context);
+			failed_contexts.push_back(std::move(sub_context));
 		}
 	}
 
@@ -40,6 +40,11 @@ bool AnyOfRule::validate(const Variant &target, ValidationContext &context) cons
 		}
 
 		return false;
+	}
+
+	// For Draft 2020-12, merge annotations from all successful branches
+	for (const auto &passed_ctx : passed_contexts) {
+		context.merge_evaluation_data(passed_ctx);
 	}
 
 	return true;

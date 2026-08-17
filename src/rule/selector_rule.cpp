@@ -20,10 +20,16 @@ bool SelectorRule::validate(const Variant &target, ValidationContext &context) c
 		if (rule->validate(selection.value, child_context)) {
 			// If validation succeeded and we have a path segment, mark it as evaluated in the parent context
 			if (!selection.path_segment.is_empty()) {
-				if (selection.path_segment.is_valid_int()) {
+				if (target.get_type() == Variant::DICTIONARY) {
+					context.mark_property_evaluated(selection.path_segment);
+				} else if (target.get_type() == Variant::ARRAY || (target.get_type() >= Variant::PACKED_BYTE_ARRAY && target.get_type() <= Variant::PACKED_COLOR_ARRAY)) {
 					context.mark_item_evaluated(selection.path_segment.to_int());
 				} else {
-					context.mark_property_evaluated(selection.path_segment);
+					if (selection.path_segment.is_valid_int()) {
+						context.mark_item_evaluated(selection.path_segment.to_int());
+					} else {
+						context.mark_property_evaluated(selection.path_segment);
+					}
 				}
 			}
 		} else {

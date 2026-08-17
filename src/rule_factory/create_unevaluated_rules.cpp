@@ -15,6 +15,11 @@ void RuleFactory::create_unevaluated_rules(const Dictionary &schema_def, const R
 			auto selector = std::make_unique<UnevaluatedPropertiesSelector>();
 			auto rule = std::make_shared<FalseRule>();
 			result.rules->add_rule(std::make_unique<SelectorRule>(std::move(selector), std::move(rule)));
+		} else if (uneval_props_var.get_type() == Variant::BOOL && uneval_props_var.operator bool()) {
+			// unevaluatedProperties: true
+			auto selector = std::make_unique<UnevaluatedPropertiesSelector>();
+			auto rule = std::make_shared<RuleGroup>();
+			result.rules->add_rule(std::make_unique<SelectorRule>(std::move(selector), std::move(rule)));
 		} else if (uneval_props_var.get_type() == Variant::DICTIONARY) {
 			// unevaluatedProperties: {...}
 			Ref<Schema> child_schema = schema->get_child("unevaluatedProperties");
@@ -22,7 +27,7 @@ void RuleFactory::create_unevaluated_rules(const Dictionary &schema_def, const R
 				auto uneval_result = create_rules(child_schema);
 				result.errors.insert(result.errors.end(), uneval_result.errors.begin(), uneval_result.errors.end());
 
-				if (uneval_result.is_valid() && !uneval_result.rules->is_empty()) {
+				if (uneval_result.is_valid()) {
 					auto selector = std::make_unique<UnevaluatedPropertiesSelector>();
 					result.rules->add_rule(std::make_unique<SelectorRule>(std::move(selector), std::move(uneval_result.rules)));
 				}
@@ -38,6 +43,11 @@ void RuleFactory::create_unevaluated_rules(const Dictionary &schema_def, const R
 			auto selector = std::make_unique<UnevaluatedItemsSelector>();
 			auto rule = std::make_shared<FalseRule>();
 			result.rules->add_rule(std::make_unique<SelectorRule>(std::move(selector), std::move(rule)));
+		} else if (uneval_items_var.get_type() == Variant::BOOL && uneval_items_var.operator bool()) {
+			// unevaluatedItems: true
+			auto selector = std::make_unique<UnevaluatedItemsSelector>();
+			auto rule = std::make_shared<RuleGroup>();
+			result.rules->add_rule(std::make_unique<SelectorRule>(std::move(selector), std::move(rule)));
 		} else if (uneval_items_var.get_type() == Variant::DICTIONARY) {
 			// unevaluatedItems: {...}
 			Ref<Schema> child_schema = schema->get_child("unevaluatedItems");
@@ -45,7 +55,7 @@ void RuleFactory::create_unevaluated_rules(const Dictionary &schema_def, const R
 				auto uneval_result = create_rules(child_schema);
 				result.errors.insert(result.errors.end(), uneval_result.errors.begin(), uneval_result.errors.end());
 
-				if (uneval_result.is_valid() && !uneval_result.rules->is_empty()) {
+				if (uneval_result.is_valid()) {
 					auto selector = std::make_unique<UnevaluatedItemsSelector>();
 					result.rules->add_rule(std::make_unique<SelectorRule>(std::move(selector), std::move(uneval_result.rules)));
 				}

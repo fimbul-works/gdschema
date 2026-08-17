@@ -114,19 +114,15 @@ void RuleFactory::create_object_rules(const Dictionary &schema_def, const Ref<Sc
 
 			for (int i = 0; i < patterns.size(); i++) {
 				String pattern = patterns[i].operator String();
-				Variant pattern_schema_var = pattern_properties[patterns[i]];
+				StringName child_path = vformat("patternProperties/%s", pattern);
+				Ref<Schema> child_schema = schema->get_child(child_path);
+				if (child_schema.is_valid()) {
+					auto pattern_result = create_rules(child_schema);
+					result.errors.insert(result.errors.end(), pattern_result.errors.begin(), pattern_result.errors.end());
 
-				if (pattern_schema_var.get_type() == Variant::DICTIONARY) {
-					StringName child_path = vformat("patternProperties/%s", pattern);
-					Ref<Schema> child_schema = schema->get_child(child_path);
-					if (child_schema.is_valid()) {
-						auto pattern_result = create_rules(child_schema);
-						result.errors.insert(result.errors.end(), pattern_result.errors.begin(), pattern_result.errors.end());
-
-						if (pattern_result.is_valid()) {
-							auto selector = std::make_unique<PatternPropertiesSelector>(pattern);
-							result.rules->add_rule(std::make_unique<SelectorRule>(std::move(selector), std::move(pattern_result.rules)));
-						}
+					if (pattern_result.is_valid()) {
+						auto selector = std::make_unique<PatternPropertiesSelector>(pattern);
+						result.rules->add_rule(std::make_unique<SelectorRule>(std::move(selector), std::move(pattern_result.rules)));
 					}
 				}
 			}
@@ -136,62 +132,43 @@ void RuleFactory::create_object_rules(const Dictionary &schema_def, const Ref<Sc
 	// additionalProperties
 	if (schema_def.has("additionalProperties")) {
 		Variant additional_props_var = schema_def["additionalProperties"];
+		std::vector<StringName> defined_properties;
+		std::vector<String> pattern_properties_list;
+
+		if (schema_def.has("properties")) {
+			Dictionary properties = schema_def["properties"].operator Dictionary();
+			Array prop_keys = properties.keys();
+			for (int i = 0; i < prop_keys.size(); i++) {
+				defined_properties.push_back(StringName(prop_keys[i].operator String()));
+			}
+		}
+
+		if (schema_def.has("patternProperties")) {
+			Dictionary pattern_properties = schema_def["patternProperties"].operator Dictionary();
+			Array pattern_keys = pattern_properties.keys();
+			for (int i = 0; i < pattern_keys.size(); i++) {
+				pattern_properties_list.push_back(pattern_keys[i].operator String());
+			}
+		}
 
 		if (additional_props_var.get_type() == Variant::BOOL && !additional_props_var.operator bool()) {
 			// additionalProperties: false - no additional properties allowed
-			// Collect defined properties and pattern properties
-			std::vector<StringName> defined_properties;
-			std::vector<String> pattern_properties_list;
-
-			if (schema_def.has("properties")) {
-				Dictionary properties = schema_def["properties"].operator Dictionary();
-				Array prop_keys = properties.keys();
-				for (int i = 0; i < prop_keys.size(); i++) {
-					defined_properties.push_back(StringName(prop_keys[i].operator String()));
-				}
-			}
-
-			if (schema_def.has("patternProperties")) {
-				Dictionary pattern_properties = schema_def["patternProperties"].operator Dictionary();
-				Array pattern_keys = pattern_properties.keys();
-				for (int i = 0; i < pattern_keys.size(); i++) {
-					pattern_properties_list.push_back(pattern_keys[i].operator String());
-				}
-			}
-
-			// Create a rule that fails validation for any additional properties
 			auto selector = std::make_unique<AdditionalPropertiesSelector>(defined_properties, pattern_properties_list);
 			auto rule = std::make_shared<FalseRule>();
 			result.rules->add_rule(std::make_unique<SelectorRule>(std::move(selector), std::move(rule)));
+		} else if (additional_props_var.get_type() == Variant::BOOL && additional_props_var.operator bool()) {
+			// additionalProperties: true - any additional properties allowed and marked as evaluated
+			auto selector = std::make_unique<AdditionalPropertiesSelector>(defined_properties, pattern_properties_list);
+			auto rule = std::make_shared<RuleGroup>();
+			result.rules->add_rule(std::make_unique<SelectorRule>(std::move(selector), std::move(rule)));
 		} else if (additional_props_var.get_type() == Variant::DICTIONARY) {
 			// additionalProperties: {...} - additional properties must match this Schema
-			Dictionary additional_schema = additional_props_var.operator Dictionary();
 			Ref<Schema> child_schema = schema->get_child("additionalProperties");
 			if (child_schema.is_valid()) {
 				auto additional_result = create_rules(child_schema);
 				result.errors.insert(result.errors.end(), additional_result.errors.begin(), additional_result.errors.end());
 
-				if (additional_result.is_valid() && !additional_result.rules->is_empty()) {
-					std::vector<StringName> defined_properties;
-					std::vector<String> pattern_properties_list;
-
-					// Same collection logic as above...
-					if (schema_def.has("properties")) {
-						Dictionary properties = schema_def["properties"].operator Dictionary();
-						Array prop_keys = properties.keys();
-						for (int i = 0; i < prop_keys.size(); i++) {
-							defined_properties.push_back(StringName(prop_keys[i].operator String()));
-						}
-					}
-
-					if (schema_def.has("patternProperties")) {
-						Dictionary pattern_properties = schema_def["patternProperties"].operator Dictionary();
-						Array pattern_keys = pattern_properties.keys();
-						for (int i = 0; i < pattern_keys.size(); i++) {
-							pattern_properties_list.push_back(pattern_keys[i].operator String());
-						}
-					}
-
+				if (additional_result.is_valid()) {
 					auto selector = std::make_unique<AdditionalPropertiesSelector>(defined_properties, pattern_properties_list);
 					result.rules->add_rule(std::make_unique<SelectorRule>(std::move(selector), std::move(additional_result.rules)));
 				}
@@ -291,7 +268,7 @@ void RuleFactory::create_object_rules(const Dictionary &schema_def, const Ref<Sc
 					auto dep_result = create_rules(child_schema);
 					result.errors.insert(result.errors.end(), dep_result.errors.begin(), dep_result.errors.end());
 
-					if (dep_result.is_valid() && !dep_result.rules->is_empty()) {
+					if (dep_result.is_valid()) {
 						rule->add_schema(trigger, dep_result.rules);
 					}
 				}

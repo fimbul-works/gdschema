@@ -17,6 +17,8 @@ bool ContainsRule::validate(const Variant &target, ValidationContext &context) c
 
 	// Normal case: check how many items validate against the schema
 	int64_t match_count = 0;
+	std::vector<int64_t> matched_indices;
+	std::vector<ValidationContext> matched_contexts;
 
 	for (int64_t i = 0; i < array_size; i++) {
 		Variant item = SchemaUtil::get_array_item(target, i);
@@ -26,10 +28,8 @@ bool ContainsRule::validate(const Variant &target, ValidationContext &context) c
 
 		if (item_rule->validate(item, item_context)) {
 			match_count++;
-			// Mark this item as evaluated in the parent context
-			context.mark_item_evaluated(i);
-			// Also merge any nested evaluations
-			context.merge_evaluation_data(item_context);
+			matched_indices.push_back(i);
+			matched_contexts.push_back(std::move(item_context));
 		}
 	}
 
@@ -43,6 +43,13 @@ bool ContainsRule::validate(const Variant &target, ValidationContext &context) c
 	if (max_contains >= 0 && match_count > max_contains) {
 		context.add_error(vformat("Array contains %d matching items, but at most %d are allowed", match_count, max_contains), "maxContains", target);
 		valid = false;
+	}
+
+	if (valid) {
+		for (size_t k = 0; k < matched_indices.size(); k++) {
+			context.mark_item_evaluated(matched_indices[k]);
+			context.merge_evaluation_data(matched_contexts[k]);
+		}
 	}
 
 	return valid;
