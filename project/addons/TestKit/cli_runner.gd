@@ -34,6 +34,22 @@ func _run() -> void:
 		root.add_child(instance)
 		_instantiated_scenes.append(instance)
 		test_suites = _find_test_suites(instance)
+	elif test_path.ends_with(".gd"):
+		var script = load(test_path)
+		if not script:
+			printerr("Failed to load test script: ", test_path)
+			quit(1)
+			return
+		var instance = script.new()
+		if instance is TestSuite:
+			root.add_child(instance)
+			_instantiated_scenes.append(instance)
+			test_suites = _find_test_suites(instance)
+		else:
+			printerr("Script does not extend TestSuite: ", test_path)
+			instance.free()
+			quit(1)
+			return
 	elif DirAccess.dir_exists_absolute(test_path):
 		# Load all test scenes from directory
 		test_suites = _load_tests_from_directory(test_path)
@@ -138,7 +154,8 @@ func _load_tests_from_directory(dir_path: String) -> Array[TestSuite]:
 	return suites
 
 func _on_suite_started(test_class: TestSuite) -> void:
-	print("\n%s %s" % [test_class.icon if test_class.icon else "📋", test_class.name])
+	var display_name: String = test_class.get_suite_display_name() if test_class.has_method("get_suite_display_name") else test_class.name
+	print("\n%s %s" % [test_class.icon if test_class.icon else "📋", display_name])
 
 func _on_method_started(test_class: TestSuite, method_name: String) -> void:
 	if verbose:

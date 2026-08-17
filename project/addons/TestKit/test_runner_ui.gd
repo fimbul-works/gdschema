@@ -65,19 +65,24 @@ func _populate_test_suites(test_classes: Array[TestSuite]) -> void:
 		if test_methods.is_empty():
 			continue
 
+		var suite_name: String = test_class.get_suite_display_name() if test_class.has_method("get_suite_display_name") else test_class.name
+		if test_suites.has(suite_name):
+			suite_name = "%s (%d)" % [suite_name, test_class.get_instance_id()]
+		test_class.set_meta("suite_key", suite_name)
+
 		# Create suite button
-		var suite_button = _create_suite_button(test_class, test_methods)
+		var suite_button = _create_suite_button(test_class, test_methods, suite_name)
 		test_suites_list.add_child(suite_button)
 
 		# Store suite data
-		test_suites[test_class.name] = {
+		test_suites[suite_name] = {
 			"test_class": test_class,
 			"test_methods": test_methods,
 			"button": suite_button,
 			"status": "pending"
 		}
 
-func _create_suite_button(test_class: TestSuite, test_methods: Array) -> Button:
+func _create_suite_button(test_class: TestSuite, test_methods: Array, suite_name: String) -> Button:
 	var button = Button.new()
 	button.alignment = HORIZONTAL_ALIGNMENT_LEFT
 	button.custom_minimum_size.y = 40
@@ -85,11 +90,11 @@ func _create_suite_button(test_class: TestSuite, test_methods: Array) -> Button:
 	var icon_text = test_class.icon if test_class.icon.length() > 0 else "📁"
 	var method_count = test_methods.size()
 
-	button.text = "%s %s (%d tests)" % [icon_text, test_class.name, method_count]
+	button.text = "%s %s (%d tests)" % [icon_text, suite_name, method_count]
 	button.add_theme_color_override("font_color", COLOR_PENDING)
 
 	# Connect button press
-	button.pressed.connect(_on_suite_selected.bind(test_class.name))
+	button.pressed.connect(_on_suite_selected.bind(suite_name))
 
 	return button
 
@@ -201,12 +206,13 @@ func _on_run_tests_pressed() -> void:
 	if is_headless:
 		var exit_code := 0
 		for suite_name in test_suites:
-			var suite = test_suites[suite_name]
-			if not suite is TestSuite:
-				continue
+			var suite_data = test_suites[suite_name]
+			var suite: TestSuite = suite_data.test_class
 			var results = suite.get_test_results()
-			if !results.passed:
-				exit_code = 1
+			for method_name in results:
+				if not results[method_name].passed:
+					exit_code = 1
+					break
 		get_tree().quit(exit_code)
 
 func _reset_ui_state() -> void:
@@ -367,11 +373,13 @@ func _on_test_method_completed(test_class: TestSuite, method_name: String, resul
 		_update_method_status(test_class, method_name, "failed", result.errors)
 
 func _on_test_suite_started(test_class: TestSuite) -> void:
-	_update_suite_status(test_class.name, "running")
+	var suite_key: String = test_class.get_meta("suite_key", test_class.get_suite_display_name() if test_class.has_method("get_suite_display_name") else test_class.name)
+	_update_suite_status(suite_key, "running")
 
 func _on_test_suite_completed(test_class: TestSuite, results: Dictionary) -> void:
+	var suite_key: String = test_class.get_meta("suite_key", test_class.get_suite_display_name() if test_class.has_method("get_suite_display_name") else test_class.name)
 	var status = "passed" if results.all_passed else "failed"
-	_update_suite_status(test_class.name, status)
+	_update_suite_status(suite_key, status)
 
 func _on_all_tests_completed(final_results: Array) -> void:
 	_update_final_summary(final_results)

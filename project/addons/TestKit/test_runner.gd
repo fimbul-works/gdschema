@@ -23,7 +23,14 @@ func find_test_classes(parent_node: Node) -> Array[TestSuite]:
 			classes.append_array(find_test_classes(child))
 	return classes
 
+func get_suite_key(test_class: TestSuite) -> String:
+	var key: String = test_class.get_suite_display_name() if test_class.has_method("get_suite_display_name") else test_class.name
+	return key
+
 func find_test_methods(test_class: TestSuite) -> PackedStringArray:
+	if test_class.has_method("get_test_names"):
+		return test_class.get_test_names()
+
 	var test_methods: PackedStringArray = []
 	for method in test_class.get_method_list():
 		if method.name.begins_with("test_"):
@@ -52,7 +59,12 @@ func prepare_test_suites(test_classes: Array[TestSuite]) -> Dictionary:
 		if test_methods.is_empty():
 			continue
 
-		test_suites[test_class.name] = {
+		var suite_key := get_suite_key(test_class)
+		if test_suites.has(suite_key):
+			suite_key = "%s (%d)" % [suite_key, test_class.get_instance_id()]
+		test_class.set_meta("suite_key", suite_key)
+
+		test_suites[suite_key] = {
 			"test_class": test_class,
 			"test_methods": test_methods,
 			"status": "pending"
@@ -74,7 +86,8 @@ func run_tests(test_classes: Array[TestSuite]) -> void:
 
 	# Run tests for each class
 	for test_class in test_classes:
-		if test_class.name not in test_suites:
+		var suite_key: String = test_class.get_meta("suite_key", get_suite_key(test_class))
+		if suite_key not in test_suites:
 			continue
 
 		await _run_suite_tests(test_class)
@@ -83,7 +96,8 @@ func run_tests(test_classes: Array[TestSuite]) -> void:
 	all_tests_completed.emit(suite_results)
 
 func _run_suite_tests(test_class: TestSuite) -> void:
-	var suite_data = test_suites[test_class.name]
+	var suite_key: String = test_class.get_meta("suite_key", get_suite_key(test_class))
+	var suite_data = test_suites[suite_key]
 	var test_methods: Array = suite_data.test_methods
 
 	if test_methods.is_empty():
@@ -94,21 +108,25 @@ func _run_suite_tests(test_class: TestSuite) -> void:
 
 	# Run each test method
 	for method_name in test_methods:
-		if test_class.LOG_VERBOSE: print_rich("[b]Running %s - %s[/b]" % [test_class.name, method_name.substr(5).replace("_", " ")])
+		var display_method: String = method_name.substr(5).replace("_", " ") if method_name.begins_with("test_") else method_name
+		if test_class.LOG_VERBOSE: print_rich("[b]Running %s - %s[/b]" % [suite_key, display_method])
 
 		# Emit method started
 		test_method_started.emit(test_class, method_name)
 
 		# Run the test
-		test_class._start_test(method_name)
-		await test_class.call(method_name)
-		test_class._end_test()
+		if test_class.has_method("run_test"):
+			await test_class.run_test(method_name)
+		else:
+			test_class._start_test(method_name)
+			await test_class.call(method_name)
+			test_class._end_test()
 
 		var result = test_class._test_results[method_name]
 
 		# Print failure message if needed
 		if not result.passed:
-			print_rich("[color=red]Failed %s - %s: %s[/color]:\n  " % [test_class.name, method_name.substr(5).replace("_", " "), "\n  ".join(result.errors)])
+			print_rich("[color=red]Failed %s - %s: %s[/color]:\n  " % [suite_key, display_method, "\n  ".join(result.errors)])
 
 		# Emit method completed
 		test_method_completed.emit(test_class, method_name, result)
@@ -136,7 +154,7 @@ func _run_suite_tests(test_class: TestSuite) -> void:
 		passed_expectations += result.expectation_passed
 
 	var suite_result = {
-		"suite_name": test_class.name,
+		"suite_name": suite_key,
 		"passed": passed_tests,
 		"total": total_tests,
 		"passed_expectations": passed_expectations,
