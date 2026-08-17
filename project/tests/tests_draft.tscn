@@ -1,0 +1,22 @@
+[gd_scene format=3 uid="uid://b6p2lq1msx0q8"]
+
+[ext_resource type="PackedScene" uid="uid://bkdh3qj8xqsnh" path="res://addons/TestKit/test_runner.tscn" id="1_runner"]
+[ext_resource type="Script" path="res://tests/test_draft2020_12.gd" id="2_d2020"]
+[ext_resource type="Script" path="res://tests/test_draft7.gd" id="3_d7"]
+
+[node name="SpecTests" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="TestRunnerUI" parent="." instance=ExtResource("1_runner")]
+layout_mode = 1
+
+[node name="Draft 2020-12" type="Node2D" parent="TestRunnerUI"]
+script = ExtResource("2_d2020")
+
+[node name="Draft 7" type="Node2D" parent="TestRunnerUI"]
+script = ExtResource("3_d7")
