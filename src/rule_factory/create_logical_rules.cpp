@@ -20,15 +20,13 @@ void RuleFactory::create_logical_rules(const Dictionary &schema_def, const Ref<S
 			auto all_of_rule = std::make_unique<AllOfRule>();
 
 			for (int64_t i = 0; i < all_of_array.size(); i++) {
-				if (all_of_array[i].get_type() == Variant::DICTIONARY) {
-					Ref<Schema> child_schema = schema->get_child(vformat("allOf/%d", i));
-					if (child_schema.is_valid()) {
-						auto sub_result = create_rules(child_schema);
-						result.errors.insert(result.errors.end(), sub_result.errors.begin(), sub_result.errors.end());
+				Ref<Schema> child_schema = schema->get_child(vformat("allOf/%d", i));
+				if (child_schema.is_valid()) {
+					auto sub_result = create_rules(child_schema);
+					result.errors.insert(result.errors.end(), sub_result.errors.begin(), sub_result.errors.end());
 
-						if (sub_result.is_valid()) {
-							all_of_rule->add_sub_rule(sub_result.rules);
-						}
+					if (sub_result.is_valid()) {
+						all_of_rule->add_sub_rule(sub_result.rules);
 					}
 				}
 			}
@@ -46,15 +44,13 @@ void RuleFactory::create_logical_rules(const Dictionary &schema_def, const Ref<S
 			auto any_of_rule = std::make_unique<AnyOfRule>();
 
 			for (int64_t i = 0; i < any_of_array.size(); i++) {
-				if (any_of_array[i].get_type() == Variant::DICTIONARY) {
-					Ref<Schema> child_schema = schema->get_child(vformat("anyOf/%d", i));
-					if (child_schema.is_valid()) {
-						auto sub_result = create_rules(child_schema);
-						result.errors.insert(result.errors.end(), sub_result.errors.begin(), sub_result.errors.end());
+				Ref<Schema> child_schema = schema->get_child(vformat("anyOf/%d", i));
+				if (child_schema.is_valid()) {
+					auto sub_result = create_rules(child_schema);
+					result.errors.insert(result.errors.end(), sub_result.errors.begin(), sub_result.errors.end());
 
-						if (sub_result.is_valid()) {
-							any_of_rule->add_sub_rule(sub_result.rules);
-						}
+					if (sub_result.is_valid()) {
+						any_of_rule->add_sub_rule(sub_result.rules);
 					}
 				}
 			}
@@ -72,15 +68,13 @@ void RuleFactory::create_logical_rules(const Dictionary &schema_def, const Ref<S
 			auto one_of_rule = std::make_unique<OneOfRule>();
 
 			for (int64_t i = 0; i < one_of_array.size(); i++) {
-				if (one_of_array[i].get_type() == Variant::DICTIONARY) {
-					Ref<Schema> child_schema = schema->get_child(vformat("oneOf/%d", i));
-					if (child_schema.is_valid()) {
-						auto sub_result = create_rules(child_schema);
-						result.errors.insert(result.errors.end(), sub_result.errors.begin(), sub_result.errors.end());
+				Ref<Schema> child_schema = schema->get_child(vformat("oneOf/%d", i));
+				if (child_schema.is_valid()) {
+					auto sub_result = create_rules(child_schema);
+					result.errors.insert(result.errors.end(), sub_result.errors.begin(), sub_result.errors.end());
 
-						if (sub_result.is_valid()) {
-							one_of_rule->add_sub_rule(sub_result.rules);
-						}
+					if (sub_result.is_valid()) {
+						one_of_rule->add_sub_rule(sub_result.rules);
 					}
 				}
 			}
@@ -92,18 +86,15 @@ void RuleFactory::create_logical_rules(const Dictionary &schema_def, const Ref<S
 
 	// not
 	if (schema_def.has("not")) {
-		Variant not_var = schema_def["not"];
-		if (not_var.get_type() == Variant::DICTIONARY) {
-			Ref<Schema> child_schema = schema->get_child("not");
-			if (child_schema.is_valid()) {
-				auto not_result = create_rules(child_schema);
-				result.errors.insert(result.errors.end(), not_result.errors.begin(), not_result.errors.end());
+		Ref<Schema> child_schema = schema->get_child("not");
+		if (child_schema.is_valid()) {
+			auto not_result = create_rules(child_schema);
+			result.errors.insert(result.errors.end(), not_result.errors.begin(), not_result.errors.end());
 
-				if (not_result.is_valid()) {
-					auto not_rule = std::make_unique<NotRule>(std::move(not_result.rules));
-					auto selector = std::make_unique<ValueSelector>();
-					result.rules->add_rule(std::make_unique<SelectorRule>(std::move(selector), std::move(not_rule)));
-				}
+			if (not_result.is_valid()) {
+				auto not_rule = std::make_unique<NotRule>(std::move(not_result.rules));
+				auto selector = std::make_unique<ValueSelector>();
+				result.rules->add_rule(std::make_unique<SelectorRule>(std::move(selector), std::move(not_rule)));
 			}
 		}
 	}

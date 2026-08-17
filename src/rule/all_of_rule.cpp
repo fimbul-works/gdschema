@@ -11,6 +11,7 @@ void AllOfRule::add_sub_rule(std::shared_ptr<ValidationRule> rule) {
 
 bool AllOfRule::validate(const Variant &target, ValidationContext &context) const {
 	bool all_valid = true;
+	int64_t failed_count = 0;
 
 	// All sub-rules must pass
 	for (int64_t i = 0; i < sub_rules.size(); i++) {
@@ -18,6 +19,7 @@ bool AllOfRule::validate(const Variant &target, ValidationContext &context) cons
 
 		if (!sub_rules[i]->validate(target, sub_context)) {
 			all_valid = false;
+			failed_count++;
 			// Continue to validate other sub-rules and collect all errors
 		}
 
@@ -27,7 +29,7 @@ bool AllOfRule::validate(const Variant &target, ValidationContext &context) cons
 	}
 
 	if (!all_valid) {
-		context.add_error(vformat("Value failed %d out of %d allOf schemas", static_cast<int64_t>(sub_rules.size()), static_cast<int64_t>(sub_rules.size())), "allOf");
+		context.add_error(vformat("Value failed %d out of %d allOf schemas", failed_count, static_cast<int64_t>(sub_rules.size())), "allOf");
 	}
 
 	return all_valid;
