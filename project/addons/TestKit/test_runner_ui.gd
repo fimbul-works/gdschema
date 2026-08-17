@@ -58,7 +58,12 @@ func _populate_test_suites(test_classes: Array[TestSuite]) -> void:
 	test_suites.clear()
 
 	for test_class in test_classes:
-		if !test_class.visible or (test_class.owner and !test_class.owner.visible):
+		if test_class.has_method("is_suite_visible"):
+			if not test_class.is_suite_visible():
+				continue
+		elif test_class is TestSuite and not test_class.is_visible_in_tree():
+			continue
+		elif !test_class.visible or (test_class.owner and !test_class.owner.visible):
 			continue
 
 		var test_methods = test_runner.find_test_methods(test_class)

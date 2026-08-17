@@ -124,6 +124,17 @@ func get_suite_display_name() -> String:
 		return "%s > %s" % [parent_node.name, name]
 	return name
 
+## Check if this suite and all ancestor nodes are visible
+func is_suite_visible() -> bool:
+	if is_inside_tree():
+		return is_visible_in_tree()
+	var curr: Node = self
+	while curr != null:
+		if curr is TestSuite and not curr.visible:
+			return false
+		curr = curr.get_parent()
+	return true
+
 # Called when a test begins
 func _start_test(method_name: String) -> void:
 	if not _before_all_executed:

@@ -119,7 +119,10 @@ func _parse_arguments() -> Dictionary:
 func _find_test_suites(node: Node) -> Array[TestSuite]:
 	var suites: Array[TestSuite] = []
 
-	if node is TestSuite and node.visible:
+	if node is TestSuite and not node.visible:
+		return suites
+
+	if node is TestSuite:
 		suites.append(node)
 
 	for child in node.get_children():

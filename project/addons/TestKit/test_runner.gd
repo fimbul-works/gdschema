@@ -17,6 +17,8 @@ var _completed_test_methods := 0
 func find_test_classes(parent_node: Node) -> Array[TestSuite]:
 	var classes: Array[TestSuite] = []
 	for child in parent_node.get_children():
+		if child is TestSuite and not child.visible:
+			continue
 		if child is TestSuite:
 			classes.append(child)
 		if child.get_child_count() > 0:
@@ -52,7 +54,12 @@ func prepare_test_suites(test_classes: Array[TestSuite]) -> Dictionary:
 	_total_test_methods = 0
 
 	for test_class in test_classes:
-		if !test_class.visible or (test_class.owner and !test_class.owner.visible):
+		if test_class.has_method("is_suite_visible"):
+			if not test_class.is_suite_visible():
+				continue
+		elif test_class is TestSuite and not test_class.is_visible_in_tree():
+			continue
+		elif not test_class.visible or (test_class.owner and !test_class.owner.visible):
 			continue
 
 		var test_methods := find_test_methods(test_class)
