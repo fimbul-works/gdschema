@@ -391,9 +391,12 @@ void Schema::construct_children(const Dictionary &dict) {
 
 			for (int i = 0; i < patterns.size(); i++) {
 				String pattern = patterns[i].operator String();
-				Dictionary pattern_schema = pattern_properties[patterns[i]].operator Dictionary();
-				StringName child_key = vformat("patternProperties/%s", pattern);
-				create_schema_child(pattern_schema, child_key);
+				Variant schema_dict_var = variant_to_schema_dict(pattern_properties[patterns[i]]);
+				if (schema_dict_var.get_type() == Variant::DICTIONARY) {
+					Dictionary pattern_schema = schema_dict_var.operator Dictionary();
+					StringName child_key = vformat("patternProperties/%s", pattern);
+					create_schema_child(pattern_schema, child_key);
+				}
 			}
 		}
 
@@ -408,10 +411,13 @@ void Schema::construct_children(const Dictionary &dict) {
 				String dep_name = dep_keys[i].operator String();
 				Variant dep_value = dependencies[dep_keys[i]];
 
-				if (dep_value.get_type() == Variant::DICTIONARY) {
-					Dictionary dep_schema = dep_value.operator Dictionary();
-					StringName child_key = vformat("dependencies/%s", dep_name);
-					create_schema_child(dep_schema, child_key);
+				if (dep_value.get_type() == Variant::DICTIONARY || dep_value.get_type() == Variant::BOOL) {
+					Variant schema_dict_var = variant_to_schema_dict(dep_value);
+					if (schema_dict_var.get_type() == Variant::DICTIONARY) {
+						Dictionary dep_schema = schema_dict_var.operator Dictionary();
+						StringName child_key = vformat("dependencies/%s", dep_name);
+						create_schema_child(dep_schema, child_key);
+					}
 				}
 			}
 		}
@@ -425,8 +431,9 @@ void Schema::construct_children(const Dictionary &dict) {
 				String dep_name = keys[i].operator String();
 				Variant dep_value = dependent_schemas[keys[i]];
 
-				if (dep_value.get_type() == Variant::DICTIONARY) {
-					Dictionary dep_schema = dep_value.operator Dictionary();
+				Variant schema_dict_var = variant_to_schema_dict(dep_value);
+				if (schema_dict_var.get_type() == Variant::DICTIONARY) {
+					Dictionary dep_schema = schema_dict_var.operator Dictionary();
 					StringName child_key = vformat("dependentSchemas/%s", dep_name);
 					create_schema_child(dep_schema, child_key);
 				}
@@ -560,8 +567,9 @@ void Schema::create_definitions_children(const Dictionary &dict, const StringNam
 			String def_name = def_keys[i].operator String();
 			Variant def_value = definitions[def_keys[i]];
 
-			if (def_value.get_type() == Variant::DICTIONARY) {
-				Dictionary def_schema = def_value.operator Dictionary();
+			Variant schema_dict_var = variant_to_schema_dict(def_value);
+			if (schema_dict_var.get_type() == Variant::DICTIONARY) {
+				Dictionary def_schema = schema_dict_var.operator Dictionary();
 				StringName child_key = vformat("%s/%s", key, def_name);
 				create_schema_child(def_schema, child_key);
 			}
