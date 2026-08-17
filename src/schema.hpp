@@ -235,6 +235,12 @@ public:
 	static bool register_schema(const Ref<Schema> &schema, const StringName &id = "");
 
 	/**
+	 * @brief Recursively registers any subschemas that define their own $id
+	 * @param schema The parent Schema instance
+	 */
+	static void register_subschemas(const Ref<Schema> &schema);
+
+	/**
 	 * @brief Checks if a Schema is registered for a given ID
 	 * @param id The Schema ID to check
 	 * @return True if a Schema is registered with the ID, false otherwise

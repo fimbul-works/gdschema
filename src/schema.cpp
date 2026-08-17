@@ -168,7 +168,28 @@ Ref<Schema> Schema::build_schema(const Dictionary &schema_dict, bool validate_ag
 		register_schema(schema);
 	}
 
+	// Auto-register any subschemas with $id
+	if (schema.is_valid()) {
+		register_subschemas(schema);
+	}
+
 	return schema;
+}
+
+void Schema::register_subschemas(const Ref<Schema> &schema) {
+	if (!schema.is_valid()) {
+		return;
+	}
+
+	for (const auto &pair : schema->children) {
+		Ref<Schema> child = pair.second;
+		if (child.is_valid()) {
+			if (!child->schema_id.is_empty()) {
+				register_schema(child);
+			}
+			register_subschemas(child);
+		}
+	}
 }
 
 bool Schema::register_schema(const Ref<Schema> &schema, const StringName &id) {
@@ -193,7 +214,14 @@ bool Schema::register_schema(const Ref<Schema> &schema, const StringName &id) {
 		UtilityFunctions::push_warning(vformat("Registering Schema with ID '%s' but Schema has $id '%s' - this may cause reference resolution issues", registration_id, schema->schema_id));
 	}
 
-	return SchemaRegistry::get_singleton().register_schema(registration_id, schema);
+	bool result = SchemaRegistry::get_singleton().register_schema(registration_id, schema);
+	// If registration ID ends with '#', also register without the trailing '#'
+	String reg_str = String(registration_id);
+	if (reg_str.ends_with("#") && reg_str.length() > 1) {
+		String clean_str = reg_str.substr(0, reg_str.length() - 1);
+		SchemaRegistry::get_singleton().register_schema(clean_str, schema);
+	}
+	return result;
 }
 
 bool Schema::is_schema_registered(const StringName &id) {
