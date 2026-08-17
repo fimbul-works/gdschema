@@ -331,11 +331,18 @@ public:
 	Ref<Schema> get_by_anchor(const StringName &name) const;
 
 	/**
-	 * @brief Checks if this schema has a dynamic anchor
+	 * @brief Gets a schema defining the given dynamic anchor in this resource scope
+	 * @param name Dynamic anchor name
+	 * @return Schema or null
+	 */
+	Ref<Schema> get_by_dynamic_anchor(const StringName &name) const;
+
+	/**
+	 * @brief Checks if this schema or its resource scope has a dynamic anchor
 	 * @param name Anchor name
 	 * @return True if it has the dynamic anchor
 	 */
-	bool has_dynamic_anchor(const StringName &name) const { return dynamic_anchor == name; }
+	bool has_dynamic_anchor(const StringName &name) const;
 
 	/**
 	 * @brief Gets the Schema path from root

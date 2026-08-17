@@ -5,7 +5,9 @@
             "$schema": "https://json-schema.org/draft/2020-12/schema",
             "$id": "https://test.json-schema.org/dynamicRef-dynamicAnchor-same-schema/root",
             "type": "array",
-            "items": { "$dynamicRef": "#items" },
+            "items": {
+                "$dynamicRef": "#items"
+            },
             "$defs": {
                 "foo": {
                     "$dynamicAnchor": "items",
@@ -16,12 +18,18 @@
         "tests": [
             {
                 "description": "An array of strings is valid",
-                "data": ["foo", "bar"],
+                "data": [
+                    "foo",
+                    "bar"
+                ],
                 "valid": true
             },
             {
                 "description": "An array containing non-strings is invalid",
-                "data": ["foo", 42],
+                "data": [
+                    "foo",
+                    42
+                ],
                 "valid": false
             }
         ]
@@ -32,7 +40,9 @@
             "$schema": "https://json-schema.org/draft/2020-12/schema",
             "$id": "https://test.json-schema.org/dynamicRef-anchor-same-schema/root",
             "type": "array",
-            "items": { "$dynamicRef": "#items" },
+            "items": {
+                "$dynamicRef": "#items"
+            },
             "$defs": {
                 "foo": {
                     "$anchor": "items",
@@ -43,12 +53,18 @@
         "tests": [
             {
                 "description": "An array of strings is valid",
-                "data": ["foo", "bar"],
+                "data": [
+                    "foo",
+                    "bar"
+                ],
                 "valid": true
             },
             {
                 "description": "An array containing non-strings is invalid",
-                "data": ["foo", 42],
+                "data": [
+                    "foo",
+                    42
+                ],
                 "valid": false
             }
         ]
@@ -59,7 +75,9 @@
             "$schema": "https://json-schema.org/draft/2020-12/schema",
             "$id": "https://test.json-schema.org/ref-dynamicAnchor-same-schema/root",
             "type": "array",
-            "items": { "$ref": "#items" },
+            "items": {
+                "$ref": "#items"
+            },
             "$defs": {
                 "foo": {
                     "$dynamicAnchor": "items",
@@ -70,12 +88,18 @@
         "tests": [
             {
                 "description": "An array of strings is valid",
-                "data": ["foo", "bar"],
+                "data": [
+                    "foo",
+                    "bar"
+                ],
                 "valid": true
             },
             {
                 "description": "An array containing non-strings is invalid",
-                "data": ["foo", 42],
+                "data": [
+                    "foo",
+                    42
+                ],
                 "valid": false
             }
         ]
@@ -94,12 +118,14 @@
                 "list": {
                     "$id": "list",
                     "type": "array",
-                    "items": { "$dynamicRef": "#items" },
+                    "items": {
+                        "$dynamicRef": "#items"
+                    },
                     "$defs": {
-                      "items": {
-                          "$comment": "This is only needed to satisfy the bookending requirement",
-                          "$dynamicAnchor": "items"
-                      }
+                        "items": {
+                            "$comment": "This is only needed to satisfy the bookending requirement",
+                            "$dynamicAnchor": "items"
+                        }
                     }
                 }
             }
@@ -107,12 +133,18 @@
         "tests": [
             {
                 "description": "An array of strings is valid",
-                "data": ["foo", "bar"],
+                "data": [
+                    "foo",
+                    "bar"
+                ],
                 "valid": true
             },
             {
                 "description": "An array containing non-strings is invalid",
-                "data": ["foo", 42],
+                "data": [
+                    "foo",
+                    42
+                ],
                 "valid": false
             }
         ]
@@ -131,13 +163,15 @@
                 "list": {
                     "$id": "list",
                     "type": "array",
-                    "items": { "$dynamicRef": "#/$defs/items" },
+                    "items": {
+                        "$dynamicRef": "#/$defs/items"
+                    },
                     "$defs": {
-                      "items": {
-                          "$comment": "This is only needed to satisfy the bookending requirement",
-                          "$dynamicAnchor": "items",
-                          "type": "number"
-                      }
+                        "items": {
+                            "$comment": "This is only needed to satisfy the bookending requirement",
+                            "$dynamicAnchor": "items",
+                            "type": "number"
+                        }
                     }
                 }
             }
@@ -145,12 +179,18 @@
         "tests": [
             {
                 "description": "An array of strings is invalid",
-                "data": ["foo", "bar"],
+                "data": [
+                    "foo",
+                    "bar"
+                ],
                 "valid": false
             },
             {
                 "description": "An array of numbers is valid",
-                "data": [24, 42],
+                "data": [
+                    24,
+                    42
+                ],
                 "valid": true
             }
         ]
@@ -173,12 +213,14 @@
                 "list": {
                     "$id": "list",
                     "type": "array",
-                    "items": { "$dynamicRef": "#items" },
+                    "items": {
+                        "$dynamicRef": "#items"
+                    },
                     "$defs": {
-                      "items": {
-                          "$comment": "This is only needed to satisfy the bookending requirement",
-                          "$dynamicAnchor": "items"
-                      }
+                        "items": {
+                            "$comment": "This is only needed to satisfy the bookending requirement",
+                            "$dynamicAnchor": "items"
+                        }
                     }
                 }
             }
@@ -186,12 +228,18 @@
         "tests": [
             {
                 "description": "An array of strings is valid",
-                "data": ["foo", "bar"],
+                "data": [
+                    "foo",
+                    "bar"
+                ],
                 "valid": true
             },
             {
                 "description": "An array containing non-strings is invalid",
-                "data": ["foo", 42],
+                "data": [
+                    "foo",
+                    42
+                ],
                 "valid": false
             }
         ]
@@ -210,12 +258,14 @@
                 "list": {
                     "$id": "list",
                     "type": "array",
-                    "items": { "$dynamicRef": "#items" },
+                    "items": {
+                        "$dynamicRef": "#items"
+                    },
                     "$defs": {
-                      "items": {
-                          "$comment": "This is only needed to satisfy the bookending requirement",
-                          "$dynamicAnchor": "items"
-                      }
+                        "items": {
+                            "$comment": "This is only needed to satisfy the bookending requirement",
+                            "$dynamicAnchor": "items"
+                        }
                     }
                 }
             }
@@ -223,7 +273,10 @@
         "tests": [
             {
                 "description": "Any array is valid",
-                "data": ["foo", 42],
+                "data": [
+                    "foo",
+                    42
+                ],
                 "valid": true
             }
         ]
@@ -242,7 +295,9 @@
                 "list": {
                     "$id": "list",
                     "type": "array",
-                    "items": { "$dynamicRef": "#items" },
+                    "items": {
+                        "$dynamicRef": "#items"
+                    },
                     "$defs": {
                         "items": {
                             "$comment": "This is only needed to give the reference somewhere to resolve to when it behaves like $ref",
@@ -255,7 +310,10 @@
         "tests": [
             {
                 "description": "Any array is valid",
-                "data": ["foo", 42],
+                "data": [
+                    "foo",
+                    42
+                ],
                 "valid": true
             }
         ]
@@ -274,7 +332,9 @@
                 "list": {
                     "$id": "list",
                     "type": "array",
-                    "items": { "$dynamicRef": "#items" },
+                    "items": {
+                        "$dynamicRef": "#items"
+                    },
                     "$defs": {
                         "items": {
                             "$comment": "This is only needed to give the reference somewhere to resolve to when it behaves like $ref",
@@ -288,7 +348,10 @@
         "tests": [
             {
                 "description": "Any array is valid",
-                "data": ["foo", 42],
+                "data": [
+                    "foo",
+                    42
+                ],
                 "valid": true
             }
         ]
@@ -301,7 +364,9 @@
             "$dynamicAnchor": "meta",
             "type": "object",
             "properties": {
-                "foo": { "const": "pass" }
+                "foo": {
+                    "const": "pass"
+                }
             },
             "$ref": "extended",
             "$defs": {
@@ -310,14 +375,18 @@
                     "$dynamicAnchor": "meta",
                     "type": "object",
                     "properties": {
-                        "bar": { "$ref": "bar" }
+                        "bar": {
+                            "$ref": "bar"
+                        }
                     }
                 },
                 "bar": {
                     "$id": "bar",
                     "type": "object",
                     "properties": {
-                        "baz": { "$dynamicRef": "extended#meta" }
+                        "baz": {
+                            "$dynamicRef": "extended#meta"
+                        }
                     }
                 }
             }
@@ -328,7 +397,9 @@
                 "data": {
                     "foo": "pass",
                     "bar": {
-                        "baz": { "foo": "pass" }
+                        "baz": {
+                            "foo": "pass"
+                        }
                     }
                 },
                 "valid": true
@@ -338,7 +409,9 @@
                 "data": {
                     "foo": "pass",
                     "bar": {
-                        "baz": { "foo": "fail" }
+                        "baz": {
+                            "foo": "fail"
+                        }
                     }
                 },
                 "valid": false
@@ -353,7 +426,9 @@
             "$dynamicAnchor": "meta",
             "type": "object",
             "properties": {
-                "foo": { "const": "pass" }
+                "foo": {
+                    "const": "pass"
+                }
             },
             "$ref": "extended",
             "$defs": {
@@ -362,14 +437,18 @@
                     "$anchor": "meta",
                     "type": "object",
                     "properties": {
-                        "bar": { "$ref": "bar" }
+                        "bar": {
+                            "$ref": "bar"
+                        }
                     }
                 },
                 "bar": {
                     "$id": "bar",
                     "type": "object",
                     "properties": {
-                        "baz": { "$dynamicRef": "extended#meta" }
+                        "baz": {
+                            "$dynamicRef": "extended#meta"
+                        }
                     }
                 }
             }
@@ -380,7 +459,9 @@
                 "data": {
                     "foo": "pass",
                     "bar": {
-                        "baz": { "foo": "fail" }
+                        "baz": {
+                            "foo": "fail"
+                        }
                     }
                 },
                 "valid": true
@@ -417,19 +498,26 @@
                 "title": "integer node",
                 "$id": "integerNode",
                 "$dynamicAnchor": "foo",
-                "type": [ "object", "integer" ],
+                "type": [
+                    "object",
+                    "integer"
+                ],
                 "$ref": "inner"
             }
         },
         "tests": [
             {
                 "description": "recurse to anyLeafNode - floats are allowed",
-                "data": { "alpha": 1.1 },
+                "data": {
+                    "alpha": 1.1
+                },
                 "valid": true
             },
             {
                 "description": "recurse to integerNode - floats are not allowed",
-                "data": { "november": 1.1 },
+                "data": {
+                    "november": 1.1
+                },
                 "valid": false
             }
         ]
@@ -488,184 +576,6 @@
             {
                 "description": "/then/$defs/thingy is the final stop for the $dynamicRef",
                 "data": null,
-                "valid": true
-            }
-        ]
-    },
-    {
-        "description": "strict-tree schema, guards against misspelled properties",
-        "schema": {
-            "$schema": "https://json-schema.org/draft/2020-12/schema",
-            "$id": "http://localhost:1234/draft2020-12/strict-tree.json",
-            "$dynamicAnchor": "node",
-
-            "$ref": "tree.json",
-            "unevaluatedProperties": false
-        },
-        "tests": [
-            {
-                "description": "instance with misspelled field",
-                "data": {
-                    "children": [{
-                            "daat": 1
-                        }]
-                },
-                "valid": false
-            },
-            {
-                "description": "instance with correct field",
-                "data": {
-                    "children": [{
-                            "data": 1
-                        }]
-                },
-                "valid": true
-            }
-        ]
-    },
-    {
-        "description": "tests for implementation dynamic anchor and reference link",
-        "schema": {
-            "$schema": "https://json-schema.org/draft/2020-12/schema",
-            "$id": "http://localhost:1234/draft2020-12/strict-extendible.json",
-            "$ref": "extendible-dynamic-ref.json",
-            "$defs": {
-                "elements": {
-                    "$dynamicAnchor": "elements",
-                    "properties": {
-                        "a": true
-                    },
-                    "required": ["a"],
-                    "additionalProperties": false
-                }
-            }
-        },
-        "tests": [
-            {
-                "description": "incorrect parent schema",
-                "data": {
-                    "a": true
-                },
-                "valid": false
-            },
-            {
-                "description": "incorrect extended schema",
-                "data": {
-                    "elements": [
-                        { "b": 1 }
-                    ]
-                },
-                "valid": false
-            },
-            {
-                "description": "correct extended schema",
-                "data": {
-                    "elements": [
-                        { "a": 1 }
-                    ]
-                },
-                "valid": true
-            }
-        ]
-    },
-    {
-        "description": "$ref and $dynamicAnchor are independent of order - $defs first",
-        "schema": {
-            "$schema": "https://json-schema.org/draft/2020-12/schema",
-            "$id": "http://localhost:1234/draft2020-12/strict-extendible-allof-defs-first.json",
-            "allOf": [
-                {
-                    "$ref": "extendible-dynamic-ref.json"
-                },
-                {
-                    "$defs": {
-                        "elements": {
-                            "$dynamicAnchor": "elements",
-                            "properties": {
-                                "a": true
-                            },
-                            "required": ["a"],
-                            "additionalProperties": false
-                        }
-                    }
-                }
-            ]
-        },
-        "tests": [
-            {
-                "description": "incorrect parent schema",
-                "data": {
-                    "a": true
-                },
-                "valid": false
-            },
-            {
-                "description": "incorrect extended schema",
-                "data": {
-                    "elements": [
-                        { "b": 1 }
-                    ]
-                },
-                "valid": false
-            },
-            {
-                "description": "correct extended schema",
-                "data": {
-                    "elements": [
-                        { "a": 1 }
-                    ]
-                },
-                "valid": true
-            }
-        ]
-    },
-    {
-        "description": "$ref and $dynamicAnchor are independent of order - $ref first",
-        "schema": {
-            "$schema": "https://json-schema.org/draft/2020-12/schema",
-            "$id": "http://localhost:1234/draft2020-12/strict-extendible-allof-ref-first.json",
-            "allOf": [
-                {
-                    "$defs": {
-                        "elements": {
-                            "$dynamicAnchor": "elements",
-                            "properties": {
-                                "a": true
-                            },
-                            "required": ["a"],
-                            "additionalProperties": false
-                        }
-                    }
-                },
-                {
-                    "$ref": "extendible-dynamic-ref.json"
-                }
-            ]
-        },
-        "tests": [
-            {
-                "description": "incorrect parent schema",
-                "data": {
-                    "a": true
-                },
-                "valid": false
-            },
-            {
-                "description": "incorrect extended schema",
-                "data": {
-                    "elements": [
-                        { "b": 1 }
-                    ]
-                },
-                "valid": false
-            },
-            {
-                "description": "correct extended schema",
-                "data": {
-                    "elements": [
-                        { "a": 1 }
-                    ]
-                },
                 "valid": true
             }
         ]

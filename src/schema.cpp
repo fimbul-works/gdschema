@@ -109,6 +109,10 @@ void Schema::init(const Dictionary &schema_dict, Schema *p_root_schema, const St
 	schema_type = detect_schema_type(schema_dict);
 	schema_path = p_schema_path;
 
+	if (p_root_schema != nullptr) {
+		root_schema = p_root_schema->get_root_ptr();
+	}
+
 	if (schema_dict.has("$schema") && SchemaUtil::is_string(schema_dict["$schema"])) {
 		schema_url = schema_dict["$schema"];
 	}
@@ -120,7 +124,7 @@ void Schema::init(const Dictionary &schema_dict, Schema *p_root_schema, const St
 		resource_root = this;
 	} else {
 		base_uri = parent_base_uri;
-		resource_root = p_root_schema != nullptr ? (p_root_schema->resource_root != nullptr ? p_root_schema->resource_root : p_root_schema) : this;
+		resource_root = p_root_schema != nullptr ? p_root_schema->get_resource_root_ptr() : this;
 	}
 
 	if (schema_dict.has("title") && SchemaUtil::is_string(schema_dict["title"])) {
@@ -143,10 +147,6 @@ void Schema::init(const Dictionary &schema_dict, Schema *p_root_schema, const St
 	if (schema_dict.has("$dynamicAnchor") && SchemaUtil::is_string(schema_dict["$dynamicAnchor"])) {
 		dynamic_anchor = schema_dict["$dynamicAnchor"];
 		register_dynamic_anchor(dynamic_anchor, this);
-	}
-
-	if (p_root_schema != nullptr) {
-		root_schema = p_root_schema;
 	}
 
 	construct_children(schema_dict);
@@ -547,10 +547,7 @@ Ref<Schema> Schema::create_schema_child(const Dictionary &child_schema, const St
 	StringName child_path = vformat("%s/%s", schema_path, child_key);
 	Ref<Schema> child_node;
 	child_node.instantiate();
-	child_node->init(child_schema, get_root_ptr(), child_path, this->base_uri, false);
-	if (child_node->schema_id.is_empty()) {
-		child_node->resource_root = this->get_resource_root_ptr();
-	}
+	child_node->init(child_schema, this, child_path, this->base_uri, false);
 	children[child_key] = child_node;
 	return child_node;
 }
@@ -721,23 +718,42 @@ Ref<Schema> Schema::resolve_reference(const String &reference_uri) const {
 }
 
 Ref<Schema> Schema::resolve_dynamic_reference(const String &uri, const ValidationContext &context) const {
-	// Resolve as normal ref first to find the "initial" target
+	// 1. Check if uri has an anchor fragment (e.g. "#items" or "extended#meta")
+	int fragment_pos = uri.find("#");
+	if (fragment_pos == -1) {
+		return resolve_reference(uri);
+	}
+
+	String fragment = uri.substr(fragment_pos + 1);
+	if (fragment.is_empty() || fragment.begins_with("/")) {
+		// Not a plain anchor name - behaves identically to $ref
+		return resolve_reference(uri);
+	}
+
+	// 2. Resolve statically to find the initial target
 	Ref<Schema> initial_target = resolve_reference(uri);
 	if (!initial_target.is_valid()) {
 		return initial_target;
 	}
 
-	// If it has a dynamic anchor, search dynamic scope
-	if (!initial_target->dynamic_anchor.is_empty()) {
-		StringName anchor_name = initial_target->dynamic_anchor;
-		const std::vector<Ref<Schema>> &scope = context.get_dynamic_scope();
+	// 3. Bookending: check if initial_target has a matching $dynamicAnchor
+	StringName anchor_name = fragment;
+	if (initial_target->dynamic_anchor != anchor_name) {
+		// Initial target does not have matching $dynamicAnchor (e.g. it has normal $anchor or a different dynamic anchor)
+		return initial_target;
+	}
 
-		// Search from outermost to innermost
-		for (size_t i = 0; i < scope.size(); i++) {
-			Ref<Schema> s = scope[i];
-			if (s.is_valid() && s->has_dynamic_anchor(anchor_name)) {
-				return s;
-			}
+	// 4. Search dynamic scope from outermost to innermost
+	const std::vector<Ref<Schema>> &scope = context.get_dynamic_scope();
+	for (size_t i = 0; i < scope.size(); i++) {
+		Ref<Schema> s = scope[i];
+		if (!s.is_valid()) {
+			continue;
+		}
+
+		Ref<Schema> dynamic_match = s->get_by_dynamic_anchor(anchor_name);
+		if (dynamic_match.is_valid()) {
+			return dynamic_match;
 		}
 	}
 
@@ -749,19 +765,59 @@ void Schema::register_anchor(const StringName &name, const Schema *schema) {
 }
 
 void Schema::register_dynamic_anchor(const StringName &name, const Schema *schema) {
-	get_root()->dynamic_anchor_map[name] = schema;
+	get_resource_root()->dynamic_anchor_map[name] = schema;
+}
+
+Ref<Schema> Schema::get_by_dynamic_anchor(const StringName &name) const {
+	if (dynamic_anchor == name) {
+		return Ref<Schema>(const_cast<Schema *>(this));
+	}
+	auto res_root = get_resource_root();
+	auto it = res_root->dynamic_anchor_map.find(name);
+	if (it != res_root->dynamic_anchor_map.end()) {
+		return Ref<Schema>(const_cast<Schema *>(it->second));
+	}
+	auto root = get_root();
+	if (res_root != root) {
+		it = root->dynamic_anchor_map.find(name);
+		if (it != root->dynamic_anchor_map.end()) {
+			return Ref<Schema>(const_cast<Schema *>(it->second));
+		}
+	}
+	return Ref<Schema>();
+}
+
+bool Schema::has_dynamic_anchor(const StringName &name) const {
+	return get_by_dynamic_anchor(name).is_valid();
 }
 
 Ref<Schema> Schema::get_by_anchor(const StringName &name) const {
-	auto root = get_root();
-	auto it = root->anchor_map.find(name);
-	if (it != root->anchor_map.end()) {
+	if (anchor == name || dynamic_anchor == name) {
+		return Ref<Schema>(const_cast<Schema *>(this));
+	}
+
+	auto res_root = get_resource_root();
+	auto it = res_root->anchor_map.find(name);
+	if (it != res_root->anchor_map.end()) {
 		return Ref<Schema>(const_cast<Schema *>(it->second));
 	}
-	auto it_dyn = root->dynamic_anchor_map.find(name);
-	if (it_dyn != root->dynamic_anchor_map.end()) {
+	auto it_dyn = res_root->dynamic_anchor_map.find(name);
+	if (it_dyn != res_root->dynamic_anchor_map.end()) {
 		return Ref<Schema>(const_cast<Schema *>(it_dyn->second));
 	}
+
+	auto root = get_root();
+	if (res_root != root) {
+		it = root->anchor_map.find(name);
+		if (it != root->anchor_map.end()) {
+			return Ref<Schema>(const_cast<Schema *>(it->second));
+		}
+		it_dyn = root->dynamic_anchor_map.find(name);
+		if (it_dyn != root->dynamic_anchor_map.end()) {
+			return Ref<Schema>(const_cast<Schema *>(it_dyn->second));
+		}
+	}
+
 	return Ref<Schema>();
 }
 

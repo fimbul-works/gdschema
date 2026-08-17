@@ -44,13 +44,14 @@ RuleFactory::RuleCompileResult RuleFactory::create_rules(const Ref<Schema> &sche
 		create_unevaluated_rules(schema_def, schema, result);
 
 		// Apply dynamic scope wrapping if needed
-		std::shared_ptr<ValidationRule> final_rules = result.rules;
-		if (!schema->get_id().is_empty() || !schema->dynamic_anchor.is_empty()) {
-			final_rules = std::make_shared<DynamicScopeRule>(schema.ptr(), final_rules);
+		if (!schema->get_id().is_empty() || !schema->dynamic_anchor.is_empty() || schema->is_root()) {
+			auto wrapped_group = std::make_shared<RuleGroup>();
+			wrapped_group->add_rule(std::make_shared<DynamicScopeRule>(schema.ptr(), result.rules));
+			result.rules = wrapped_group;
 		}
 
 		// Update Schema atomically (whether valid or not)
-		schema->set_compilation_result(final_rules, result.errors);
+		schema->set_compilation_result(result.rules, result.errors);
 	} catch (...) {
 		// Ensure cleanup on exception
 		cache_mutex->lock();

@@ -18,31 +18,45 @@ bool DynamicRefRule::validate(const Variant &target, ValidationContext &context)
 		return false;
 	}
 
-	// Ensure the schema is compiled
-	resolved->compile();
+	bool validation_result = false;
 
-	if (!resolved->rules) {
-		context.add_error(vformat("Referenced schema '%s' is not compiled", reference_uri), "dynamicRef");
-		return false;
+	try {
+		// Ensure the schema is compiled
+		resolved->compilation_mutex->lock();
+		bool needs_compilation = !resolved->is_compiled;
+		resolved->compilation_mutex->unlock();
+
+		if (needs_compilation) {
+			resolved->compile();
+		}
+
+		// Get the compiled rules safely
+		resolved->compilation_mutex->lock();
+
+		if (!resolved->is_compiled || !resolved->rules) {
+			resolved->compilation_mutex->unlock();
+			context.add_error(vformat("Referenced schema '%s' is not compiled", reference_uri), "dynamicRef");
+			return false;
+		}
+
+		auto rules_to_validate = resolved->rules;
+		resolved->compilation_mutex->unlock();
+
+		// Create child context for the reference validation, incrementing depth
+		ValidationContext ref_context = context.create_child_schema(vformat("$dynamicRef:%s", reference_uri)).with_incremented_depth();
+		ref_context.push_dynamic_scope(resolved);
+
+		// Validate using the resolved schema's rules
+		validation_result = rules_to_validate->validate(target, ref_context);
+
+		// Merge results
+		context.merge_errors(ref_context);
+		context.merge_evaluation_data(ref_context);
+	} catch (...) {
+		throw;
 	}
 
-	bool result = false;
-
-	// Create child context for the reference validation, incrementing depth
-	ValidationContext ref_context = context.create_child_schema(vformat("$dynamicRef:%s", reference_uri)).with_incremented_depth();
-
-	// Note: The DynamicScopeRule inside the resolved schema will push itself to the scope if needed.
-	// However, the spec says $dynamicRef itself adds to the dynamic scope.
-	ref_context.push_dynamic_scope(resolved);
-
-	// Validate using the resolved schema's rules
-	result = resolved->rules->validate(target, ref_context);
-
-	// Merge results
-	context.merge_errors(ref_context);
-	context.merge_evaluation_data(ref_context);
-
-	return result;
+	return validation_result;
 }
 
 String DynamicRefRule::get_description() const {
