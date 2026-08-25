@@ -99,5 +99,8 @@ func _build_schema_from_variant(schema_val: Variant) -> RefCounted:
 		else:
 			return Schema.build_schema({"not": {}})
 	elif typeof(schema_val) == TYPE_DICTIONARY:
-		return Schema.build_schema(schema_val)
+		var dict: Dictionary = schema_val.duplicate(true)
+		if not dict.has("$schema") and json_path.contains("draft7"):
+			dict["$schema"] = "http://json-schema.org/draft-07/schema#"
+		return Schema.build_schema(dict)
 	return null

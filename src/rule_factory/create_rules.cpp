@@ -28,6 +28,17 @@ RuleFactory::RuleCompileResult RuleFactory::create_rules(const Ref<Schema> &sche
 	// Handle $ref and $dynamicRef
 	if (schema_def.has("$ref") || schema_def.has("$dynamicRef")) {
 		create_ref_rules(schema, schema_def, result);
+
+		// In Draft-07 / legacy drafts, $ref overrides all sibling keywords
+		String schema_url_str = schema->get_schema_url();
+		if (schema_url_str.is_empty() && !schema->is_root() && schema->get_root().is_valid()) {
+			schema_url_str = schema->get_root()->get_schema_url();
+		}
+		bool is_draft7 = schema_url_str.contains("draft-07") || schema_url_str.contains("draft7");
+		if (is_draft7 && schema_def.has("$ref")) {
+			schema->set_compilation_result(result.rules, result.errors);
+			return result;
+		}
 	}
 
 	cache_mutex->lock();

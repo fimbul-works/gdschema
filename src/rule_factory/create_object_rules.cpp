@@ -202,7 +202,7 @@ void RuleFactory::create_object_rules(const Dictionary &schema_def, const Ref<Sc
 					result.rules->add_rule(std::make_unique<SelectorRule>(std::move(selector), std::move(rule)));
 				}
 
-			} else if (dep_value.get_type() == Variant::DICTIONARY) {
+			} else if (dep_value.get_type() == Variant::DICTIONARY || dep_value.get_type() == Variant::BOOL) {
 				// Schema dependency
 				StringName child_key = vformat("dependencies/%s", dep_name);
 				Ref<Schema> child_schema = schema->get_child(child_key);

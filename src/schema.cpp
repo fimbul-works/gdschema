@@ -127,11 +127,38 @@ void Schema::init(const Dictionary &schema_dict, Schema *p_root_schema, const St
 		schema_url = schema_dict["$schema"];
 	}
 
-	if (schema_dict.has("$id") && SchemaUtil::is_string(schema_dict["$id"])) {
+	String effective_url = schema_url;
+	if (effective_url.is_empty() && p_root_schema != nullptr) {
+		effective_url = p_root_schema->get_schema_url();
+	}
+	bool is_draft7 = effective_url.contains("draft-07") || effective_url.contains("draft7");
+
+	bool ignore_sibling_id = is_draft7 && schema_dict.has("$ref");
+
+	if (!ignore_sibling_id && schema_dict.has("$id") && SchemaUtil::is_string(schema_dict["$id"])) {
 		String raw_id = schema_dict["$id"];
-		schema_id = SchemaUtil::resolve_uri(parent_base_uri, raw_id);
-		base_uri = schema_id;
-		resource_root = this;
+		if (raw_id.begins_with("#")) {
+			// Plain name fragment identifier / anchor in Draft 7
+			anchor = raw_id.substr(1);
+			register_anchor(anchor, this);
+			base_uri = parent_base_uri;
+			resource_root = p_root_schema != nullptr ? p_root_schema->get_resource_root_ptr() : this;
+		} else {
+			int hash_pos = raw_id.find("#");
+			if (hash_pos != -1 && hash_pos < raw_id.length() - 1 && !raw_id.substr(hash_pos + 1).begins_with("/")) {
+				// URI with anchor fragment like "foo.json#bar"
+				String uri_part = raw_id.substr(0, hash_pos);
+				anchor = raw_id.substr(hash_pos + 1);
+				register_anchor(anchor, this);
+				schema_id = SchemaUtil::resolve_uri(parent_base_uri, uri_part);
+				base_uri = schema_id;
+				resource_root = this;
+			} else {
+				schema_id = SchemaUtil::resolve_uri(parent_base_uri, raw_id);
+				base_uri = schema_id;
+				resource_root = this;
+			}
+		}
 	} else {
 		base_uri = parent_base_uri;
 		resource_root = p_root_schema != nullptr ? p_root_schema->get_resource_root_ptr() : this;

@@ -19,5 +19,4 @@ layout_mode = 1
 script = ExtResource("2_d2020")
 
 [node name="Draft 7" type="Node2D" parent="TestRunnerUI"]
-visible = false
 script = ExtResource("3_d7")
