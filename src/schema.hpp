@@ -269,6 +269,12 @@ public:
 	static bool unregister_schema(const StringName &id);
 
 	/**
+	 * @brief Clears registered schemas and rule caches
+	 * @param preserve_metaschemas If true, keeps default meta-schemas registered
+	 */
+	static void clear_registry(bool preserve_metaschemas = true);
+
+	/**
 	 * @brief Loads a Schema from a JSON file
 	 * @param path Path to the JSON Schema file
 	 * @param validate_against_meta If true, validate against meta-Schema

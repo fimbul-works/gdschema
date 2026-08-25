@@ -2,6 +2,7 @@
 
 #include "validation_rule.hpp"
 
+#include <godot_cpp/classes/reg_ex.hpp>
 #include <godot_cpp/variant/variant.hpp>
 
 namespace godot {
@@ -16,10 +17,10 @@ class ValidationContext;
 class FormatRule : public ValidationRule {
 private:
 	String format;
+	Ref<RegEx> format_regex;
 
 public:
-	explicit FormatRule(const String &value) :
-			format(value) {}
+	explicit FormatRule(const String &value);
 
 	bool validate(const Variant &target, ValidationContext &context) const override;
 	String get_rule_type() const override { return "format"; }

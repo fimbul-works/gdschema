@@ -102,3 +102,35 @@ func test_load_from_json_with_meta_validation() -> void:
 	expect(schema != null, "Invalid Schema should still return Schema object")
 	expect(!schema.is_valid(), "Schema with meta-validation errors should be invalid")
 	expect(schema.get_compile_errors().size() > 0, "Should have compilation errors from meta-validation")
+
+func test_dual_registration_unregister() -> void:
+	var schema = Schema.build_schema({
+		"$id": "http://example.com/dual-test#",
+		"type": "string"
+	})
+	expect(Schema.is_schema_registered("http://example.com/dual-test#"), "Hash alias should be registered")
+	expect(Schema.is_schema_registered("http://example.com/dual-test"), "Non-hash alias should be registered")
+
+	# Unregister using clean ID
+	var unregistered = Schema.unregister_schema("http://example.com/dual-test")
+	expect(unregistered, "Unregistering clean ID should succeed")
+	expect(!Schema.is_schema_registered("http://example.com/dual-test"), "Clean ID should no longer be registered")
+	expect(!Schema.is_schema_registered("http://example.com/dual-test#"), "Hash ID should also be removed")
+
+func test_schema_clear_registry() -> void:
+	var schema = Schema.build_schema({
+		"$id": "http://example.com/temp-user-schema",
+		"type": "integer"
+	})
+	expect(Schema.is_schema_registered("http://example.com/temp-user-schema"), "User schema should be registered")
+
+	# Clear user schemas preserving metaschemas
+	Schema.clear_registry(true)
+
+	expect(!Schema.is_schema_registered("http://example.com/temp-user-schema"), "User schema should be cleared")
+	expect(Schema.is_schema_registered("http://json-schema.org/draft-07/schema#"), "Draft-07 metaschema should be preserved")
+	expect(Schema.is_schema_registered("https://json-schema.org/draft/2020-12/schema"), "Draft 2020-12 metaschema should be preserved")
+
+	# Verify meta-validation still works after clear_registry
+	var valid_meta_schema = Schema.load_from_json('{"type": "string"}', true)
+	expect(valid_meta_schema != null and valid_meta_schema.is_valid(), "Meta-validation should still work after clear_registry")

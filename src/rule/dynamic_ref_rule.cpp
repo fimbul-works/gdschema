@@ -22,25 +22,16 @@ bool DynamicRefRule::validate(const Variant &target, ValidationContext &context)
 
 	try {
 		// Ensure the schema is compiled
-		resolved->compilation_mutex->lock();
-		bool needs_compilation = !resolved->is_compiled;
-		resolved->compilation_mutex->unlock();
-
-		if (needs_compilation) {
+		if (!resolved->is_compiled) {
 			resolved->compile();
 		}
 
-		// Get the compiled rules safely
-		resolved->compilation_mutex->lock();
-
 		if (!resolved->is_compiled || !resolved->rules) {
-			resolved->compilation_mutex->unlock();
 			context.add_error(vformat("Referenced schema '%s' is not compiled", reference_uri), "dynamicRef");
 			return false;
 		}
 
 		auto rules_to_validate = resolved->rules;
-		resolved->compilation_mutex->unlock();
 
 		// Create child context for the reference validation, incrementing depth
 		ValidationContext ref_context = context.create_child_schema(vformat("$dynamicRef:%s", reference_uri)).with_incremented_depth();

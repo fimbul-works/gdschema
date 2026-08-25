@@ -127,6 +127,11 @@ public:
 	}
 
 	/**
+	 * @brief Clears compiled rule cache without affecting custom rule factories.
+	 */
+	void clear_cache();
+
+	/**
 	 * @brief Clears cached rules and releases resources.
 	 */
 	void clear();

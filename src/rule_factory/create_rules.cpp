@@ -10,6 +10,21 @@ RuleFactory::RuleCompileResult RuleFactory::create_rules(const Ref<Schema> &sche
 	Dictionary schema_def = schema->get_schema_definition();
 	int64_t hash = schema_def.hash();
 
+	bool can_cache = !schema->has_children() && !schema_def.has("$ref") && !schema_def.has("$dynamicRef") &&
+			schema->get_id().is_empty() && schema->dynamic_anchor.is_empty() && !schema->is_root();
+
+	if (can_cache) {
+		cache_mutex->lock();
+		auto it = rule_cache.find(hash);
+		if (it != rule_cache.end()) {
+			result.rules = it->second;
+			cache_mutex->unlock();
+			schema->set_compilation_result(result.rules, result.errors);
+			return result;
+		}
+		cache_mutex->unlock();
+	}
+
 	// Handle $ref and $dynamicRef
 	if (schema_def.has("$ref") || schema_def.has("$dynamicRef")) {
 		create_ref_rules(schema, schema_def, result);
@@ -48,6 +63,12 @@ RuleFactory::RuleCompileResult RuleFactory::create_rules(const Ref<Schema> &sche
 			auto wrapped_group = std::make_shared<RuleGroup>();
 			wrapped_group->add_rule(std::make_shared<DynamicScopeRule>(schema.ptr(), result.rules));
 			result.rules = wrapped_group;
+		}
+
+		if (can_cache && result.is_valid()) {
+			cache_mutex->lock();
+			rule_cache[hash] = result.rules;
+			cache_mutex->unlock();
 		}
 
 		// Update Schema atomically (whether valid or not)

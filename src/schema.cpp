@@ -56,6 +56,7 @@ void Schema::_bind_methods() {
 	ClassDB::bind_static_method("Schema", D_METHOD("is_schema_registered", "id"), &Schema::is_schema_registered);
 	ClassDB::bind_static_method("Schema", D_METHOD("get_schema_from_registry", "id"), &Schema::get_schema_from_registry);
 	ClassDB::bind_static_method("Schema", D_METHOD("unregister_schema", "id"), &Schema::unregister_schema);
+	ClassDB::bind_static_method("Schema", D_METHOD("clear_registry", "preserve_metaschemas"), &Schema::clear_registry, DEFVAL(true));
 	ClassDB::bind_static_method("Schema", D_METHOD("load_from_json", "json_string", "validate_against_meta"), &Schema::load_from_json, DEFVAL(false));
 	ClassDB::bind_static_method("Schema", D_METHOD("load_from_json_file", "path", "validate_against_meta"), &Schema::load_from_json_file, DEFVAL(false));
 
@@ -243,6 +244,15 @@ bool Schema::unregister_schema(const StringName &id) {
 	return SchemaRegistry::get_singleton().unregister_schema(id);
 }
 
+void Schema::clear_registry(bool preserve_metaschemas) {
+	if (preserve_metaschemas) {
+		SchemaRegistry::get_singleton().clear_user_schemas();
+	} else {
+		SchemaRegistry::get_singleton().clear();
+	}
+	RuleFactory::get_singleton().clear_cache();
+}
+
 Ref<Schema> Schema::load_from_json_file(const String &path, bool validate_against_meta) {
 	Ref<FileAccess> file = FileAccess::open(path, FileAccess::READ);
 	if (file.is_null()) {
@@ -276,13 +286,18 @@ Ref<Schema> Schema::load_from_json(const String &json_string, bool validate_agai
 }
 
 void Schema::compile() {
-	// Check if compilation is needed
-	compilation_mutex->lock();
 	if (is_compiled) {
-		compilation_mutex->unlock();
 		return; // Already compiled
 	}
-	compilation_mutex->unlock();
+
+	if (compilation_mutex.is_valid()) {
+		compilation_mutex->lock();
+		if (is_compiled) {
+			compilation_mutex->unlock();
+			return; // Already compiled
+		}
+		compilation_mutex->unlock();
+	}
 
 	// Let RuleFactory handle the compilation
 	Ref<Schema> ref = (const_cast<Schema *>(this));
@@ -951,62 +966,61 @@ Ref<Schema> Schema::get_at_path(const StringName &path) const {
 }
 
 Ref<SchemaValidationResult> Schema::validate(const Variant &data) {
-	// Check compilation status safely
-	compilation_mutex->lock();
-	bool needs_compilation = !is_compiled;
-	compilation_mutex->unlock();
-
-	// Ensure compilation is complete
-	if (needs_compilation) {
+	if (!is_compiled) {
 		compile();
 	}
-
-	// Lock for reading compilation state
-	compilation_mutex->lock();
 
 	ValidationContext context(this);
 	context.push_dynamic_scope(Ref<Schema>(this));
 
 	if (!is_valid()) {
-		for (auto error : compile_errors) {
+		for (const auto &error : compile_errors) {
 			context.add_error(error.message, error.get_path_string());
 		}
-		compilation_mutex->unlock();
 		return SchemaValidationResult::from_context(context);
 	}
 
 	if (!rules) {
 		context.add_error("Schema not compiled");
-		compilation_mutex->unlock();
 		return SchemaValidationResult::from_context(context);
 	}
 
-	auto validation_rules = rules;
-	compilation_mutex->unlock();
-
-	validation_rules->validate(data, context);
+	rules->validate(data, context);
 	return SchemaValidationResult::from_context(context);
 }
 
 Ref<SchemaValidationResult> Schema::validate_uncompiled(const Dictionary &schema_dict) {
 	ValidationContext context(this);
-	rules->validate(schema_dict, context);
+	if (rules) {
+		rules->validate(schema_dict, context);
+	}
 	return SchemaValidationResult::from_context(context);
 }
 
 bool Schema::is_valid() const {
-	compilation_mutex->lock();
-	bool valid = is_compiled && compile_errors.size() == 0;
-	compilation_mutex->unlock();
-	return valid;
+	if (is_compiled) {
+		return compile_errors.empty();
+	}
+	if (compilation_mutex.is_valid()) {
+		compilation_mutex->lock();
+		bool valid = is_compiled && compile_errors.empty();
+		compilation_mutex->unlock();
+		return valid;
+	}
+	return is_compiled && compile_errors.empty();
 }
 
 void Schema::set_compilation_result(std::shared_ptr<ValidationRule> compiled_rules, std::vector<SchemaCompileError> errors) {
-	compilation_mutex->lock();
+	if (compilation_mutex.is_valid()) {
+		compilation_mutex->lock();
+	}
 	rules = compiled_rules;
 	compile_errors = std::move(errors);
 	is_compiled = true;
-	compilation_mutex->unlock();
+	if (compilation_mutex.is_valid()) {
+		compilation_mutex->unlock();
+		compilation_mutex.unref(); // Release Mutex to free ObjectDB memory
+	}
 }
 
 Array Schema::get_compile_errors() {

@@ -53,7 +53,25 @@ bool SchemaRegistry::unregister_schema(const StringName &id) {
 	}
 
 	registry_mutex->lock();
+	Ref<Schema> target_schema = schemas[id];
 	schemas.erase(id);
+
+	// Also check for dual registration with/without trailing '#'
+	String id_str = String(id);
+	if (id_str.ends_with("#") && id_str.length() > 1) {
+		StringName clean_id = StringName(id_str.substr(0, id_str.length() - 1));
+		auto it = schemas.find(clean_id);
+		if (it != schemas.end() && it->second == target_schema) {
+			schemas.erase(it);
+		}
+	} else if (!id_str.ends_with("#")) {
+		StringName hash_id = StringName(id_str + "#");
+		auto it = schemas.find(hash_id);
+		if (it != schemas.end() && it->second == target_schema) {
+			schemas.erase(it);
+		}
+	}
+
 	registry_mutex->unlock();
 
 #ifdef GODOT_SCHEMA_DEBUG
@@ -61,6 +79,26 @@ bool SchemaRegistry::unregister_schema(const StringName &id) {
 #endif
 
 	return true;
+}
+
+void SchemaRegistry::clear_user_schemas() {
+	if (registry_mutex.is_valid()) {
+		registry_mutex->lock();
+	}
+
+	std::unordered_map<StringName, Ref<Schema>, StringNameHasher, StringNameEqual> meta_schemas;
+	for (const auto &[id, schema] : schemas) {
+		String id_str = String(id);
+		if (id_str.begins_with("http://json-schema.org/") || id_str.begins_with("https://json-schema.org/")) {
+			meta_schemas[id] = schema;
+		}
+	}
+
+	schemas = std::move(meta_schemas);
+
+	if (registry_mutex.is_valid()) {
+		registry_mutex->unlock();
+	}
 }
 
 void SchemaRegistry::clear() {

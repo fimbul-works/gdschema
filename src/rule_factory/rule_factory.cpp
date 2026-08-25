@@ -4,6 +4,19 @@ using namespace godot;
 
 RuleFactory *RuleFactory::singleton = nullptr;
 
+void RuleFactory::clear_cache() {
+	if (cache_mutex.is_valid()) {
+		cache_mutex->lock();
+	}
+
+	rule_cache.clear();
+	compiling_schemas.clear();
+
+	if (cache_mutex.is_valid()) {
+		cache_mutex->unlock();
+	}
+}
+
 void RuleFactory::clear() {
 	if (cache_mutex.is_valid()) {
 		cache_mutex->lock();

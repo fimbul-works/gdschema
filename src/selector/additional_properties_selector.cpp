@@ -34,9 +34,8 @@ std::vector<SelectionTarget> AdditionalPropertiesSelector::select_targets(const 
 
 		// Check if this property is covered by pattern properties
 		bool covered_by_patterns = false;
-		for (const String &pattern : pattern_properties) {
-			Ref<RegEx> regex = RegEx::create_from_string(pattern);
-			if (regex->is_valid()) {
+		for (const Ref<RegEx> &regex : pattern_regexes) {
+			if (regex.is_valid()) {
 				Ref<RegExMatch> match = regex->search(key_str);
 				if (match.is_valid()) {
 					covered_by_patterns = true;

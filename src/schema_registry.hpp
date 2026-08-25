@@ -99,6 +99,11 @@ public:
 	bool unregister_schema(const StringName &id);
 
 	/**
+	 * @brief Clears user schemas while preserving default meta-schemas.
+	 */
+	void clear_user_schemas();
+
+	/**
 	 * @brief Clears all registered schemas and releases resources.
 	 */
 	void clear();

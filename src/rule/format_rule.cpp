@@ -7,6 +7,29 @@
 
 using namespace godot;
 
+FormatRule::FormatRule(const String &value) :
+		format(value) {
+	if (format == "email") {
+		format_regex = RegEx::create_from_string("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+	} else if (format == "hostname") {
+		format_regex = RegEx::create_from_string("^[a-zA-Z0-9]([a-zA-Z0-9\\-]{0,61}[a-zA-Z0-9])?(\\.[a-zA-Z0-9]([a-zA-Z0-9\\-]{0,61}[a-zA-Z0-9])?)*$");
+	} else if (format == "uuid") {
+		format_regex = RegEx::create_from_string("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$");
+	} else if (format == "date") {
+		format_regex = RegEx::create_from_string("^([0-9]{4})-([0-9]{2})-([0-9]{2})$");
+	} else if (format == "time") {
+		format_regex = RegEx::create_from_string("^([0-9]{2}):([0-9]{2}):([0-9]{2})(?:\\.([0-9]+))?(?:([Zz])|([+-])([0-9]{2}):([0-9]{2}))?$");
+	} else if (format == "date-time") {
+		format_regex = RegEx::create_from_string("^([0-9]{4})-([0-9]{2})-([0-9]{2})[Tt]([0-9]{2}):([0-9]{2}):([0-9]{2})(?:\\.([0-9]+))?(?:([Zz])|([+-])([0-9]{2}):([0-9]{2}))?$");
+	} else if (format == "base64") {
+		format_regex = RegEx::create_from_string("^[A-Za-z0-9+/]*={0,2}$");
+	} else if (format == "base64url") {
+		format_regex = RegEx::create_from_string("^[A-Za-z0-9_-]*$");
+	} else if (format == "relative-json-pointer") {
+		format_regex = RegEx::create_from_string("^[0-9]+(?:#|/.*)?$");
+	}
+}
+
 bool FormatRule::validate(const Variant &target, ValidationContext &context) const {
 	// Format validation only applies to strings - ignore other types
 	if (target.get_type() != Variant::STRING && target.get_type() != Variant::STRING_NAME) {
@@ -59,8 +82,8 @@ String FormatRule::get_description() const {
 }
 
 bool FormatRule::validate_regex(const String &regex_pattern, const String &str, ValidationContext &context) const {
-	Ref<RegEx> regex = RegEx::create_from_string(regex_pattern);
-	if (!regex.is_valid()) {
+	Ref<RegEx> regex = format_regex.is_valid() ? format_regex : RegEx::create_from_string(regex_pattern);
+	if (!regex.is_valid() || !regex->is_valid()) {
 		context.add_error(vformat("Invalid %s regex: \"%s\"", format, regex_pattern), "format", str);
 		return false;
 	}
@@ -101,9 +124,8 @@ bool FormatRule::validate_email(const String &str, ValidationContext &context) c
 
 bool FormatRule::validate_date(const String &str, ValidationContext &context) const {
 	// Simple but effective date pattern: YYYY-MM-DD
-	const String date_pattern = "^([0-9]{4})-([0-9]{2})-([0-9]{2})$";
-	Ref<RegEx> regex = RegEx::create_from_string(date_pattern);
-	if (!regex.is_valid()) {
+	Ref<RegEx> regex = (format == "date" && format_regex.is_valid()) ? format_regex : RegEx::create_from_string("^([0-9]{4})-([0-9]{2})-([0-9]{2})$");
+	if (!regex.is_valid() || !regex->is_valid()) {
 		context.add_error("Internal error: invalid date regex", "format", str);
 		return false;
 	}

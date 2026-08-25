@@ -32,37 +32,27 @@ bool RefRule::validate(const Variant &target, ValidationContext &context) const 
 
 	try {
 		// Ensure the schema is compiled
-		resolved->compilation_mutex->lock();
-		bool needs_compilation = !resolved->is_compiled;
-		resolved->compilation_mutex->unlock();
-
-		if (needs_compilation) {
+		if (!resolved->is_compiled) {
 			resolved->compile();
 		}
 
-		// Get the compiled rules safely
-		resolved->compilation_mutex->lock();
-
 		if (!resolved->is_compiled || !resolved->rules) {
-			resolved->compilation_mutex->unlock();
 			context.add_error(vformat("Referenced schema '%s' is not compiled", reference_uri), "ref", reference_uri);
-			validation_result = false;
-		} else {
-			// Copy rules reference so we can unlock
-			auto rules_to_validate = resolved->rules;
-			resolved->compilation_mutex->unlock();
-
-			// Create child context for the reference validation, incrementing depth
-			ValidationContext ref_context = context.create_child_schema(vformat("$ref:%s", reference_uri)).with_incremented_depth();
-			ref_context.push_dynamic_scope(resolved);
-
-			// Validate using the resolved schema's rules
-			validation_result = rules_to_validate->validate(target, ref_context);
-
-			// Merge results from the reference validation
-			context.merge_errors(ref_context);
-			context.merge_evaluation_data(ref_context);
+			return false;
 		}
+
+		auto rules_to_validate = resolved->rules;
+
+		// Create child context for the reference validation, incrementing depth
+		ValidationContext ref_context = context.create_child_schema(vformat("$ref:%s", reference_uri)).with_incremented_depth();
+		ref_context.push_dynamic_scope(resolved);
+
+		// Validate using the resolved schema's rules
+		validation_result = rules_to_validate->validate(target, ref_context);
+
+		// Merge results from the reference validation
+		context.merge_errors(ref_context);
+		context.merge_evaluation_data(ref_context);
 	} catch (...) {
 		throw;
 	}
