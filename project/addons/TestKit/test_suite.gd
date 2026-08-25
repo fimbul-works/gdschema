@@ -178,6 +178,8 @@ func expect(condition: bool, message := "") -> bool:
 
 			if LOG_VERBOSE:
 				push_error("✗ %s" % error_msg)
+			else:
+				print_verbose("✗ %s" % error_msg)
 
 			result.passed = false
 			result.errors.append(error_msg)
@@ -250,6 +252,8 @@ func expect_equal(actual: Variant, expected: Variant, message := "") -> bool:
 
 			if LOG_VERBOSE:
 				print_rich("✗ %s" % error_msg)
+			else:
+				print_verbose("✗ %s" % error_msg)
 
 			result.passed = false
 			result.errors.append(error_msg)
@@ -286,6 +290,8 @@ func expect_not_equal(actual, expected, message := "") -> bool:
 			var error_msg := "Values should not match"
 			if LOG_VERBOSE:
 				print_rich("[color=red]✗ %s[/color]" % error_msg)
+			else:
+				print_verbose("✗ %s" % error_msg)
 
 			result.passed = false
 			result.errors.append(error_msg)

@@ -118,7 +118,6 @@ func test_uri_format_valid() -> void:
 	})
 
 	expect(schema.validate("https://example.com").is_valid(), "HTTPS URL should validate")
-	print(schema.validate("https://example.com").get_summary())
 	expect(schema.validate("http://example.com/path?query=value#fragment").is_valid(), "Full URL should validate")
 	expect(schema.validate("ftp://files.example.com/file.txt").is_valid(), "FTP URL should validate")
 	expect(schema.validate("mailto:user@example.com").is_valid(), "Mailto URI should validate")
@@ -408,4 +407,3 @@ func test_draft2020_global_format_assertion_toggle() -> void:
 	Schema.set_default_format_assertion(false)
 	var schema_restored = Schema.build_schema(schema_dict)
 	expect(schema_restored.validate("999.999.999.999").is_valid(), "Restored default should treat format as annotation under 2020-12")
-

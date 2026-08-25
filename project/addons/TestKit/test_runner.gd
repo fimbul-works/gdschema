@@ -116,7 +116,10 @@ func _run_suite_tests(test_class: TestSuite) -> void:
 	# Run each test method
 	for method_name in test_methods:
 		var display_method: String = method_name.substr(5).replace("_", " ") if method_name.begins_with("test_") else method_name
-		if test_class.LOG_VERBOSE: print_rich("[b]Running %s - %s[/b]" % [suite_key, display_method])
+		if test_class.LOG_VERBOSE:
+			print_rich("[b]Running %s - %s[/b]" % [suite_key, display_method])
+		else:
+			print_verbose("Running %s - %s" % [suite_key, display_method])
 
 		# Emit method started
 		test_method_started.emit(test_class, method_name)
@@ -133,7 +136,10 @@ func _run_suite_tests(test_class: TestSuite) -> void:
 
 		# Print failure message if needed
 		if not result.passed:
-			print_rich("[color=red]Failed %s - %s: %s[/color]:\n  " % [suite_key, display_method, "\n  ".join(result.errors)])
+			if test_class.LOG_VERBOSE:
+				print_rich("[color=red]Failed %s - %s: %s[/color]:\n  " % [suite_key, display_method, "\n  ".join(result.errors)])
+			else:
+				print_verbose("Failed %s - %s: %s:\n  " % [suite_key, display_method, "\n  ".join(result.errors)])
 
 		# Emit method completed
 		test_method_completed.emit(test_class, method_name, result)
