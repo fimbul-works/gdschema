@@ -647,6 +647,15 @@ void Schema::create_definitions_children(const Dictionary &dict, const StringNam
 	}
 }
 
+static bool remote_ref_warned = false;
+
+static void warn_remote_ref_once(const String &uri) {
+	if (!remote_ref_warned) {
+		remote_ref_warned = true;
+		UtilityFunctions::push_warning(vformat("Schema: Remote schema reference '%s' is not supported. Pre-load or register schemas locally with Schema.register_schema(). If you would like remote schema fetching supported, please open an issue at https://github.com/fimbul-works/gdschema/issues", uri));
+	}
+}
+
 Ref<Schema> Schema::resolve_reference(const String &reference_uri) const {
 	String uri = reference_uri.strip_edges();
 
@@ -729,7 +738,11 @@ Ref<Schema> Schema::resolve_reference(const String &reference_uri) const {
 		}
 
 		if (!external_schema.is_valid()) {
-			UtilityFunctions::push_error(vformat("External Schema not found: %s", schema_id_str));
+			if (schema_id_str.begins_with("http://") || schema_id_str.begins_with("https://")) {
+				warn_remote_ref_once(schema_id_str);
+			} else {
+				UtilityFunctions::push_error(vformat("External Schema not found: %s", schema_id_str));
+			}
 			return Ref<Schema>();
 		}
 
@@ -763,6 +776,10 @@ Ref<Schema> Schema::resolve_reference(const String &reference_uri) const {
 		Ref<Schema> res = SchemaRegistry::get_singleton().get_schema(target_uri);
 		if (!res.is_valid() && target_uri != uri) {
 			res = SchemaRegistry::get_singleton().get_schema(uri);
+		}
+		if (!res.is_valid() && (target_uri.begins_with("http://") || target_uri.begins_with("https://") || uri.begins_with("http://") || uri.begins_with("https://"))) {
+			String remote_uri = target_uri.begins_with("http") ? target_uri : uri;
+			warn_remote_ref_once(remote_uri);
 		}
 		return res;
 	}

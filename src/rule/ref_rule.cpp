@@ -24,7 +24,11 @@ bool RefRule::validate(const Variant &target, ValidationContext &context) const 
 
 	Ref<Schema> resolved = source_schema->resolve_reference(reference_uri);
 	if (!resolved.is_valid()) {
-		context.add_error(vformat("Could not resolve reference: %s", reference_uri), "ref", reference_uri);
+		if (reference_uri.begins_with("http://") || reference_uri.begins_with("https://")) {
+			context.add_error(vformat("Remote reference '%s' is not supported (open an issue at https://github.com/fimbul-works/gdschema/issues)", reference_uri), "ref", reference_uri);
+		} else {
+			context.add_error(vformat("Could not resolve reference: %s", reference_uri), "ref", reference_uri);
+		}
 		return false;
 	}
 
