@@ -154,9 +154,10 @@ private:
 	/**
 	 * @brief Creates string constraint rules
 	 * @param schema_def The Schema definition
+	 * @param schema The source Schema
 	 * @param result Result to add rules/errors to
 	 */
-	void create_string_rules(const Dictionary &schema_def, RuleCompileResult &result);
+	void create_string_rules(const Dictionary &schema_def, const Ref<Schema> &schema, RuleCompileResult &result);
 
 	/**
 	 * @brief Creates numeric constraint rules

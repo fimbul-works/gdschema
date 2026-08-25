@@ -10,6 +10,8 @@
 
 using namespace godot;
 
+bool Schema::default_format_assertion = false;
+
 void Schema::_bind_methods() {
 	// Bind enum
 	BIND_ENUM_CONSTANT(SCHEMA_SCALAR);
@@ -51,14 +53,20 @@ void Schema::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_compile_errors"), &Schema::get_compile_errors);
 	ClassDB::bind_method(D_METHOD("get_compile_error_summary"), &Schema::get_compile_error_summary);
 
-	ClassDB::bind_static_method("Schema", D_METHOD("build_schema", "schema_dict", "validate_against_meta"), &Schema::build_schema, DEFVAL(false));
+	ClassDB::bind_method(D_METHOD("set_assert_format", "enabled"), &Schema::set_assert_format);
+	ClassDB::bind_method(D_METHOD("is_assert_format"), &Schema::is_assert_format);
+
+	ClassDB::bind_static_method("Schema", D_METHOD("set_default_format_assertion", "enabled"), &Schema::set_default_format_assertion);
+	ClassDB::bind_static_method("Schema", D_METHOD("is_default_format_assertion"), &Schema::is_default_format_assertion);
+
+	ClassDB::bind_static_method("Schema", D_METHOD("build_schema", "schema_dict", "validate_against_meta", "assert_format"), &Schema::build_schema, DEFVAL(false), DEFVAL(false));
 	ClassDB::bind_static_method("Schema", D_METHOD("register_schema", "schema", "id"), &Schema::register_schema, DEFVAL(""));
 	ClassDB::bind_static_method("Schema", D_METHOD("is_schema_registered", "id"), &Schema::is_schema_registered);
 	ClassDB::bind_static_method("Schema", D_METHOD("get_schema_from_registry", "id"), &Schema::get_schema_from_registry);
 	ClassDB::bind_static_method("Schema", D_METHOD("unregister_schema", "id"), &Schema::unregister_schema);
 	ClassDB::bind_static_method("Schema", D_METHOD("clear_registry", "preserve_metaschemas"), &Schema::clear_registry, DEFVAL(true));
-	ClassDB::bind_static_method("Schema", D_METHOD("load_from_json", "json_string", "validate_against_meta"), &Schema::load_from_json, DEFVAL(false));
-	ClassDB::bind_static_method("Schema", D_METHOD("load_from_json_file", "path", "validate_against_meta"), &Schema::load_from_json_file, DEFVAL(false));
+	ClassDB::bind_static_method("Schema", D_METHOD("load_from_json", "json_string", "validate_against_meta", "assert_format"), &Schema::load_from_json, DEFVAL(false), DEFVAL(false));
+	ClassDB::bind_static_method("Schema", D_METHOD("load_from_json_file", "path", "validate_against_meta", "assert_format"), &Schema::load_from_json_file, DEFVAL(false), DEFVAL(false));
 
 	BIND_VIRTUAL_METHOD(Schema, _to_string);
 }
@@ -74,10 +82,11 @@ Schema::Schema() {
 	root_schema = nullptr;
 }
 
-void Schema::init(const Dictionary &schema_dict, Schema *p_root_schema, const StringName &p_schema_path, const String &parent_base_uri, const bool validate_against_meta) {
+void Schema::init(const Dictionary &schema_dict, Schema *p_root_schema, const StringName &p_schema_path, const String &parent_base_uri, const bool p_assert_format, const bool validate_against_meta) {
 	schema_type = SchemaType::SCHEMA_OBJECT;
 	schema_path = "";
 	is_compiled = false;
+	assert_format = p_assert_format || (p_root_schema != nullptr ? p_root_schema->is_assert_format() : false);
 	if (compilation_mutex.is_null()) {
 		compilation_mutex = Ref<Mutex>(memnew(Mutex));
 	}
@@ -161,10 +170,10 @@ Schema::~Schema() {
 #endif
 }
 
-Ref<Schema> Schema::build_schema(const Dictionary &schema_dict, bool validate_against_meta) {
+Ref<Schema> Schema::build_schema(const Dictionary &schema_dict, bool validate_against_meta, bool assert_format) {
 	Ref<Schema> schema;
 	schema.instantiate();
-	schema->init(schema_dict, nullptr, "", "", validate_against_meta);
+	schema->init(schema_dict, nullptr, "", "", assert_format, validate_against_meta);
 
 	// Auto-register if $id is present
 	if (schema.is_valid() && !schema->schema_id.is_empty()) {
@@ -253,7 +262,7 @@ void Schema::clear_registry(bool preserve_metaschemas) {
 	RuleFactory::get_singleton().clear_cache();
 }
 
-Ref<Schema> Schema::load_from_json_file(const String &path, bool validate_against_meta) {
+Ref<Schema> Schema::load_from_json_file(const String &path, bool validate_against_meta, bool assert_format) {
 	Ref<FileAccess> file = FileAccess::open(path, FileAccess::READ);
 	if (file.is_null()) {
 		UtilityFunctions::push_error(vformat("Failed to open Schema file: %s", path));
@@ -263,10 +272,10 @@ Ref<Schema> Schema::load_from_json_file(const String &path, bool validate_agains
 	String json_text = file->get_as_text();
 	file->close();
 
-	return load_from_json(json_text, validate_against_meta);
+	return load_from_json(json_text, validate_against_meta, assert_format);
 }
 
-Ref<Schema> Schema::load_from_json(const String &json_string, bool validate_against_meta) {
+Ref<Schema> Schema::load_from_json(const String &json_string, bool validate_against_meta, bool assert_format) {
 	Ref<JSON> json;
 	json.instantiate();
 	Error err = json->parse(json_string);
@@ -282,7 +291,7 @@ Ref<Schema> Schema::load_from_json(const String &json_string, bool validate_agai
 		return Ref<Schema>();
 	}
 
-	return build_schema(result.operator Dictionary(), validate_against_meta);
+	return build_schema(result.operator Dictionary(), validate_against_meta, assert_format);
 }
 
 void Schema::compile() {
@@ -562,7 +571,7 @@ Ref<Schema> Schema::create_schema_child(const Dictionary &child_schema, const St
 	StringName child_path = vformat("%s/%s", schema_path, child_key);
 	Ref<Schema> child_node;
 	child_node.instantiate();
-	child_node->init(child_schema, this, child_path, this->base_uri, false);
+	child_node->init(child_schema, this, child_path, this->base_uri, this->assert_format, false);
 	children[child_key] = child_node;
 	return child_node;
 }

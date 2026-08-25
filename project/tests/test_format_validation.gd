@@ -372,3 +372,40 @@ func test_multiple_format_errors() -> void:
 	var result = schema.validate("short")
 	expect(!result.is_valid(), "Should fail validation")
 	expect(result.error_count() >= 2, "Should have both format and length errors")
+
+# ========== FORMAT ASSERTION TOGGLE TESTS ==========
+
+func test_draft2020_format_assertion_per_schema() -> void:
+	var schema_dict = {
+		"$schema": "https://json-schema.org/draft/2020-12/schema",
+		"type": "string",
+		"format": "email"
+	}
+
+	# Default Draft 2020-12: format is annotation only
+	var schema_default = Schema.build_schema(schema_dict)
+	expect(schema_default.validate("notanemail").is_valid(), "2020-12 default should treat format as annotation")
+
+	# With assert_format = true
+	var schema_assert = Schema.build_schema(schema_dict, false, true)
+	expect(!schema_assert.validate("notanemail").is_valid(), "2020-12 with assert_format=true should fail invalid format")
+	expect(schema_assert.validate("valid@example.com").is_valid(), "2020-12 with assert_format=true should pass valid format")
+
+func test_draft2020_global_format_assertion_toggle() -> void:
+	var schema_dict = {
+		"$schema": "https://json-schema.org/draft/2020-12/schema",
+		"type": "string",
+		"format": "ipv4"
+	}
+
+	# Turn on global format assertion
+	Schema.set_default_format_assertion(true)
+	var schema_global = Schema.build_schema(schema_dict)
+	expect(!schema_global.validate("999.999.999.999").is_valid(), "Global assert_format should enforce invalid ipv4")
+	expect(schema_global.validate("192.168.1.1").is_valid(), "Global assert_format should pass valid ipv4")
+
+	# Restore default
+	Schema.set_default_format_assertion(false)
+	var schema_restored = Schema.build_schema(schema_dict)
+	expect(schema_restored.validate("999.999.999.999").is_valid(), "Restored default should treat format as annotation under 2020-12")
+

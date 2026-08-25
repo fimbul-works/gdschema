@@ -50,7 +50,7 @@ RuleFactory::RuleCompileResult RuleFactory::create_rules(const Ref<Schema> &sche
 		}
 
 		create_value_rules(schema_def, result);
-		create_string_rules(schema_def, result);
+		create_string_rules(schema_def, schema, result);
 		create_numeric_rules(schema_def, result);
 		create_array_rules(schema_def, schema, result);
 		create_object_rules(schema_def, schema, result);

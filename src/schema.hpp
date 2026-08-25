@@ -76,6 +76,10 @@ private:
 	mutable bool is_compiled;
 	mutable Ref<Mutex> compilation_mutex;
 
+	// Format assertion configuration
+	static bool default_format_assertion;
+	bool assert_format = false;
+
 	Schema *get_root_ptr() const {
 		return is_root() ? const_cast<Schema *>(this) : root_schema;
 	}
@@ -98,17 +102,24 @@ private:
 	void construct_children(const Dictionary &dict);
 
 	/**
-	 * @brief Creates a child Schema node from a dictionary
-	 * @param child_schema The child Schema definition
-	 * @param child_key The key or index identifying the child
-	 * @return New child Schema instance
+	 * @brief Helper to convert Variant to Dictionary for Schema creation
+	 * @param value The Variant to convert
+	 * @return Dictionary representation of Schema
+	 */
+	Variant variant_to_schema_dict(const Variant &value) const;
+
+	/**
+	 * @brief Helper to create a child schema node and add it to children
+	 * @param child_schema The child schema dictionary definition
+	 * @param child_key The key to store the child under (e.g., "properties/name", "if")
+	 * @return The created child Schema Ref
 	 */
 	Ref<Schema> create_schema_child(const Dictionary &child_schema, const StringName &child_key);
 
 	/**
-	 * @brief Creates a child Schema node if the key exists in the dictionary
-	 * @param dict The parent dictionary
-	 * @param key The key to check and create child for
+	 * @brief Helper to create a child schema from a dict key if it exists
+	 * @param dict The dictionary to look in
+	 * @param key The key to look for
 	 */
 	void create_schema_child_if_exists(const Dictionary &dict, const StringName &key);
 
@@ -125,13 +136,6 @@ private:
 	 * @param key The definitions keyword ("definitions" or "$defs")
 	 */
 	void create_definitions_children(const Dictionary &dict, const StringName &key);
-
-	/**
-	 * @brief Converts a Variant value to a Schema-compatible dictionary
-	 * @param value The Variant value to convert
-	 * @return Dictionary representation suitable for Schema validation
-	 */
-	Variant variant_to_schema_dict(const Variant &value) const;
 
 	/**
 	 * @brief Adds a compilation error to the list
@@ -196,21 +200,15 @@ public:
 	Schema();
 
 	/**
-	 * @brief Constructor that builds tree from dictionary
-	 * @param schema_dict The JSON Schema definition
-	 * @param root_schema Reference to root Schema (for child nodes)
-	 * @param schema_path Path from root (for debugging)
-	 * @param validate_against_meta If true, validate against meta-Schema
-	 */
-	/**
 	 * @brief Initializes the schema node
 	 * @param schema_dict The JSON Schema definition
 	 * @param root_schema Reference to root Schema
 	 * @param schema_path Path from root
 	 * @param parent_base_uri Base URI of the parent schema (for resolving relative URIs)
+	 * @param p_assert_format If true, treat format keyword as validation assertion
 	 * @param validate_against_meta If true, validate against meta-Schema
 	 */
-	void init(const Dictionary &schema_dict, Schema *root_schema = nullptr, const StringName &schema_path = "", const String &parent_base_uri = "", const bool validate_against_meta = false);
+	void init(const Dictionary &schema_dict, Schema *root_schema = nullptr, const StringName &schema_path = "", const String &parent_base_uri = "", const bool p_assert_format = false, const bool validate_against_meta = false);
 
 	/**
 	 * @brief Destructor
@@ -227,11 +225,45 @@ public:
 	// ========== Factory Methods ==========
 
 	/**
+	 * @brief Sets whether format is treated as a validation assertion for this schema
+	 * @param p_assert True to assert format constraints, false for annotation only
+	 */
+	void set_assert_format(bool p_assert) { assert_format = p_assert; }
+
+	/**
+	 * @brief Checks whether format is treated as a validation assertion
+	 * @return True if format assertion is enabled
+	 */
+	bool is_assert_format() const {
+		if (assert_format) {
+			return true;
+		}
+		if (root_schema != nullptr) {
+			return root_schema->is_assert_format();
+		}
+		return false;
+	}
+
+	/**
+	 * @brief Sets default global format assertion behavior
+	 * @param enabled True to globally enforce format as an assertion
+	 */
+	static void set_default_format_assertion(bool enabled) { default_format_assertion = enabled; }
+
+	/**
+	 * @brief Gets default global format assertion behavior
+	 * @return True if format assertion is globally enabled
+	 */
+	static bool is_default_format_assertion() { return default_format_assertion; }
+
+	/**
 	 * @brief Creates a Schema from a dictionary
 	 * @param schema_dict The JSON Schema definition
+	 * @param validate_against_meta If true, validate against meta-Schema
+	 * @param assert_format If true, treat format keyword as validation assertion
 	 * @return New Schema instance
 	 */
-	static Ref<Schema> build_schema(const Dictionary &schema_dict, bool validate_against_meta = false);
+	static Ref<Schema> build_schema(const Dictionary &schema_dict, bool validate_against_meta = false, bool assert_format = false);
 
 	/**
 	 * @brief Registers a Schema with a ID for reference resolution
@@ -278,17 +310,19 @@ public:
 	 * @brief Loads a Schema from a JSON file
 	 * @param path Path to the JSON Schema file
 	 * @param validate_against_meta If true, validate against meta-Schema
+	 * @param assert_format If true, treat format keyword as validation assertion
 	 * @return New Schema instance or null on error
 	 */
-	static Ref<Schema> load_from_json_file(const String &path, bool validate_against_meta = false);
+	static Ref<Schema> load_from_json_file(const String &path, bool validate_against_meta = false, bool assert_format = false);
 
 	/**
 	 * @brief Loads a Schema from a JSON string
 	 * @param json_string JSON Schema as string
 	 * @param validate_against_meta If true, validate against meta-Schema
+	 * @param assert_format If true, treat format keyword as validation assertion
 	 * @return New Schema instance or null on error
 	 */
-	static Ref<Schema> load_from_json(const String &json_string, bool validate_against_meta = false);
+	static Ref<Schema> load_from_json(const String &json_string, bool validate_against_meta = false, bool assert_format = false);
 
 	// ========== Tree Navigation ==========
 

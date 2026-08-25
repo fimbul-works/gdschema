@@ -12,7 +12,17 @@
 
 using namespace godot;
 
-void RuleFactory::create_string_rules(const Dictionary &schema_def, RuleCompileResult &result) {
+void RuleFactory::create_string_rules(const Dictionary &schema_def, const Ref<Schema> &schema, RuleCompileResult &result) {
+	String schema_url = "";
+	if (schema.is_valid()) {
+		schema_url = String(schema->get_schema_url());
+		if (schema_url.is_empty() && schema->get_root() != nullptr) {
+			schema_url = String(schema->get_root()->get_schema_url());
+		}
+	}
+
+	bool is_draft_2020_12 = schema_url.contains("draft/2020-12") || schema_url.contains("draft2020-12");
+
 	// minLength
 	if (schema_def.has("minLength")) {
 		Variant min_length_var = schema_def["minLength"];
@@ -46,19 +56,23 @@ void RuleFactory::create_string_rules(const Dictionary &schema_def, RuleCompileR
 		}
 	}
 
-	// format
+	// format (annotation by default in Draft 2020-12 unless format-assertion is active)
 	if (schema_def.has("format")) {
 		Variant format_var = schema_def["format"];
 		if (SchemaUtil::is_string(format_var)) {
 			String format = format_var.operator String();
-			auto selector = std::make_unique<ValueSelector>();
-			auto rule = std::make_unique<FormatRule>(format);
-			result.rules->add_rule(std::make_unique<SelectorRule>(std::move(selector), std::move(rule)));
+			bool assert_format = schema.is_valid() ? schema->is_assert_format() : false;
+			bool enable_format_assertion = assert_format || Schema::is_default_format_assertion() || !is_draft_2020_12 || schema_url.contains("format-assertion-true");
+			if (enable_format_assertion) {
+				auto selector = std::make_unique<ValueSelector>();
+				auto rule = std::make_unique<FormatRule>(format);
+				result.rules->add_rule(std::make_unique<SelectorRule>(std::move(selector), std::move(rule)));
+			}
 		}
 	}
 
-	// contentEncoding
-	if (schema_def.has("contentEncoding")) {
+	// contentEncoding (annotation only in Draft 2020-12)
+	if (!is_draft_2020_12 && schema_def.has("contentEncoding")) {
 		Variant format_var = schema_def["contentEncoding"];
 		if (SchemaUtil::is_string(format_var)) {
 			String format = format_var.operator String();
@@ -68,8 +82,8 @@ void RuleFactory::create_string_rules(const Dictionary &schema_def, RuleCompileR
 		}
 	}
 
-	// contentMediaType
-	if (schema_def.has("contentMediaType")) {
+	// contentMediaType (annotation only in Draft 2020-12)
+	if (!is_draft_2020_12 && schema_def.has("contentMediaType")) {
 		Variant format_var = schema_def["contentMediaType"];
 		if (SchemaUtil::is_string(format_var)) {
 			String format = format_var.operator String();
